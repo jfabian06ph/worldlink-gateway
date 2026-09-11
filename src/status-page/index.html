@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorldLink Gateway</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #09090b; --surface: #18181b; --border: #27272a;
+    --text: #e4e4e7; --muted: #71717a; --cyan: #06b6d4;
+    --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
+    --orange: #f97316;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; padding: 24px; min-height: 100vh; }
+  h1 { font-size: 18px; font-weight: 600; color: var(--cyan); margin-bottom: 4px; letter-spacing: -0.02em; }
+  .worldid { color: var(--muted); font-size: 11px; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  section h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .peer { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .peer:last-child { border-bottom: none; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.offline { background: var(--muted); }
+  .dot.pending { background: var(--amber); animation: pulse 1s infinite; }
+  .dot.error   { background: var(--red); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .peer-name { font-weight: 500; color: var(--text); flex: 1; }
+  .peer-host { color: var(--muted); font-size: 11px; }
+  .caps { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .cap { background: #1e3a4a; color: var(--cyan); border-radius: 4px; padding: 1px 6px; font-size: 10px; }
+  .task { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .task:last-child { border-bottom: none; }
+  .task-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .status-badge { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 10px; }
+  .status-badge.completed { background: #14532d; color: var(--green); }
+  .status-badge.running   { background: #1e3a4a; color: var(--cyan); }
+  .status-badge.pending-approval { background: #451a03; color: var(--amber); }
+  .status-badge.failed    { background: #450a0a; color: var(--red); }
+  .status-badge.denied    { background: #27272a; color: var(--muted); }
+  .status-badge.queued    { background: #1c1917; color: var(--muted); }
+  .task-from { color: var(--muted); font-size: 11px; }
+  .task-cap  { color: var(--orange); font-size: 11px; }
+  .task-prompt { color: var(--muted); font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .artifact-btn { margin-top: 4px; background: #1e3a4a; border: none; color: var(--cyan); padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; }
+  .artifact-btn:hover { background: #164e63; }
+  .audit { max-height: 240px; overflow-y: auto; }
+  .audit::-webkit-scrollbar { width: 4px; } .audit::-webkit-scrollbar-track { background: transparent; } .audit::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .evt { padding: 4px 0; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 11px; display: flex; gap: 8px; }
+  .evt:last-child { border-bottom: none; }
+  .evt-type { color: var(--cyan); min-width: 160px; flex-shrink: 0; }
+  .empty { color: var(--muted); font-size: 11px; padding: 12px 0; }
+  .approve-btn { background: #14532d; border: none; color: var(--green); padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; margin-right: 4px; }
+  .deny-btn    { background: #450a0a; border: none; color: var(--red); padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; }
+  .approve-btn:hover { background: #166534; } .deny-btn:hover { background: #7f1d1d; }
+  .full { grid-column: 1 / -1; }
+  .refresh-note { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
+  .header-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+  .refresh-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 2px 10px; border-radius: 5px; font-size: 11px; cursor: pointer; font-family: inherit; }
+  .refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="header-row">
+  <div>
+    <h1>WorldLink Gateway</h1>
+    <div class="worldid" id="world-id">Loading…</div>
+  </div>
+  <button class="refresh-btn" onclick="load()">Refresh</button>
+</div>
+
+<div class="grid">
+  <section>
+    <h2>Connected Peers</h2>
+    <div id="peers-list"><div class="empty">No peers</div></div>
+  </section>
+
+  <section>
+    <h2>Recent Tasks</h2>
+    <div id="tasks-list"><div class="empty">No tasks</div></div>
+  </section>
+
+  <section class="full">
+    <h2>Audit Log</h2>
+    <div class="audit" id="audit-list"><div class="empty">No events</div></div>
+  </section>
+</div>
+
+<div id="artifact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px;"><strong>Artifact</strong><button onclick="closeModal()" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button></div>
+    <pre id="artifact-body" style="white-space:pre-wrap;font-size:12px;color:var(--text);line-height:1.6;"></pre>
+  </div>
+</div>
+
+<script>
+function ts(ms) {
+  if (!ms) return '—';
+  const d = new Date(ms);
+  return d.toLocaleTimeString('en', { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+}
+
+function statusBadge(s) {
+  return `<span class="status-badge ${s}">${s}</span>`;
+}
+
+async function load() {
+  try {
+    const [peersRes, tasksRes, auditRes] = await Promise.all([
+      fetch('/worldlink/peers').then(r => r.json()),
+      fetch('/worldlink/tasks').then(r => r.json()),
+      fetch('/worldlink/audit').then(r => r.json()),
+    ]);
+
+    document.getElementById('world-id').textContent =
+      (peersRes.worldName || 'WorldLink') + ' · ' + (peersRes.worldId || '…');
+
+    // Peers
+    const pl = document.getElementById('peers-list');
+    const peers = peersRes.peers || [];
+    if (!peers.length) { pl.innerHTML = '<div class="empty">No peers configured</div>'; }
+    else {
+      pl.innerHTML = peers.map(p => `
+        <div class="peer">
+          <div class="dot ${p.status}"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <span class="peer-name">${p.worldName || p.worldId}</span>
+              <span class="peer-host">${p.host || ''}</span>
+            </div>
+            ${p.capabilities?.length ? `<div class="caps">${p.capabilities.map(c => `<span class="cap">${c}</span>`).join('')}</div>` : ''}
+            <div style="color:var(--muted);font-size:10px;margin-top:2px;">Last seen: ${ts(p.lastSeen)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Tasks
+    const tl = document.getElementById('tasks-list');
+    const tasks = (tasksRes.tasks || []).slice().reverse().slice(0, 20);
+    if (!tasks.length) { tl.innerHTML = '<div class="empty">No tasks yet</div>'; }
+    else {
+      tl.innerHTML = tasks.map(t => `
+        <div class="task" data-task="${t.taskId}">
+          <div class="task-header">
+            ${statusBadge(t.status)}
+            <span class="task-cap">${t.capability}</span>
+          </div>
+          <div class="task-from">from: ${(t.sourceWorld || '').slice(0, 22)}</div>
+          <div class="task-prompt">${t.prompt}</div>
+          ${t.artifactId ? `<button class="artifact-btn" onclick="showArtifact('${t.taskId}','${t.artifactId}')">View artifact</button>` : ''}
+          ${t.status === 'pending-approval' ? `
+            <button class="approve-btn" onclick="approve('${t.taskId}')">Approve</button>
+            <button class="deny-btn" onclick="deny('${t.taskId}')">Deny</button>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // Audit
+    const al = document.getElementById('audit-list');
+    const evts = (auditRes.events || []).slice().reverse().slice(0, 50);
+    if (!evts.length) { al.innerHTML = '<div class="empty">No events</div>'; }
+    else {
+      al.innerHTML = evts.map(e => `
+        <div class="evt">
+          <span class="evt-type">${e.type}</span>
+          <span>${e.taskId || e.sourceWorld || e.targetWorld || e.worldId || ''}</span>
+          <span style="margin-left:auto;">${ts(e._ts)}</span>
+        </div>
+      `).join('');
+    }
+
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function showArtifact(taskId, artifactId) {
+  // artifacts need a session token — show raw task result from tasks list instead
+  document.getElementById('artifact-modal').style.display = 'flex';
+  document.getElementById('artifact-body').textContent = 'Artifact ID: ' + artifactId + '\n\nTo retrieve: authenticate via session token or approve via CLI.';
+}
+
+function closeModal() {
+  document.getElementById('artifact-modal').style.display = 'none';
+}
+
+async function approve(taskId) {
+  await fetch(`/worldlink/approve/${taskId}`, { method: 'POST' });
+  load();
+}
+
+async function deny(taskId) {
+  await fetch(`/worldlink/deny/${taskId}`, { method: 'POST' });
+  load();
+}
+
+// Auto-refresh every 5 seconds
+load();
+setInterval(load, 5000);
+</script>
+</body>
+</html>

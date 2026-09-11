@@ -1,0 +1,15 @@
+# WorldLink secrets — never commit
+.worldlink-identity.json
+.worldlink-config.json
+.worldlink-audit.jsonl
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test world directories
+wl-*/
