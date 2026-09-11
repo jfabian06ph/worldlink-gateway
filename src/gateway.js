@@ -35,6 +35,7 @@ function createGateway(opts = {}) {
   const tasks      = new Map(); // taskId → task
   const artifacts  = new Map(); // artifactId → artifact
   const peers      = new Map(); // worldId → peer
+  const messages   = [];        // incoming direct messages
 
   // ── Helpers ────────────────────────────────────────────────────────
   function verifyToken(token) {
@@ -433,6 +434,70 @@ function createGateway(opts = {}) {
         const id = req.url.split('/worldlink/brain/')[1];
         const ok = brain.remove(id);
         json(ok ? 200 : 404, ok ? { deleted: id } : { error: 'Record not found' });
+        return;
+      }
+
+      // POST /worldlink/message  — authenticated: receive a direct message from a peer
+      if (req.method === 'POST' && req.url === '/worldlink/message') {
+        const s = verifyToken(bearer());
+        if (!s) { json(401, { error: 'Invalid or expired session token' }); return; }
+        const b = await body();
+        const { text, fromWorld } = b;
+        if (!text) { json(400, { error: 'text required' }); return; }
+        const msg = {
+          id: `wlm_${crypto.randomUUID()}`,
+          fromWorld: fromWorld || s.worldId,
+          text,
+          timestamp: Date.now(),
+          read: false,
+        };
+        messages.push(msg);
+        audit.write({ type: 'message.received', fromWorld: msg.fromWorld, timestamp: Math.floor(Date.now() / 1000) });
+        json(200, { ok: true, id: msg.id });
+        return;
+      }
+
+      // GET /worldlink/local/messages  — no auth, local status page
+      if (req.method === 'GET' && req.url === '/worldlink/local/messages') {
+        const sorted = [...messages].sort((a, b) => b.timestamp - a.timestamp);
+        json(200, { messages: sorted });
+        return;
+      }
+
+      // POST /worldlink/local/send-message  — no auth, local status page → outbound DM
+      if (req.method === 'POST' && req.url === '/worldlink/local/send-message') {
+        const b = await body();
+        const { targetWorldId, text } = b;
+        if (!targetWorldId || !text) { json(400, { error: 'targetWorldId and text required' }); return; }
+        const peer = peers.get(targetWorldId);
+        if (!peer?.sessionToken || !peer.host) { json(404, { error: `Not connected to: ${targetWorldId}` }); return; }
+        try {
+          await wlFetch(`${peer.host}/worldlink/message`, {
+            method: 'POST', token: peer.sessionToken,
+            body: { text, fromWorld: wlId?.worldId },
+          });
+          audit.write({ type: 'message.sent', targetWorld: targetWorldId, timestamp: Math.floor(Date.now() / 1000) });
+          json(200, { ok: true });
+        } catch (e) { json(502, { error: `Could not reach ${targetWorldId}: ${e.message}` }); }
+        return;
+      }
+
+      // GET /worldlink/local/artifact/:id  — no auth, local status page
+      if (req.method === 'GET' && req.url.startsWith('/worldlink/local/artifact/')) {
+        const artifactId = req.url.slice('/worldlink/local/artifact/'.length);
+        const a = artifacts.get(artifactId);
+        if (!a) { json(404, { error: 'Artifact not found or expired' }); return; }
+        if (Date.now() > a.expiresAt) { artifacts.delete(artifactId); json(410, { error: 'Artifact expired' }); return; }
+        json(200, a);
+        return;
+      }
+
+      // GET /worldlink/local/brain  — no auth, local status page
+      if (req.method === 'GET' && req.url === '/worldlink/local/brain') {
+        const u = new URL(req.url, 'http://localhost');
+        const scope = u.searchParams.get('scope') || undefined;
+        const type  = u.searchParams.get('type')  || undefined;
+        json(200, { records: brain.list({ scope, type }) });
         return;
       }
 

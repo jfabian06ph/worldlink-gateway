@@ -5,203 +5,1487 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WorldLink Gateway</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #09090b; --surface: #18181b; --border: #27272a;
-    --text: #e4e4e7; --muted: #71717a; --cyan: #06b6d4;
-    --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
-    --orange: #f97316;
-  }
-  body { background: var(--bg); color: var(--text); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; padding: 24px; min-height: 100vh; }
-  h1 { font-size: 18px; font-weight: 600; color: var(--cyan); margin-bottom: 4px; letter-spacing: -0.02em; }
-  .worldid { color: var(--muted); font-size: 11px; margin-bottom: 24px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
-  section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-  section h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-  .peer { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .peer:last-child { border-bottom: none; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .dot.offline { background: var(--muted); }
-  .dot.pending { background: var(--amber); animation: pulse 1s infinite; }
-  .dot.error   { background: var(--red); }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .peer-name { font-weight: 500; color: var(--text); flex: 1; }
-  .peer-host { color: var(--muted); font-size: 11px; }
-  .caps { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-  .cap { background: #1e3a4a; color: var(--cyan); border-radius: 4px; padding: 1px 6px; font-size: 10px; }
-  .task { padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .task:last-child { border-bottom: none; }
-  .task-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-  .status-badge { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 10px; }
-  .status-badge.completed { background: #14532d; color: var(--green); }
-  .status-badge.running   { background: #1e3a4a; color: var(--cyan); }
-  .status-badge.pending-approval { background: #451a03; color: var(--amber); }
-  .status-badge.failed    { background: #450a0a; color: var(--red); }
-  .status-badge.denied    { background: #27272a; color: var(--muted); }
-  .status-badge.queued    { background: #1c1917; color: var(--muted); }
-  .task-from { color: var(--muted); font-size: 11px; }
-  .task-cap  { color: var(--orange); font-size: 11px; }
-  .task-prompt { color: var(--muted); font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-  .artifact-btn { margin-top: 4px; background: #1e3a4a; border: none; color: var(--cyan); padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; }
-  .artifact-btn:hover { background: #164e63; }
-  .audit { max-height: 240px; overflow-y: auto; }
-  .audit::-webkit-scrollbar { width: 4px; } .audit::-webkit-scrollbar-track { background: transparent; } .audit::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .evt { padding: 4px 0; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 11px; display: flex; gap: 8px; }
-  .evt:last-child { border-bottom: none; }
-  .evt-type { color: var(--cyan); min-width: 160px; flex-shrink: 0; }
-  .empty { color: var(--muted); font-size: 11px; padding: 12px 0; }
-  .approve-btn { background: #14532d; border: none; color: var(--green); padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; margin-right: 4px; }
-  .deny-btn    { background: #450a0a; border: none; color: var(--red); padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; }
-  .approve-btn:hover { background: #166534; } .deny-btn:hover { background: #7f1d1d; }
-  .full { grid-column: 1 / -1; }
-  .refresh-note { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
-  .header-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
-  .refresh-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 2px 10px; border-radius: 5px; font-size: 11px; cursor: pointer; font-family: inherit; }
-  .refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #060d1a;
+  --surface: #0d1929;
+  --surface-2: #111f35;
+  --border: #1a3a5c;
+  --border-light: #1e4470;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --text-strong: #f1f5f9;
+  --cyan: #06b6d4;
+  --cyan-dim: #0e4a5c;
+  --cyan-glow: rgba(6,182,212,0.15);
+  --green: #4ade80;
+  --green-dim: #14532d;
+  --amber: #f59e0b;
+  --amber-dim: #451a03;
+  --red: #f87171;
+  --red-dim: #450a0a;
+  --sidebar-w: 180px;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.sidebar-header {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.sidebar-badge {
+  display: inline-block;
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 0;
+  overflow-y: auto;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  user-select: none;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active {
+  color: var(--cyan);
+  background: var(--cyan-glow);
+  border-left-color: var(--cyan);
+}
+.nav-item .nav-icon { font-size: 14px; width: 16px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--cyan);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+.sidebar-footer {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.online-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  flex-shrink: 0;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 4px var(--green); }
+  50% { box-shadow: 0 0 10px var(--green); }
+}
+.footer-label { font-size: 11px; color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.footer-version { font-size: 10px; color: var(--text-muted); opacity: 0.5; }
+
+/* ── Main area ────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.topbar-title { font-size: 15px; font-weight: 700; color: var(--text-strong); }
+.topbar-beta {
+  background: rgba(6,182,212,0.15);
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(6,182,212,0.3);
+}
+.topbar-worldid {
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.topbar-worldid:hover .copy-icon { color: var(--cyan); }
+.copy-icon { font-size: 11px; color: var(--text-muted); transition: color 0.15s; }
+.topbar-spacer { flex: 1; }
+.listen-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.25);
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.listen-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s infinite;
+}
+.refresh-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── Content ──────────────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+.content::-webkit-scrollbar { width: 5px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Cards ────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+
+/* ── World visualization ─────────────────── */
+.world-viz {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  position: relative;
+  height: 220px;
+}
+.world-viz svg { width: 100%; height: 100%; }
+
+/* ── Badges & pills ───────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.badge-green  { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.25); }
+.badge-cyan   { background: rgba(6,182,212,0.12);  color: var(--cyan);  border: 1px solid rgba(6,182,212,0.25); }
+.badge-amber  { background: rgba(245,158,11,0.12); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+.badge-red    { background: rgba(248,113,113,0.12); color: var(--red);   border: 1px solid rgba(248,113,113,0.25); }
+.badge-muted  { background: rgba(100,116,139,0.12); color: var(--text-muted); border: 1px solid rgba(100,116,139,0.2); }
+
+.cap-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  color: var(--cyan);
+  background: rgba(6,182,212,0.06);
+}
+
+/* ── Status dot ───────────────────────────── */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-dot 2s infinite; }
+.status-dot.offline { background: var(--text-muted); }
+.status-dot.running { background: var(--cyan); animation: pulse-dot 1s infinite; }
+.status-dot.pending-approval { background: var(--amber); animation: blink 1s infinite; }
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity: 0.3; } }
+
+/* ── My World card ────────────────────────── */
+.world-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.world-name { font-size: 16px; font-weight: 700; color: var(--text-strong); }
+.info-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: var(--text-muted); }
+.info-label { min-width: 60px; }
+.info-val { color: var(--text); }
+.copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: color 0.15s;
+}
+.copy-btn:hover { color: var(--cyan); }
+.caps-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+
+/* ── Peer list ────────────────────────────── */
+.peer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.peer-item:last-child { border-bottom: none; }
+.peer-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.peer-info { flex: 1; min-width: 0; }
+.peer-name { font-size: 13px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.peer-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.peer-actions { display: flex; align-items: center; gap: 6px; }
+.icon-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.icon-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── Task list ────────────────────────────── */
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.task-item:last-child { border-bottom: none; }
+.task-meta { flex: 1; min-width: 0; }
+.task-cap { font-size: 11px; font-weight: 600; color: var(--cyan); margin-bottom: 3px; }
+.task-prompt { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; opacity: 0.7; }
+.task-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn-green { border-color: rgba(74,222,128,0.3); color: var(--green); background: rgba(74,222,128,0.06); }
+.btn-green:hover { background: rgba(74,222,128,0.12); }
+.btn-red { border-color: rgba(248,113,113,0.3); color: var(--red); background: rgba(248,113,113,0.06); }
+.btn-red:hover { background: rgba(248,113,113,0.12); }
+
+/* ── Audit log ────────────────────────────── */
+.audit-scroll { max-height: 200px; overflow-y: auto; }
+.audit-scroll::-webkit-scrollbar { width: 4px; }
+.audit-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.audit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(26,58,92,0.4);
+  font-size: 12px;
+}
+.audit-row:last-child { border-bottom: none; }
+.audit-type { color: var(--cyan); min-width: 160px; flex-shrink: 0; font-weight: 500; }
+.audit-detail { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.audit-time { color: var(--text-muted); font-size: 10px; opacity: 0.6; flex-shrink: 0; }
+
+/* ── Brain record ─────────────────────────── */
+.brain-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.brain-item:last-child { border-bottom: none; }
+.brain-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.brain-summary { font-size: 13px; color: var(--text); line-height: 1.5; }
+.brain-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 11px; color: var(--text-muted); }
+.importance-bar { height: 4px; width: 80px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.importance-fill { height: 100%; background: var(--cyan); border-radius: 2px; transition: width 0.3s; }
+
+/* ── Filter tabs ──────────────────────────── */
+.filter-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-tab {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.filter-tab:hover { border-color: var(--border-light); color: var(--text); }
+.filter-tab.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-glow); }
+
+/* ── Messages ─────────────────────────────── */
+.message-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.message-item:last-child { border-bottom: none; }
+.message-from { font-size: 12px; font-weight: 600; color: var(--text-strong); margin-bottom: 3px; }
+.message-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.message-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+/* ── Settings form ────────────────────────── */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; letter-spacing: 0.04em; text-transform: uppercase; }
+.form-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus { border-color: var(--cyan); }
+.form-textarea { min-height: 80px; resize: vertical; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; }
+.toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 11px;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle input:checked + .toggle-slider { background: var(--cyan); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+.btn-primary {
+  background: var(--cyan);
+  color: #000;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+/* ── Modals ───────────────────────────────── */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-size: 15px; font-weight: 700; color: var(--text-strong); }
+.modal-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px; }
+.modal-close:hover { color: var(--text); }
+.artifact-content {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.artifact-content::-webkit-scrollbar { width: 4px; }
+.artifact-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Brain form ───────────────────────────── */
+.brain-form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.brain-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 640px) { .brain-form-grid { grid-template-columns: 1fr; } }
+.form-select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.form-select:focus { border-color: var(--cyan); }
+.form-range { width: 100%; accent-color: var(--cyan); }
+.form-range-row { display: flex; align-items: center; gap: 10px; }
+.range-val { font-size: 12px; color: var(--text-muted); min-width: 30px; text-align: right; }
+
+/* ── Empty state ──────────────────────────── */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+.empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.4; }
+
+/* ── Utility ──────────────────────────────── */
+.mt-12 { margin-top: 12px; }
+.flex { display: flex; align-items: center; }
+.gap-6 { gap: 6px; }
+.gap-8 { gap: 8px; }
+.flex-1 { flex: 1; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.view-all-link { font-size: 12px; color: var(--cyan); cursor: pointer; }
+.view-all-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 
-<div class="header-row">
-  <div>
-    <h1>WorldLink Gateway</h1>
-    <div class="worldid" id="world-id">Loading…</div>
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">WorldLink<br>Gateway</div>
+    <span class="sidebar-badge">BETA</span>
   </div>
-  <button class="refresh-btn" onclick="load()">Refresh</button>
+  <div class="sidebar-nav">
+    <div class="nav-item active" data-page="overview" onclick="navigate('overview', this)">
+      <span class="nav-icon">◉</span> Overview
+    </div>
+    <div class="nav-item" data-page="peers" onclick="navigate('peers', this)">
+      <span class="nav-icon">⬡</span> Peers
+    </div>
+    <div class="nav-item" data-page="tasks" onclick="navigate('tasks', this)">
+      <span class="nav-icon">⚙</span> Tasks
+    </div>
+    <div class="nav-item" data-page="artifacts" onclick="navigate('artifacts', this)">
+      <span class="nav-icon">◈</span> Artifacts
+    </div>
+    <div class="nav-item" data-page="brain" onclick="navigate('brain', this)">
+      <span class="nav-icon">◎</span> Brain
+    </div>
+    <div class="nav-item" data-page="messages" onclick="navigate('messages', this)">
+      <span class="nav-icon">✉</span> Messages
+      <span class="nav-badge" id="msg-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" data-page="audit" onclick="navigate('audit', this)">
+      <span class="nav-icon">☰</span> Audit
+    </div>
+    <div class="nav-item" data-page="settings" onclick="navigate('settings', this)">
+      <span class="nav-icon">⊙</span> Settings
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="online-dot"></div>
+    <span class="footer-label">Gateway Online</span>
+    <span class="footer-version" id="footer-version">v–</span>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">WorldLink Gateway</span>
+    <span class="topbar-beta">BETA</span>
+    <span class="topbar-worldid" id="topbar-worldid" onclick="copyWorldId()" title="Click to copy World ID">
+      <span id="topbar-id-text">Loading…</span>
+      <span class="copy-icon">⎘</span>
+    </span>
+    <div class="topbar-spacer"></div>
+    <div class="listen-badge" id="listen-badge">
+      <div class="listen-dot"></div>
+      <span id="listen-port">Listening on :…</span>
+    </div>
+    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+  </div>
+
+  <div class="content">
+    <!-- Overview -->
+    <div class="page active" id="page-overview">
+      <!-- World visualization -->
+      <div class="world-viz" id="world-viz"></div>
+
+      <!-- 3-column cards -->
+      <div class="grid-3">
+        <!-- My World -->
+        <div class="card">
+          <div class="card-title">My World</div>
+          <div class="world-name-row">
+            <span class="world-name" id="my-world-name">—</span>
+            <span class="status-dot online"></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">World ID</span>
+            <span class="info-val truncate" id="my-world-id" style="max-width:100px;font-size:11px;font-family:monospace">—</span>
+            <button class="copy-btn" onclick="copyWorldId()" title="Copy World ID">⎘</button>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Uptime</span>
+            <span class="info-val" id="my-uptime">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Peers</span>
+            <span class="info-val" id="my-peers-count">—</span>
+          </div>
+          <div class="caps-row" id="my-caps"></div>
+        </div>
+
+        <!-- Connected Peers -->
+        <div class="card">
+          <div class="card-title">Connected Peers</div>
+          <div id="ov-peers-list">
+            <div class="empty-state"><div class="empty-icon">⬡</div>No peers connected</div>
+          </div>
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="card">
+          <div class="flex" style="justify-content:space-between;margin-bottom:16px;">
+            <span class="card-title" style="margin-bottom:0">Recent Tasks</span>
+            <span class="view-all-link" onclick="navigate('tasks')">View All →</span>
+          </div>
+          <div id="ov-tasks-list">
+            <div class="empty-state"><div class="empty-icon">⚙</div>No tasks yet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages card (shown when messages exist) -->
+      <div class="card" id="ov-messages-card" style="display:none;margin-bottom:16px;">
+        <div class="card-title">Messages</div>
+        <div id="ov-messages-list"></div>
+      </div>
+
+      <!-- Audit log -->
+      <div class="card">
+        <div class="card-title">Audit Log <span style="opacity:0.5;font-weight:400;font-size:11px;">(last 10)</span></div>
+        <div class="audit-scroll" id="ov-audit-list">
+          <div class="empty-state" style="padding:16px"><div class="empty-icon">☰</div>No events</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Peers -->
+    <div class="page" id="page-peers">
+      <div class="card">
+        <div class="card-title">All Peers</div>
+        <div id="peers-full-list">
+          <div class="empty-state"><div class="empty-icon">⬡</div>No peers configured</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="page" id="page-tasks">
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterTasks('all', this)">All</button>
+        <button class="filter-tab" onclick="filterTasks('running', this)">Running</button>
+        <button class="filter-tab" onclick="filterTasks('pending-approval', this)">Pending Approval</button>
+        <button class="filter-tab" onclick="filterTasks('completed', this)">Completed</button>
+        <button class="filter-tab" onclick="filterTasks('failed', this)">Failed</button>
+      </div>
+      <div class="card">
+        <div id="tasks-full-list">
+          <div class="empty-state"><div class="empty-icon">⚙</div>No tasks yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Artifacts -->
+    <div class="page" id="page-artifacts">
+      <div class="card">
+        <div class="card-title">Artifacts</div>
+        <div id="artifacts-list">
+          <div class="empty-state"><div class="empty-icon">◈</div>No artifacts yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Brain -->
+    <div class="page" id="page-brain">
+      <div class="brain-form-card">
+        <div class="card-title">Add Brain Record</div>
+        <div class="form-group">
+          <label class="form-label">Summary</label>
+          <textarea class="form-input form-textarea" id="brain-summary" placeholder="Describe what to remember…"></textarea>
+        </div>
+        <div class="brain-form-grid">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Type</label>
+            <select class="form-select" id="brain-type">
+              <option value="fact">Fact</option>
+              <option value="decision">Decision</option>
+              <option value="constraint">Constraint</option>
+              <option value="goal">Goal</option>
+              <option value="context">Context</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Scope</label>
+            <input class="form-input" id="brain-scope" placeholder="e.g. global" />
+          </div>
+        </div>
+        <div class="form-group mt-12">
+          <label class="form-label">Importance (0–1)</label>
+          <div class="form-range-row">
+            <input type="range" class="form-range" id="brain-importance" min="0" max="1" step="0.05" value="0.5"
+              oninput="document.getElementById('brain-importance-val').textContent = this.value">
+            <span class="range-val" id="brain-importance-val">0.5</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visibility</label>
+          <select class="form-select" id="brain-visibility">
+            <option value="self">Self only</option>
+            <option value="pod">Pod (shared peers)</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="addBrainRecord()">+ Add Record</button>
+        <span id="brain-save-msg" style="font-size:12px;margin-left:10px;color:var(--green);"></span>
+      </div>
+      <div class="card">
+        <div class="card-title">Brain Records</div>
+        <div id="brain-list">
+          <div class="empty-state"><div class="empty-icon">◎</div>No brain records</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="page" id="page-messages">
+      <div class="card">
+        <div class="card-title">Direct Messages</div>
+        <div id="messages-full-list">
+          <div class="empty-state"><div class="empty-icon">✉</div>No messages</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit -->
+    <div class="page" id="page-audit">
+      <div class="card">
+        <div class="card-title">Audit Log</div>
+        <div style="max-height:70vh;overflow-y:auto;" id="audit-full-list">
+          <div class="empty-state"><div class="empty-icon">☰</div>No events</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-settings">
+      <div class="card" style="max-width:520px;">
+        <div class="card-title">Settings</div>
+        <div class="form-group">
+          <label class="form-label">World Name</label>
+          <input class="form-input" id="settings-name" placeholder="My World" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Auto-Approve Tasks</label>
+          <div class="toggle-row">
+            <span style="font-size:13px;color:var(--text-muted)">Automatically approve incoming task requests</span>
+            <label class="toggle">
+              <input type="checkbox" id="settings-auto-approve">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Capabilities</label>
+          <div id="settings-caps" style="font-size:13px;color:var(--text-muted)">Loading…</div>
+        </div>
+        <button class="btn-primary" onclick="saveSettings()">Save Changes</button>
+        <span id="settings-save-msg" style="font-size:12px;margin-left:10px;color:var(--green);"></span>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="grid">
-  <section>
-    <h2>Connected Peers</h2>
-    <div id="peers-list"><div class="empty">No peers</div></div>
-  </section>
-
-  <section>
-    <h2>Recent Tasks</h2>
-    <div id="tasks-list"><div class="empty">No tasks</div></div>
-  </section>
-
-  <section class="full">
-    <h2>Audit Log</h2>
-    <div class="audit" id="audit-list"><div class="empty">No events</div></div>
-  </section>
+<!-- Artifact modal -->
+<div class="modal-backdrop" id="modal-artifact">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Artifact</span>
+      <button class="modal-close" onclick="closeModal('modal-artifact')">✕</button>
+    </div>
+    <div class="artifact-content" id="artifact-body"></div>
+  </div>
 </div>
 
-<div id="artifact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:24px;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;margin-bottom:12px;"><strong>Artifact</strong><button onclick="closeModal()" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button></div>
-    <pre id="artifact-body" style="white-space:pre-wrap;font-size:12px;color:var(--text);line-height:1.6;"></pre>
+<!-- Send message modal -->
+<div class="modal-backdrop" id="modal-message">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="msg-modal-title">Send Message</span>
+      <button class="modal-close" onclick="closeModal('modal-message')">✕</button>
+    </div>
+    <div class="form-group">
+      <textarea class="form-input form-textarea" id="msg-modal-text" placeholder="Type your message…" style="min-height:120px;"></textarea>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn-primary" onclick="sendMessage()">Send</button>
+      <span id="msg-modal-status" style="font-size:12px;color:var(--text-muted);"></span>
+    </div>
   </div>
 </div>
 
 <script>
-function ts(ms) {
-  if (!ms) return '—';
-  const d = new Date(ms);
-  return d.toLocaleTimeString('en', { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
-}
+window._startTime = Date.now();
+let _state = { peers: [], tasks: [], audit: [], messages: [], brain: [], worldId: '', worldName: '', port: '' };
+let _taskFilter = 'all';
+let _msgTarget = null;
 
-function statusBadge(s) {
-  return `<span class="status-badge ${s}">${s}</span>`;
-}
-
-async function load() {
-  try {
-    const [peersRes, tasksRes, auditRes] = await Promise.all([
-      fetch('/worldlink/peers').then(r => r.json()),
-      fetch('/worldlink/tasks').then(r => r.json()),
-      fetch('/worldlink/audit').then(r => r.json()),
-    ]);
-
-    document.getElementById('world-id').textContent =
-      (peersRes.worldName || 'WorldLink') + ' · ' + (peersRes.worldId || '…');
-
-    // Peers
-    const pl = document.getElementById('peers-list');
-    const peers = peersRes.peers || [];
-    if (!peers.length) { pl.innerHTML = '<div class="empty">No peers configured</div>'; }
-    else {
-      pl.innerHTML = peers.map(p => `
-        <div class="peer">
-          <div class="dot ${p.status}"></div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:baseline;gap:8px;">
-              <span class="peer-name">${p.worldName || p.worldId}</span>
-              <span class="peer-host">${p.host || ''}</span>
-            </div>
-            ${p.capabilities?.length ? `<div class="caps">${p.capabilities.map(c => `<span class="cap">${c}</span>`).join('')}</div>` : ''}
-            <div style="color:var(--muted);font-size:10px;margin-top:2px;">Last seen: ${ts(p.lastSeen)}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Tasks
-    const tl = document.getElementById('tasks-list');
-    const tasks = (tasksRes.tasks || []).slice().reverse().slice(0, 20);
-    if (!tasks.length) { tl.innerHTML = '<div class="empty">No tasks yet</div>'; }
-    else {
-      tl.innerHTML = tasks.map(t => `
-        <div class="task" data-task="${t.taskId}">
-          <div class="task-header">
-            ${statusBadge(t.status)}
-            <span class="task-cap">${t.capability}</span>
-          </div>
-          <div class="task-from">from: ${(t.sourceWorld || '').slice(0, 22)}</div>
-          <div class="task-prompt">${t.prompt}</div>
-          ${t.artifactId ? `<button class="artifact-btn" onclick="showArtifact('${t.taskId}','${t.artifactId}')">View artifact</button>` : ''}
-          ${t.status === 'pending-approval' ? `
-            <button class="approve-btn" onclick="approve('${t.taskId}')">Approve</button>
-            <button class="deny-btn" onclick="deny('${t.taskId}')">Deny</button>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    // Audit
-    const al = document.getElementById('audit-list');
-    const evts = (auditRes.events || []).slice().reverse().slice(0, 50);
-    if (!evts.length) { al.innerHTML = '<div class="empty">No events</div>'; }
-    else {
-      al.innerHTML = evts.map(e => `
-        <div class="evt">
-          <span class="evt-type">${e.type}</span>
-          <span>${e.taskId || e.sourceWorld || e.targetWorld || e.worldId || ''}</span>
-          <span style="margin-left:auto;">${ts(e._ts)}</span>
-        </div>
-      `).join('');
-    }
-
-  } catch(e) {
-    console.error(e);
+// ── Navigation ────────────────────────────────────────────────────
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  const navEl = el || document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navEl) navEl.classList.add('active');
+  // Mark messages as read on visit
+  if (page === 'messages') {
+    _state.messages.forEach(m => m.read = true);
+    updateMsgBadge();
   }
 }
 
-async function showArtifact(taskId, artifactId) {
-  // artifacts need a session token — show raw task result from tasks list instead
-  document.getElementById('artifact-modal').style.display = 'flex';
-  document.getElementById('artifact-body').textContent = 'Artifact ID: ' + artifactId + '\n\nTo retrieve: authenticate via session token or approve via CLI.';
+// ── Copy helpers ──────────────────────────────────────────────────
+function copyWorldId() {
+  if (_state.worldId) {
+    navigator.clipboard.writeText(_state.worldId).catch(() => {});
+    flashMsg('topbar-id-text', 'Copied!', 600);
+  }
+}
+function flashMsg(id, text, ms) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const orig = el.textContent;
+  el.textContent = text;
+  el.style.color = 'var(--green)';
+  setTimeout(() => { el.textContent = orig; el.style.color = ''; }, ms);
 }
 
-function closeModal() {
-  document.getElementById('artifact-modal').style.display = 'none';
+// ── Time helpers ──────────────────────────────────────────────────
+function relTime(ms) {
+  if (!ms) return '—';
+  const diff = Date.now() - ms;
+  if (diff < 60000) return `${Math.floor(diff/1000)}s ago`;
+  if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+  return `${Math.floor(diff/3600000)}h ${Math.floor((diff%3600000)/60000)}m ago`;
+}
+function fmtTs(ts) {
+  if (!ts) return '—';
+  const ms = ts > 1e10 ? ts : ts * 1000;
+  return new Date(ms).toLocaleTimeString('en', { hour12: false });
+}
+function uptime() {
+  const ms = Date.now() - window._startTime;
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-async function approve(taskId) {
+// ── Avatar color ──────────────────────────────────────────────────
+const AVATAR_COLORS = ['#7c3aed','#2563eb','#0891b2','#059669','#d97706','#dc2626','#9333ea','#0284c7'];
+function avatarColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+function peerInitials(name) {
+  return (name || '?').replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase() || '??';
+}
+
+// ── Status badge ──────────────────────────────────────────────────
+function statusBadge(s) {
+  const map = {
+    'completed':        ['badge-green', '✓ Completed'],
+    'running':          ['badge-cyan', '⟳ Running'],
+    'pending-approval': ['badge-amber', '⏳ Approval'],
+    'failed':           ['badge-red', '✗ Failed'],
+    'denied':           ['badge-muted', '— Denied'],
+    'queued':           ['badge-muted', '◯ Queued'],
+  };
+  const [cls, label] = map[s] || ['badge-muted', s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// ── World visualization ───────────────────────────────────────────
+function renderWorldViz() {
+  const peers = _state.peers.filter(p => p.status === 'online');
+  const myName = _state.worldName || 'My World';
+  const viz = document.getElementById('world-viz');
+  if (!viz) return;
+
+  // Build SVG
+  const W = viz.clientWidth || 800;
+  const H = 220;
+  const cx = W / 2;
+
+  // Island SVG drawing function (isometric cube stack)
+  function islandSVG(x, y, name, online, labelAbove) {
+    const tw = 54; const th = 28; // top face width/height
+    // top face: parallelogram-ish (flat-top iso)
+    // Points for top: left, front-left, front-right, right
+    const tl = { x: x - tw/2, y: y - th/2 };
+    const tr = { x: x + tw/2, y: y - th/2 };
+    const bl = { x: x - tw/2, y: y + th/2 };
+    const br = { x: x + tw/2, y: y + th/2 };
+    // Isometric tilt: left face goes down-left, right face goes down-right
+    const sideH = 22;
+    const leftFace = `${tl.x},${tl.y} ${bl.x},${bl.y} ${bl.x},${bl.y+sideH} ${tl.x},${tl.y+sideH}`;
+    const rightFace = `${br.x},${br.y} ${tr.x},${tr.y} ${tr.x},${tr.y+sideH} ${br.x},${br.y+sideH}`;
+    const frontFace = `${bl.x},${bl.y} ${br.x},${br.y} ${br.x},${br.y+sideH} ${bl.x},${bl.y+sideH}`;
+    const topFace = `${tl.x},${tl.y} ${tr.x},${tr.y} ${br.x},${br.y} ${bl.x},${bl.y}`;
+
+    // Small tree on top
+    const treeX = x + 6;
+    const treeY = y - th/2 - 22;
+    const treeH = 16;
+    const treeW = 10;
+    const dot = online ? '#4ade80' : '#64748b';
+    const labelY = labelAbove ? y - th/2 - 46 : y + sideH + th/2 + 16;
+    const statusLabel = online ? 'Online' : 'Offline';
+
+    return `
+      <polygon points="${topFace}"  fill="#4ade80" />
+      <polygon points="${leftFace}" fill="#16a34a" />
+      <polygon points="${rightFace}" fill="#15803d" />
+      <polygon points="${frontFace}" fill="#166534" />
+      <!-- Tree trunk -->
+      <rect x="${treeX-1.5}" y="${treeY+treeH*0.55}" width="3" height="${treeH*0.45}" fill="#92400e" />
+      <!-- Tree canopy -->
+      <polygon points="${treeX},${treeY} ${treeX-treeW/2},${treeY+treeH*0.6} ${treeX+treeW/2},${treeY+treeH*0.6}" fill="#22c55e" />
+      <polygon points="${treeX},${treeY+treeH*0.3} ${treeX-treeW/2},${treeY+treeH*0.8} ${treeX+treeW/2},${treeY+treeH*0.8}" fill="#16a34a" />
+      <!-- Label -->
+      <text x="${x}" y="${labelY}" text-anchor="middle" fill="#f1f5f9" font-size="12" font-family="system-ui,sans-serif" font-weight="600">${escSVG(name)}</text>
+      <circle cx="${x+4}" cy="${labelY+14}" r="4" fill="${dot}" />
+      <text x="${x+11}" y="${labelY+18}" fill="${dot}" font-size="10" font-family="system-ui,sans-serif">${statusLabel}</text>
+    `;
+  }
+
+  function escSVG(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  let svgInner = '';
+  let defs = `<defs>
+    <radialGradient id="bg-grad" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#0f2a4a" />
+      <stop offset="100%" stop-color="#060d1a" />
+    </radialGradient>
+    <style>
+      @keyframes dash { to { stroke-dashoffset: -30; } }
+      .dashed-line { animation: dash 1.2s linear infinite; }
+    </style>
+  </defs>`;
+
+  svgInner += `<rect width="100%" height="100%" fill="url(#bg-grad)" />`;
+
+  if (peers.length === 0) {
+    // Just my world island, centered
+    svgInner += islandSVG(cx, H * 0.52, myName, true, false);
+  } else {
+    // My world on left, up to 3 peers on right
+    const myX = cx - 180;
+    const myY = H * 0.52;
+    svgInner += islandSVG(myX, myY, myName, true, false);
+
+    const showPeers = peers.slice(0, 3);
+    const peerXBase = cx + 100;
+    const spacing = H / (showPeers.length + 1);
+    showPeers.forEach((p, i) => {
+      const px = peerXBase + (i % 2 === 0 ? 0 : 50);
+      const py = spacing * (i + 1);
+      // Connection line
+      svgInner += `<line x1="${myX+28}" y1="${myY}" x2="${px-28}" y2="${py}"
+        stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="8 4"
+        class="dashed-line" opacity="0.7" />`;
+      // Small dot at each end
+      svgInner += `<circle cx="${myX+28}" cy="${myY}" r="3" fill="#06b6d4" opacity="0.8" />`;
+      svgInner += `<circle cx="${px-28}" cy="${py}" r="3" fill="#06b6d4" opacity="0.8" />`;
+      svgInner += islandSVG(px, py, p.worldName || p.worldId, p.status === 'online', i > 0);
+    });
+    if (peers.length > 3) {
+      svgInner += `<text x="${peerXBase+25}" y="${H-12}" text-anchor="middle" fill="#64748b" font-size="11" font-family="system-ui,sans-serif">+${peers.length-3} more peers</text>`;
+    }
+  }
+
+  viz.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${defs}${svgInner}</svg>`;
+}
+
+// ── Render Overview ───────────────────────────────────────────────
+function renderOverview() {
+  // My World card
+  document.getElementById('my-world-name').textContent = _state.worldName || '—';
+  const shortId = _state.worldId ? _state.worldId.slice(0, 16) + '…' : '—';
+  document.getElementById('my-world-id').textContent = shortId;
+  document.getElementById('my-peers-count').textContent = _state.peers.filter(p => p.status === 'online').length + ' online';
+  document.getElementById('my-uptime').textContent = uptime();
+
+  const capsEl = document.getElementById('my-caps');
+  if (_state.capabilities?.length) {
+    capsEl.innerHTML = _state.capabilities.map(c => `<span class="cap-badge">${c.id || c}</span>`).join('');
+  }
+
+  // Peers
+  const ovPeers = document.getElementById('ov-peers-list');
+  if (!_state.peers.length) {
+    ovPeers.innerHTML = '<div class="empty-state"><div class="empty-icon">⬡</div>No peers connected</div>';
+  } else {
+    ovPeers.innerHTML = _state.peers.map(p => {
+      const name = p.worldName || p.worldId;
+      const initials = peerInitials(name);
+      const color = avatarColor(name);
+      return `<div class="peer-item">
+        <div class="peer-avatar" style="background:${color}">${initials}</div>
+        <div class="peer-info">
+          <div class="peer-name">${escHTML(name)}</div>
+          <div class="peer-sub">${p.status === 'online' ? '🟢' : '⚫'} ${p.status} · ${relTime(p.lastSeen)}</div>
+        </div>
+        <div class="peer-actions">
+          <button class="icon-btn" title="Send message" onclick="openMsgModal('${escAttr(p.worldId)}','${escAttr(name)}')">✉</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Tasks
+  const ovTasks = document.getElementById('ov-tasks-list');
+  const recent = [..._state.tasks].reverse().slice(0, 5);
+  if (!recent.length) {
+    ovTasks.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙</div>No tasks yet</div>';
+  } else {
+    ovTasks.innerHTML = recent.map(t => `<div class="task-item">
+      <div style="flex-shrink:0;margin-top:1px;">${statusBadge(t.status)}</div>
+      <div class="task-meta">
+        <div class="task-cap">${escHTML(t.capability)}</div>
+        <div class="task-prompt">${escHTML(t.prompt || '—')}</div>
+        <div class="task-time">${relTime(t.createdAt)}</div>
+      </div>
+      ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}')">View</button>` : ''}
+    </div>`).join('');
+  }
+
+  // Messages card
+  const unread = _state.messages.filter(m => !m.read);
+  const msgCard = document.getElementById('ov-messages-card');
+  if (_state.messages.length) {
+    msgCard.style.display = 'block';
+    document.getElementById('ov-messages-list').innerHTML = _state.messages.slice(0, 5).map(m =>
+      `<div class="message-item">
+        <div class="message-from">${escHTML(m.fromWorld || '—')}</div>
+        <div class="message-text">${escHTML(m.text)}</div>
+        <div class="message-time">${relTime(m.timestamp)}</div>
+      </div>`
+    ).join('');
+  } else {
+    msgCard.style.display = 'none';
+  }
+
+  // Audit log (last 10)
+  const al = document.getElementById('ov-audit-list');
+  const evts = [..._state.audit].reverse().slice(0, 10);
+  if (!evts.length) {
+    al.innerHTML = '<div class="empty-state" style="padding:12px"><div class="empty-icon">☰</div>No events</div>';
+  } else {
+    al.innerHTML = evts.map(e => `<div class="audit-row">
+      <span class="audit-type">${escHTML(e.type)}</span>
+      <span class="audit-detail">${escHTML(e.taskId || e.sourceWorld || e.targetWorld || e.worldId || e.fromWorld || '')}</span>
+      <span class="audit-time">${fmtTs(e._ts || e.timestamp)}</span>
+    </div>`).join('');
+  }
+}
+
+// ── Render Peers page ─────────────────────────────────────────────
+function renderPeers() {
+  const el = document.getElementById('peers-full-list');
+  if (!_state.peers.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">⬡</div>No peers configured</div>';
+    return;
+  }
+  el.innerHTML = _state.peers.map(p => {
+    const name = p.worldName || p.worldId;
+    const color = avatarColor(name);
+    const initials = peerInitials(name);
+    return `<div class="peer-item" style="padding:14px 0;">
+      <div class="peer-avatar" style="background:${color};width:40px;height:40px;font-size:14px">${initials}</div>
+      <div class="peer-info">
+        <div class="peer-name" style="font-size:14px;">${escHTML(name)}</div>
+        <div class="peer-sub">${escHTML(p.worldId || '')}</div>
+        <div class="peer-sub">${p.host || ''} · Last seen: ${relTime(p.lastSeen)}</div>
+        ${p.capabilities?.length ? `<div class="caps-row" style="margin-top:6px;">${p.capabilities.map(c => `<span class="cap-badge">${escHTML(c)}</span>`).join('')}</div>` : ''}
+      </div>
+      <div class="peer-actions">
+        <span class="badge ${p.status === 'online' ? 'badge-green' : 'badge-muted'}">${p.status}</span>
+        <button class="btn" onclick="openMsgModal('${escAttr(p.worldId)}','${escAttr(name)}')">✉ Send Message</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render Tasks page ─────────────────────────────────────────────
+function filterTasks(filter, el) {
+  _taskFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderTasks();
+}
+function renderTasks() {
+  const el = document.getElementById('tasks-full-list');
+  let tasks = [..._state.tasks].reverse();
+  if (_taskFilter !== 'all') tasks = tasks.filter(t => t.status === _taskFilter);
+  if (!tasks.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙</div>No tasks found</div>';
+    return;
+  }
+  el.innerHTML = tasks.map(t => `<div class="task-item" style="padding:12px 0;">
+    <div style="flex-shrink:0;margin-top:2px;">${statusBadge(t.status)}</div>
+    <div class="task-meta">
+      <div class="task-cap">${escHTML(t.capability)}</div>
+      <div class="task-prompt" style="white-space:normal;font-size:12px;">${escHTML(t.prompt || '—')}</div>
+      <div class="task-time">From: ${escHTML((t.sourceWorld||'').slice(0,24))} · ${relTime(t.createdAt)}</div>
+    </div>
+    <div class="task-actions">
+      ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}')">View</button>` : ''}
+      ${t.status === 'pending-approval' ? `
+        <button class="btn btn-green" onclick="approveTask('${t.taskId}')">Approve</button>
+        <button class="btn btn-red" onclick="denyTask('${t.taskId}')">Deny</button>
+      ` : ''}
+    </div>
+  </div>`).join('');
+}
+
+// ── Render Artifacts page ─────────────────────────────────────────
+function renderArtifacts() {
+  const el = document.getElementById('artifacts-list');
+  const withArtifacts = [..._state.tasks].filter(t => t.artifactId).reverse();
+  if (!withArtifacts.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◈</div>No artifacts yet</div>';
+    return;
+  }
+  el.innerHTML = withArtifacts.map(t => `<div class="task-item" style="padding:12px 0;">
+    <div style="flex-shrink:0;margin-top:2px;">${statusBadge(t.status)}</div>
+    <div class="task-meta">
+      <div class="task-cap">${escHTML(t.capability)}</div>
+      <div class="task-prompt" style="white-space:normal;font-size:12px;">${escHTML(t.prompt || '—')}</div>
+      <div class="task-time">${relTime(t.createdAt)}</div>
+    </div>
+    <button class="btn" onclick="viewArtifact('${t.artifactId}')">View Artifact</button>
+  </div>`).join('');
+}
+
+// ── Render Brain page ─────────────────────────────────────────────
+function renderBrain() {
+  const el = document.getElementById('brain-list');
+  if (!_state.brain.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div>No brain records</div>';
+    return;
+  }
+  const typeColors = { fact:'badge-cyan', decision:'badge-green', constraint:'badge-red', goal:'badge-amber', context:'badge-muted' };
+  el.innerHTML = _state.brain.map(r => `<div class="brain-item">
+    <div class="brain-header">
+      <span class="badge ${typeColors[r.type] || 'badge-muted'}">${escHTML(r.type || 'fact')}</span>
+      ${r.scope ? `<span class="badge badge-muted" style="font-weight:400;">${escHTML(r.scope)}</span>` : ''}
+      ${r.visibility ? `<span style="font-size:11px;color:var(--text-muted);">${r.visibility}</span>` : ''}
+    </div>
+    <div class="brain-summary">${escHTML(r.summary || '')}</div>
+    <div class="brain-meta">
+      <span>Importance:</span>
+      <div class="importance-bar"><div class="importance-fill" style="width:${Math.round((r.importance||0)*100)}%"></div></div>
+      <span>${r.importance != null ? r.importance.toFixed(2) : '—'}</span>
+      <span style="margin-left:auto;">${relTime(r.createdAt)}</span>
+    </div>
+  </div>`).join('');
+}
+
+// ── Render Messages page ──────────────────────────────────────────
+function renderMessages() {
+  const el = document.getElementById('messages-full-list');
+  if (!_state.messages.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">✉</div>No messages</div>';
+    return;
+  }
+  el.innerHTML = _state.messages.map(m => `<div class="message-item">
+    <div class="message-from">${escHTML(m.fromWorld || '—')}</div>
+    <div class="message-text">${escHTML(m.text)}</div>
+    <div class="message-time">${new Date(m.timestamp).toLocaleString()}</div>
+  </div>`).join('');
+}
+
+// ── Render Audit full page ────────────────────────────────────────
+function renderAuditFull() {
+  const el = document.getElementById('audit-full-list');
+  const evts = [..._state.audit].reverse();
+  if (!evts.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">☰</div>No events</div>';
+    return;
+  }
+  el.innerHTML = evts.map(e => `<div class="audit-row">
+    <span class="audit-type">${escHTML(e.type)}</span>
+    <span class="audit-detail">${escHTML(e.taskId || e.sourceWorld || e.targetWorld || e.worldId || e.fromWorld || '')}</span>
+    <span class="audit-time">${fmtTs(e._ts || e.timestamp)}</span>
+  </div>`).join('');
+}
+
+// ── Render Settings ───────────────────────────────────────────────
+function renderSettings() {
+  document.getElementById('settings-name').value = _state.worldName || '';
+  const capsEl = document.getElementById('settings-caps');
+  if (_state.capabilities?.length) {
+    capsEl.innerHTML = _state.capabilities.map(c => `<span class="cap-badge" style="margin-right:4px;">${escHTML(c.id || c)}</span>`).join('');
+  } else {
+    capsEl.textContent = 'No capabilities configured';
+  }
+}
+
+// ── Task actions ──────────────────────────────────────────────────
+async function approveTask(taskId) {
   await fetch(`/worldlink/approve/${taskId}`, { method: 'POST' });
-  load();
+  await refreshAll();
 }
-
-async function deny(taskId) {
+async function denyTask(taskId) {
   await fetch(`/worldlink/deny/${taskId}`, { method: 'POST' });
-  load();
+  await refreshAll();
 }
 
-// Auto-refresh every 5 seconds
-load();
-setInterval(load, 5000);
+// ── Artifact view ─────────────────────────────────────────────────
+async function viewArtifact(artifactId) {
+  document.getElementById('artifact-body').textContent = 'Loading…';
+  openModal('modal-artifact');
+  try {
+    const res = await fetch(`/worldlink/local/artifact/${artifactId}`);
+    const data = await res.json();
+    const body = data?.content?.body || data?.content || JSON.stringify(data, null, 2);
+    document.getElementById('artifact-body').textContent = body;
+  } catch(e) {
+    document.getElementById('artifact-body').textContent = 'Error loading artifact: ' + e.message;
+  }
+}
+
+// ── Send message modal ────────────────────────────────────────────
+function openMsgModal(worldId, worldName) {
+  _msgTarget = worldId;
+  document.getElementById('msg-modal-title').textContent = `Send Message to ${worldName}`;
+  document.getElementById('msg-modal-text').value = '';
+  document.getElementById('msg-modal-status').textContent = '';
+  openModal('modal-message');
+}
+async function sendMessage() {
+  const text = document.getElementById('msg-modal-text').value.trim();
+  if (!text || !_msgTarget) return;
+  const statusEl = document.getElementById('msg-modal-status');
+  statusEl.textContent = 'Sending…';
+  try {
+    const res = await fetch('/worldlink/local/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetWorldId: _msgTarget, text }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = 'Sent!';
+      setTimeout(() => closeModal('modal-message'), 1200);
+    } else {
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = data.error || 'Failed to send';
+    }
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'Network error';
+  }
+}
+
+// ── Brain add record ──────────────────────────────────────────────
+async function addBrainRecord() {
+  const summary = document.getElementById('brain-summary').value.trim();
+  if (!summary) return;
+  const body = {
+    summary,
+    type: document.getElementById('brain-type').value,
+    scope: document.getElementById('brain-scope').value || 'global',
+    importance: parseFloat(document.getElementById('brain-importance').value),
+    visibility: document.getElementById('brain-visibility').value,
+  };
+  const msg = document.getElementById('brain-save-msg');
+  msg.textContent = 'Saving…';
+  msg.style.color = 'var(--text-muted)';
+  try {
+    const res = await fetch('/worldlink/brain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      msg.style.color = 'var(--green)';
+      msg.textContent = 'Saved!';
+      document.getElementById('brain-summary').value = '';
+      setTimeout(() => { msg.textContent = ''; }, 2000);
+      await loadBrain();
+      renderBrain();
+    } else {
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Error saving';
+    }
+  } catch(e) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Network error';
+  }
+}
+
+// ── Settings save ─────────────────────────────────────────────────
+async function saveSettings() {
+  const name = document.getElementById('settings-name').value.trim();
+  const msg = document.getElementById('settings-save-msg');
+  msg.textContent = 'Saving…';
+  try {
+    const res = await fetch('/worldlink/local/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ worldName: name }),
+    });
+    msg.style.color = res.ok ? 'var(--green)' : 'var(--red)';
+    msg.textContent = res.ok ? 'Saved!' : 'Not saved (no settings endpoint yet)';
+    if (res.ok) setTimeout(() => { msg.textContent = ''; }, 2000);
+  } catch {
+    msg.style.color = 'var(--text-muted)';
+    msg.textContent = 'Settings endpoint not available';
+  }
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Escape ────────────────────────────────────────────────────────
+function escHTML(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
+
+// ── Message badge ─────────────────────────────────────────────────
+function updateMsgBadge() {
+  const unread = _state.messages.filter(m => !m.read).length;
+  const badge = document.getElementById('msg-badge');
+  if (unread > 0) { badge.textContent = unread; badge.style.display = 'flex'; }
+  else { badge.style.display = 'none'; }
+}
+
+// ── Data loading ──────────────────────────────────────────────────
+async function loadBrain() {
+  try {
+    const r = await fetch('/worldlink/local/brain');
+    const d = await r.json();
+    _state.brain = d.records || [];
+  } catch {}
+}
+
+async function refreshAll() {
+  try {
+    const [peersRes, tasksRes, auditRes, msgsRes, brainRes] = await Promise.all([
+      fetch('/worldlink/peers').then(r => r.json()).catch(() => ({})),
+      fetch('/worldlink/tasks').then(r => r.json()).catch(() => ({})),
+      fetch('/worldlink/audit').then(r => r.json()).catch(() => ({})),
+      fetch('/worldlink/local/messages').then(r => r.json()).catch(() => ({})),
+      fetch('/worldlink/local/brain').then(r => r.json()).catch(() => ({})),
+    ]);
+
+    _state.peers = peersRes.peers || [];
+    _state.tasks = tasksRes.tasks || [];
+    _state.audit = auditRes.events || [];
+    _state.capabilities = peersRes.capabilities || [];
+    _state.brain = brainRes.records || [];
+
+    // Merge messages — preserve read status
+    const newMsgs = msgsRes.messages || [];
+    const readIds = new Set(_state.messages.filter(m => m.read).map(m => m.id));
+    _state.messages = newMsgs.map(m => ({ ...m, read: readIds.has(m.id) }));
+
+    // Update world ID + name from peers endpoint (includes own identity)
+    if (peersRes.worldId && !_state.worldId) {
+      _state.worldId = peersRes.worldId;
+      _state.worldName = peersRes.worldName || 'My World';
+    }
+
+    // Update topbar
+    const shortId = _state.worldId ? _state.worldId.slice(0, 20) + '…' : 'Not initialized';
+    document.getElementById('topbar-id-text').textContent = (_state.worldName || 'WorldLink') + ' · ' + shortId;
+
+    // Port from manifest
+    if (!_state.port) {
+      try {
+        const mf = await fetch('/worldlink/manifest').then(r => r.json());
+        _state.port = window.location.port || '7461';
+        _state.capabilities = mf.capabilities || [];
+        document.getElementById('listen-port').textContent = `Listening on :${_state.port}`;
+        document.getElementById('footer-version').textContent = 'v1.x';
+      } catch {}
+    }
+
+    renderOverview();
+    renderWorldViz();
+    renderPeers();
+    renderTasks();
+    renderArtifacts();
+    renderBrain();
+    renderMessages();
+    renderAuditFull();
+    renderSettings();
+    updateMsgBadge();
+    document.getElementById('my-uptime').textContent = uptime();
+
+  } catch(e) {
+    console.error('Refresh failed:', e);
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+document.getElementById('listen-port').textContent = `Listening on :${window.location.port || '7461'}`;
+refreshAll();
+setInterval(refreshAll, 5000);
+setInterval(() => {
+  document.getElementById('my-uptime').textContent = uptime();
+}, 30000);
 </script>
 </body>
 </html>
