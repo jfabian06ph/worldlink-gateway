@@ -148,6 +148,142 @@ async function cmdDeny() {
   } catch (e) { console.error('Error:', e.message); }
 }
 
+async function cmdBrain() {
+  const sub = args[0];
+
+  if (sub === 'add') {
+    // worldlink-gateway brain add "summary" [--type X] [--scope X] [--importance 0.9] [--visibility pod]
+    const summaryArg = args.find(a => !a.startsWith('--') && a !== 'add');
+    if (!summaryArg) {
+      console.error('Usage: worldlink-gateway brain add "<summary>" [--type decision|constraint|goal|context|fact] [--scope project:X] [--importance 0.5] [--visibility pod|self]');
+      process.exit(1);
+    }
+    const flag = (name, def) => {
+      const i = args.indexOf(`--${name}`);
+      return i !== -1 ? args[i + 1] : def;
+    };
+    const payload = {
+      summary:    summaryArg,
+      type:       flag('type', 'fact'),
+      scope:      flag('scope', 'global'),
+      importance: parseFloat(flag('importance', '0.5')),
+      visibility: [flag('visibility', 'self')],
+      source:     'manual',
+    };
+    try {
+      const result = await apiCall('POST', '/worldlink/brain', payload);
+      if (result.error) { console.error('Error:', result.error); process.exit(1); }
+      console.log(`\n  Memory saved`);
+      console.log(`  ID         : ${result.id}`);
+      console.log(`  Type       : ${result.type}`);
+      console.log(`  Scope      : ${result.scope}`);
+      console.log(`  Importance : ${result.importance}`);
+      console.log(`  Visibility : ${result.visibility?.join(', ')}`);
+      console.log(`  Summary    : ${result.summary}\n`);
+    } catch (e) { console.error('Could not reach gateway:', e.message); }
+    return;
+  }
+
+  if (sub === 'list') {
+    const flag = (name) => { const i = args.indexOf(`--${name}`); return i !== -1 ? args[i + 1] : undefined; };
+    const scope = flag('scope');
+    const type  = flag('type');
+    const qs    = new URLSearchParams();
+    if (scope) qs.set('scope', scope);
+    if (type)  qs.set('type', type);
+    try {
+      const result = await apiCall('GET', `/worldlink/brain?${qs}`);
+      if (result.error) { console.error('Error:', result.error); process.exit(1); }
+      const records = result.records || [];
+      if (!records.length) { console.log('\n  No memory records.\n'); return; }
+      console.log(`\n  WorldLink Memory (${records.length} records)\n`);
+      for (const r of records) {
+        const vis = r.visibility?.join(',') || 'self';
+        console.log(`  ${r.id}  [${r.type}]  scope:${r.scope}  importance:${r.importance}  vis:${vis}`);
+        console.log(`    ${r.summary}`);
+        console.log(`    created: ${r.createdAt}  source: ${r.source}`);
+        console.log();
+      }
+    } catch (e) { console.error('Could not reach gateway:', e.message); }
+    return;
+  }
+
+  if (sub === 'remove') {
+    const id = args[1];
+    if (!id) { console.error('Usage: worldlink-gateway brain remove <id>'); process.exit(1); }
+    try {
+      const result = await apiCall('DELETE', `/worldlink/brain/${id}`);
+      if (result.error) { console.error('Error:', result.error); process.exit(1); }
+      console.log(`Removed: ${result.deleted}`);
+    } catch (e) { console.error('Could not reach gateway:', e.message); }
+    return;
+  }
+
+  if (sub === 'share' || sub === 'unshare') {
+    const [, id, peerRef] = args;
+    if (!id || !peerRef) {
+      console.error(`Usage: worldlink-gateway brain ${sub} <id> <worldId-or-worldName>`);
+      process.exit(1);
+    }
+    try {
+      // Resolve peer name → worldId
+      const peersRes = await apiCall('GET', '/worldlink/peers');
+      const peers = peersRes.peers || [];
+      const peer  = peers.find(p => p.worldId === peerRef || (p.worldName || '').toLowerCase() === peerRef.toLowerCase());
+      if (!peer) {
+        console.error(`No connected peer matching "${peerRef}". Run: worldlink-gateway status`);
+        process.exit(1);
+      }
+
+      // Fetch current record
+      const record = await apiCall('GET', `/worldlink/brain/${id}`);
+      if (record.error) { console.error('Error:', record.error); process.exit(1); }
+
+      const current = record.sharedWith || [];
+      let next;
+      if (sub === 'share') {
+        next = current.includes(peer.worldId) ? current : [...current, peer.worldId];
+      } else {
+        next = current.filter(w => w !== peer.worldId);
+      }
+
+      const updated = await apiCall('PATCH', `/worldlink/brain/${id}`, { sharedWith: next });
+      if (updated.error) { console.error('Error:', updated.error); process.exit(1); }
+      const action = sub === 'share' ? 'Shared with' : 'Unshared from';
+      console.log(`${action} ${peer.worldName || peer.worldId} (${peer.worldId})`);
+      console.log(`sharedWith: ${updated.sharedWith?.join(', ') || '(none)'}`);
+    } catch (e) { console.error('Could not reach gateway:', e.message); }
+    return;
+  }
+
+  console.error(`
+  worldlink-gateway brain — WorldLink Memory
+
+  Subcommands:
+    brain add "<summary>"           Add a memory record
+      --type    decision|constraint|goal|context|fact  (default: fact)
+      --scope   global|project:X|sprint:X              (default: global)
+      --importance  0.0–1.0                            (default: 0.5)
+      --visibility  self|pod                           (default: self)
+
+    brain list                      List all memory records
+      --scope   filter by scope
+      --type    filter by type
+
+    brain remove <id>               Delete a memory record
+    brain share <id> <peer>         Share a record with a connected peer
+    brain unshare <id> <peer>       Revoke sharing from a peer
+
+  Examples:
+    worldlink-gateway brain add "Use REST v2 for all new endpoints" --type decision --scope project:my-app --importance 0.9
+    worldlink-gateway brain add "Node.js minimum version is 18+" --type constraint --scope global
+    worldlink-gateway brain list --scope project:my-app
+    worldlink-gateway brain remove mem_abc123
+    worldlink-gateway brain share mem_abc123 karlo-android
+    worldlink-gateway brain unshare mem_abc123 karlo-android
+`);
+}
+
 async function cmdHelp() {
   console.log(`
   worldlink-gateway — WorldLink standalone gateway
@@ -161,6 +297,7 @@ async function cmdHelp() {
     request <worldId> <cap> "<prompt>"  Send a task to a peer
     approve <taskId>    Approve a pending-approval task (local)
     deny <taskId>       Deny a pending-approval task (local)
+    brain <sub>         Manage WorldLink Memory (add / list / remove)
     help                Show this help
 
   Environment:
@@ -192,6 +329,7 @@ const commands = {
   request: cmdRequest,
   approve: cmdApprove,
   deny:    cmdDeny,
+  brain:   cmdBrain,
   help:    cmdHelp,
 };
 

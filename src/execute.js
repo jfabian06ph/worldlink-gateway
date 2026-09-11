@@ -3,10 +3,23 @@ const fs   = require('fs');
 const path = require('path');
 const os   = require('os');
 
-async function runTask(task) {
+async function runTask(task, brainRecords = []) {
   const { taskId, capability, prompt, sharedContext, attachments } = task;
 
-  let fullPrompt = `[WorldLink — capability: ${capability}]\n\n${prompt}`;
+  let fullPrompt = '';
+
+  // Inject own brain context — keyword-matched records relevant to this task
+  if (brainRecords.length) {
+    fullPrompt += `WORLDLINK MEMORY CONTEXT\n`;
+    fullPrompt += `The following records are from your world's own memory.\n`;
+    fullPrompt += `Use them as background knowledge when completing the task.\n\n`;
+    for (const r of brainRecords) {
+      fullPrompt += `  [${r.type}] ${r.scope} — ${r.summary}\n`;
+    }
+    fullPrompt += `\n`;
+  }
+
+  fullPrompt += `[WorldLink — capability: ${capability}]\n\n${prompt}`;
   if (sharedContext && Object.keys(sharedContext).length > 0) {
     fullPrompt += `\n\nContext from requesting world:\n${JSON.stringify(sharedContext, null, 2)}`;
   }
