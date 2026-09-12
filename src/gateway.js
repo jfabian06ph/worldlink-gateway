@@ -87,6 +87,7 @@ function createGateway(opts = {}) {
     const connectPayload = {
       sourceWorldId: wlId.worldId,
       sourcePublicKey: wlId.publicKey,
+      sourceHost: `http://localhost:${port}`,
       requestedCapabilities: manifest.capabilities?.map(c => c.id) || [],
       nonce: crypto.randomBytes(16).toString('hex'),
       timestamp: Math.floor(Date.now() / 1000),
@@ -181,7 +182,7 @@ function createGateway(opts = {}) {
       // POST /worldlink/connect
       if (req.method === 'POST' && req.url === '/worldlink/connect') {
         const b = await body();
-        const { sourceWorldId, sourcePublicKey, requestedCapabilities = [], timestamp, signature } = b;
+        const { sourceWorldId, sourcePublicKey, sourceHost, requestedCapabilities = [], timestamp, signature } = b;
         if (!sourceWorldId || !sourcePublicKey) { json(400, { error: 'sourceWorldId and sourcePublicKey required' }); return; }
         if (timestamp && Math.abs(Date.now() - timestamp * 1000) > 300_000) { json(400, { error: 'Request expired' }); return; }
         if (signature && !identity.verify(b, signature, sourcePublicKey)) { json(401, { error: 'Invalid signature' }); return; }
@@ -194,7 +195,7 @@ function createGateway(opts = {}) {
         const expiresAt    = Math.floor(Date.now() / 1000) + 3600;
         const challenge    = crypto.randomBytes(32).toString('hex');
         sessions.set(sessionToken, {
-          worldId: sourceWorldId, publicKey: sourcePublicKey,
+          worldId: sourceWorldId, publicKey: sourcePublicKey, host: sourceHost || null,
           grantedCapabilities: available.map(c => c.id),
           trusted: !!trusted, expiresAt, challenge, confirmed: !!trusted,
         });
@@ -211,9 +212,15 @@ function createGateway(opts = {}) {
         if (!s || s.worldId !== sourceWorldId) { json(401, { error: 'Invalid session' }); return; }
         if (!identity.verifyChallenge(s.challenge, challengeResponse, s.publicKey)) { json(401, { error: 'Challenge failed' }); return; }
         s.confirmed = true; sessions.set(sessionToken, s);
-        peers.set(sourceWorldId, { ...(peers.get(sourceWorldId) || {}), status: 'online', sessionToken, lastSeen: Date.now() });
+        // Only update status/host — do NOT overwrite sessionToken (that's our outbound key, set by initiateConnection)
+        const existing = peers.get(sourceWorldId) || {};
+        peers.set(sourceWorldId, { ...existing, status: 'online', inboundToken: sessionToken, host: s.host || null, lastSeen: Date.now() });
         audit.write({ type: 'connection.established', sourceWorld: sourceWorldId, timestamp: Math.floor(Date.now() / 1000) });
         json(200, { confirmed: true, sessionToken });
+        // Auto-reverse-connect so we get a valid outbound sessionToken for messaging (only if we don't have one yet)
+        if (s.host && !peers.get(sourceWorldId)?.sessionToken) {
+          setTimeout(() => initiateConnection(s.host).catch(() => {}), 500);
+        }
         return;
       }
 
@@ -472,10 +479,15 @@ function createGateway(opts = {}) {
         const peer = peers.get(targetWorldId);
         if (!peer?.sessionToken || !peer.host) { json(404, { error: `Not connected to: ${targetWorldId}` }); return; }
         try {
-          await wlFetch(`${peer.host}/worldlink/message`, {
+          const resp = await wlFetch(`${peer.host}/worldlink/message`, {
             method: 'POST', token: peer.sessionToken,
             body: { text, fromWorld: wlId?.worldId },
           });
+          if (resp.error) {
+            console.error(`  [WorldLink] Message rejected by ${targetWorldId}:`, resp.error);
+            json(502, { error: `Peer rejected message: ${resp.error}` });
+            return;
+          }
           audit.write({ type: 'message.sent', targetWorld: targetWorldId, timestamp: Math.floor(Date.now() / 1000) });
           json(200, { ok: true });
         } catch (e) { json(502, { error: `Could not reach ${targetWorldId}: ${e.message}` }); }
