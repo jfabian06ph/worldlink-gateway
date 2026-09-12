@@ -579,7 +579,490 @@ body {
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .view-all-link { font-size: 12px; color: var(--cyan); cursor: pointer; }
 .view-all-link:hover { text-decoration: underline; }
+
+/* ── Overview: full-height spatial view ─────────────────────────── */
+.content.content-spatial { padding: 0; overflow: hidden; }
+#page-overview { height: 100%; display: none; flex-direction: column; }
+#page-overview.active { display: flex; }
+#world-scene-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  background: #060d1a;
+  overflow: hidden;
+}
+/* ── World loading splash ─────────────────────────────────────────── */
+#world-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #060d1a;
+  gap: 28px;
+  transition: opacity .55s ease;
+  pointer-events: none;
+}
+#world-loading.fade-out { opacity: 0; }
+#world-loading.gone { display: none; }
+.wl-splash-orb {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 36%, #f97316 0%, #c2410c 60%, #7c2d12 100%);
+  box-shadow: 0 0 0 0 rgba(249,115,22,.55);
+  animation: wl-orb-pulse 2s ease-in-out infinite;
+}
+@keyframes wl-orb-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(249,115,22,.55), 0 0 18px 4px rgba(249,115,22,.18); }
+  50%      { box-shadow: 0 0 0 14px rgba(249,115,22,0), 0 0 28px 8px rgba(249,115,22,.28); }
+}
+.wl-splash-orb.ready {
+  background: radial-gradient(circle at 38% 36%, #22d3ee 0%, #0891b2 60%, #164e63 100%);
+  animation: wl-orb-pulse-cyan 1s ease-in-out 1;
+}
+@keyframes wl-orb-pulse-cyan {
+  0%   { box-shadow: 0 0 0 0 rgba(6,182,212,.7), 0 0 18px 4px rgba(6,182,212,.22); }
+  60%  { box-shadow: 0 0 0 22px rgba(6,182,212,0), 0 0 38px 12px rgba(6,182,212,.36); }
+  100% { box-shadow: 0 0 0 0 rgba(6,182,212,0), 0 0 18px 4px rgba(6,182,212,.22); }
+}
+.wl-splash-text {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.wl-splash-world {
+  font: 600 18px/1 -apple-system,sans-serif;
+  color: #f1f5f9;
+  letter-spacing: .01em;
+  min-height: 22px;
+  transition: opacity .3s;
+}
+.wl-splash-sub {
+  font: 400 12px/1 -apple-system,sans-serif;
+  color: #475569;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.wl-splash-dots {
+  display: flex; gap: 5px; margin-top: 4px;
+}
+.wl-splash-dots span {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: #1e3a5c;
+  animation: wl-dot-bounce .9s ease-in-out infinite;
+}
+.wl-splash-dots span:nth-child(2) { animation-delay: .15s; }
+.wl-splash-dots span:nth-child(3) { animation-delay: .30s; }
+@keyframes wl-dot-bounce {
+  0%,80%,100% { background: #1e3a5c; transform: scale(1); }
+  40%          { background: #06b6d4; transform: scale(1.5); }
+}
+
+#world-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13,25,41,0.82);
+  border: 1px solid rgba(6,182,212,0.18);
+  border-radius: 20px;
+  padding: 7px 18px;
+  font: 500 12px/1 -apple-system,sans-serif;
+  color: #64748b;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity .4s;
+  z-index: 3;
+}
+#world-peer-count {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(13,25,41,0.75);
+  border: 1px solid rgba(6,182,212,0.15);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font: 500 11px/1 -apple-system,sans-serif;
+  color: #64748b;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── World labels ─────────────────────────────────────────────────── */
+#world-label-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.world-label {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(6,13,26,0.82);
+  border: 1px solid rgba(6,182,212,0.2);
+  border-radius: 8px;
+  padding: 6px 11px 5px;
+  white-space: nowrap;
+  transition: opacity .25s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.wl-lbl-name {
+  font: 600 12px/1 -apple-system,sans-serif;
+  color: #e2e8f0;
+  margin-bottom: 4px;
+}
+.wl-lbl-you {
+  font: 500 9px/1 -apple-system,sans-serif;
+  color: #f97316;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.wl-lbl-status { display: flex; align-items: center; gap: 5px; }
+.wl-lbl-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.wl-lbl-stxt { font: 400 10px/1 -apple-system,sans-serif; color: #64748b; text-transform: capitalize; }
+
+/* ── Session drawer ───────────────────────────────────────────────── */
+#session-drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 38%;
+  min-width: 340px;
+  max-width: 500px;
+  background: #0d1929;
+  border-left: 1px solid #1a3a5c;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  transform: translateX(102%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow: -8px 0 32px rgba(0,0,0,.5);
+}
+#session-drawer.open { transform: translateX(0); }
+.session-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #1a3a5c;
+  flex-shrink: 0;
+}
+.session-back {
+  background: transparent;
+  border: 1px solid #1a3a5c;
+  color: #64748b;
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+  font-family: inherit;
+  line-height: 1;
+}
+.session-back:hover { border-color: var(--cyan); color: var(--cyan); }
+.session-title-group { flex: 1; min-width: 0; }
+.session-name { font: 700 15px/1.2 -apple-system,sans-serif; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.session-status-row { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+.session-status-txt { font: 400 11px/1 -apple-system,sans-serif; color: #64748b; text-transform: capitalize; }
+.session-close-btn {
+  background: transparent; border: none; color: #64748b;
+  cursor: pointer; font-size: 16px; line-height: 1; padding: 4px;
+  flex-shrink: 0; transition: color .15s; font-family: inherit;
+}
+.session-close-btn:hover { color: #f1f5f9; }
+.session-tabs {
+  display: flex;
+  border-bottom: 1px solid #1a3a5c;
+  padding: 0 14px;
+  flex-shrink: 0;
+}
+.session-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font: 500 12px/1 -apple-system,sans-serif;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  margin-bottom: -1px;
+}
+.session-tab:hover { color: #e2e8f0; }
+.session-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.session-timeline {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.session-timeline::-webkit-scrollbar { width: 4px; }
+.session-timeline::-webkit-scrollbar-thumb { background: #1a3a5c; border-radius: 2px; }
+.session-empty { color: #64748b; font: 13px/1.6 -apple-system,sans-serif; text-align: center; padding: 40px 0; }
+.tl-entry { display: flex; flex-direction: column; }
+.tl-mine { align-items: flex-end; }
+.tl-theirs { align-items: flex-start; }
+.tl-bubble {
+  max-width: 85%;
+  padding: 9px 13px;
+  border-radius: 12px;
+  font: 13px/1.55 -apple-system,sans-serif;
+  word-break: break-word;
+}
+.tl-mine .tl-bubble {
+  background: rgba(6,182,212,0.16);
+  border: 1px solid rgba(6,182,212,0.25);
+  color: #e2e8f0;
+  border-bottom-right-radius: 4px;
+}
+.tl-theirs .tl-bubble {
+  background: #111f35;
+  border: 1px solid #1a3a5c;
+  color: #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+.tl-time { font: 10px/1 -apple-system,sans-serif; color: #64748b; margin-top: 4px; padding: 0 4px; }
+.tl-task { align-items: stretch; }
+.tl-task-card {
+  background: #111f35;
+  border: 1px solid #1a3a5c;
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+.tl-task-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+.tl-task-prompt { font: 12px/1.5 -apple-system,sans-serif; color: #64748b; }
+.tl-artifact {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px;
+  background: #111f35;
+  border: 1px solid #1a3a5c;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.tl-artifact:hover { border-color: var(--cyan); }
+.tl-artifact-icon { font-size: 18px; flex-shrink: 0; }
+.tl-artifact-meta { flex: 1; min-width: 0; }
+.tl-artifact-name { font: 600 13px/1 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-artifact-time { font: 11px/1 -apple-system,sans-serif; color: #64748b; }
+.tl-artifact-arrow { color: #64748b; font-size: 14px; }
+
+/* ── Session composer ─────────────────────────────────────────────── */
+.session-composer {
+  padding: 10px 16px 14px;
+  border-top: 1px solid #1a3a5c;
+  flex-shrink: 0;
+}
+.composer-cap-row { display: none; margin-bottom: 8px; align-items: center; gap: 8px; }
+.composer-cap-row.visible { display: flex; }
+.composer-row { display: flex; align-items: flex-end; gap: 8px; position: relative; }
+.composer-type-btn {
+  background: #111f35;
+  border: 1px solid #1a3a5c;
+  color: #64748b;
+  font: 500 11px/1 -apple-system,sans-serif;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all .15s;
+  font-family: inherit;
+}
+.composer-type-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.composer-type-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 6px;
+  background: #0d1929;
+  border: 1px solid #1a3a5c;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 60;
+  min-width: 130px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.6);
+  display: none;
+}
+.composer-type-menu.open { display: block; }
+.composer-type-item {
+  padding: 9px 14px;
+  font: 500 12px/1 -apple-system,sans-serif;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: background .1s;
+}
+.composer-type-item:hover { background: #111f35; }
+.composer-input {
+  flex: 1;
+  background: #111f35;
+  border: 1px solid #1a3a5c;
+  color: #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: 13px/1.5 -apple-system,sans-serif;
+  outline: none;
+  resize: none;
+  min-height: 36px;
+  max-height: 120px;
+  transition: border-color .15s;
+  font-family: inherit;
+  overflow-y: auto;
+}
+.composer-input:focus { border-color: var(--cyan); }
+.composer-input::placeholder { color: #374151; }
+.composer-send-btn {
+  background: var(--cyan);
+  border: none;
+  color: #000;
+  font: 700 15px/1 -apple-system,sans-serif;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: opacity .15s;
+}
+.composer-send-btn:hover { opacity: 0.85; }
+@keyframes wl-pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+/* ── Connections page ───────────────────────────────────────────── */
+.conn-identity-card {
+  display: flex; align-items: center; gap: 14px;
+  background: #0d1929; border: 1px solid #1a3a5c; border-radius: 12px;
+  padding: 16px 18px; margin-bottom: 10px;
+}
+.conn-identity-orb {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: radial-gradient(circle at 38% 36%, #f97316 0%, #c2410c 55%, #7c2d12 100%);
+  box-shadow: 0 0 12px rgba(249,115,22,.35);
+}
+.conn-identity-body { flex: 1; min-width: 0; }
+.conn-identity-label { font: 500 10px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 5px; }
+.conn-identity-name { font: 700 16px/1.2 -apple-system,sans-serif; color: #f1f5f9; }
+.conn-identity-id { font: 400 11px/1 -apple-system,sans-serif; color: #475569; font-family: monospace; margin-top: 3px; }
+.conn-edit-name-btn { background: transparent; border: 1px solid #1a3a5c; color: #475569; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.conn-edit-name-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.conn-name-editor { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.conn-share-row { background: rgba(6,182,212,0.05); border: 1px solid rgba(6,182,212,0.15); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
+.conn-share-label { font: 500 11px/1 -apple-system,sans-serif; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing:.05em; }
+.conn-share-url-row { display: flex; align-items: center; gap: 8px; }
+.conn-share-url { font: 500 13px/1 monospace; color: #06b6d4; word-break: break-all; flex: 1; }
+.conn-copy-btn { background: transparent; border: 1px solid rgba(6,182,212,0.3); color: #06b6d4; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all .15s; flex-shrink: 0; }
+.conn-copy-btn:hover { background: rgba(6,182,212,0.1); }
+.conn-section-title { font: 600 11px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 10px; display:flex; align-items:baseline; gap:8px; }
+.conn-cap-subtitle { font: 400 11px/1 -apple-system,sans-serif; color: #334155; text-transform: none; letter-spacing: 0; }
+.conn-caps-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.conn-cap-row {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: #0d1929; border: 1px solid #1a3a5c; border-radius: 10px;
+  padding: 14px 16px; transition: border-color .2s;
+}
+.conn-cap-row.enabled { border-color: #0e4d6e; }
+.conn-cap-body { flex: 1; min-width: 0; }
+.conn-cap-label { font: 600 13px/1.2 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 4px; }
+.conn-cap-desc { font: 400 12px/1.4 -apple-system,sans-serif; color: #475569; }
+.conn-cap-badge { display:inline-block; font: 500 10px/1 -apple-system,sans-serif; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+.conn-cap-badge.approval { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+.conn-cap-warning {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: #1a1200; border: 1px solid #3d2e00; border-radius: 8px;
+  padding: 10px 14px; margin-bottom: 16px;
+  font: 400 12px/1.5 -apple-system,sans-serif; color: #94804a;
+}
+.conn-cap-warning-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.conn-peer-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #0d1929; border: 1px solid #1a3a5c; border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 8px; transition: border-color .2s;
+}
+.conn-peer-card:hover { border-color: #234d6e; }
+.conn-peer-orb { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
+.conn-peer-body { flex: 1; min-width: 0; }
+.conn-peer-name { font: 600 14px/1.2 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 3px; }
+.conn-peer-meta { font: 11px/1 -apple-system,sans-serif; color: #475569; }
+/* Toggle switch */
+.conn-toggle-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.conn-toggle-label { font: 500 11px/1 -apple-system,sans-serif; color: #475569; }
+.conn-toggle {
+  width: 42px; height: 24px; border-radius: 12px;
+  background: #1a2d42; border: none; cursor: pointer; position: relative;
+  transition: background .2s; flex-shrink: 0; outline: none;
+}
+.conn-toggle.on { background: #0e7490; }
+.conn-toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #475569; transition: left .2s, background .2s;
+}
+.conn-toggle.on::after { left: 21px; background: #06b6d4; }
+.conn-disconnect-btn { background: transparent; border: 1px solid #2d1a1a; color: #64748b; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.conn-disconnect-btn:hover { border-color: #ef4444; color: #ef4444; }
+.conn-form { display: flex; gap: 8px; margin-bottom: 8px; }
+.conn-form-hint { font: 12px/1.4 -apple-system,sans-serif; color: #475569; min-height: 18px; }
+
+/* ── Unified session timeline ───────────────────────────────────── */
+.tl-sender { font: 600 10px/1 -apple-system,sans-serif; color: #475569; margin-bottom: 4px; letter-spacing:.04em; text-transform: uppercase; }
+.tl-sender-mine { text-align: right; color: #0e7490; }
+.tl-bubble-mine {
+  background: rgba(6,182,212,0.13);
+  border: 1px solid rgba(6,182,212,0.28);
+  color: #e2e8f0;
+  border-bottom-right-radius: 4px;
+}
+.tl-time-right { text-align: right; }
+/* System events — task/artifact inline rows */
+.tl-system-event {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid #1a2d42;
+  border-radius: 8px;
+  font: 12px/1.45 -apple-system,sans-serif;
+}
+.tl-sys-icon { font-size: 13px; flex-shrink: 0; line-height: 1.5; }
+.tl-sys-body { flex: 1; min-width: 0; }
+.tl-sys-cap { font-weight: 600; color: #94a3b8; margin-right: 6px; }
+.tl-sys-status { color: #475569; font-size: 11px; }
+.tl-sys-prompt { color: #64748b; font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-task-approvals { display: flex; gap: 6px; margin-top: 7px; }
+.tl-artifact-inline {
+  margin-top: 6px; padding: 6px 10px;
+  background: rgba(6,182,212,0.07);
+  border: 1px solid rgba(6,182,212,0.18);
+  border-radius: 6px;
+  font: 500 11px/1 -apple-system,sans-serif;
+  color: #94a3b8; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.tl-artifact-inline:hover { border-color: rgba(6,182,212,0.45); color: #e2e8f0; }
+.tl-artifact-open { margin-left: auto; color: #06b6d4; font-size: 10px; }
+
+/* ── Memory tab ─────────────────────────────────────────────────── */
+.mem-section-label { font: 600 10px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 8px; }
+.mem-record {
+  padding: 9px 11px; margin-bottom: 7px;
+  background: #111f35; border: 1px solid #1a3a5c; border-radius: 8px;
+}
+.mem-record-local { opacity: 0.6; }
+.mem-record-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.mem-type { font: 600 10px/1 -apple-system,sans-serif; color: #06b6d4; text-transform: uppercase; letter-spacing:.06em; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 4px; padding: 2px 6px; }
+.mem-time { font: 10px/1 -apple-system,sans-serif; color: #475569; margin-left: auto; }
+.mem-summary { font: 12px/1.5 -apple-system,sans-serif; color: #94a3b8; }
 </style>
+<!-- Three.js r134 — global build matching Adrian World visual system -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
@@ -592,6 +1075,10 @@ body {
   <div class="sidebar-nav">
     <div class="nav-item active" data-page="overview" onclick="navigate('overview', this)">
       <span class="nav-icon">◉</span> Overview
+    </div>
+    <div class="nav-item" data-page="connections" onclick="navigate('connections', this)">
+      <span class="nav-icon">⇌</span> Connections
+      <span class="nav-badge" id="conn-badge" style="display:none">!</span>
     </div>
     <div class="nav-item" data-page="peers" onclick="navigate('peers', this)">
       <span class="nav-icon">⬡</span> Peers
@@ -641,72 +1128,85 @@ body {
   </div>
 
   <div class="content">
-    <!-- Overview -->
+    <!-- Overview — Spatial world view -->
     <div class="page active" id="page-overview">
-      <!-- World visualization -->
-      <div class="world-viz" id="world-viz"></div>
-
-      <!-- 3-column cards -->
-      <div class="grid-3">
-        <!-- My World -->
-        <div class="card">
-          <div class="card-title">My World</div>
-          <div class="world-name-row">
-            <span class="world-name" id="my-world-name">—</span>
-            <span class="status-dot online"></span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">World ID</span>
-            <span class="info-val truncate" id="my-world-id" style="max-width:100px;font-size:11px;font-family:monospace">—</span>
-            <button class="copy-btn" onclick="copyWorldId()" title="Copy World ID">⎘</button>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Uptime</span>
-            <span class="info-val" id="my-uptime">—</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Peers</span>
-            <span class="info-val" id="my-peers-count">—</span>
-          </div>
-          <div class="caps-row" id="my-caps"></div>
-        </div>
-
-        <!-- Connected Peers -->
-        <div class="card">
-          <div class="card-title">Connected Peers</div>
-          <div id="ov-peers-list">
-            <div class="empty-state"><div class="empty-icon">⬡</div>No peers connected</div>
+      <div id="world-scene-wrap">
+        <div id="world-loading">
+          <div class="wl-splash-orb" id="wl-splash-orb"></div>
+          <div class="wl-splash-text">
+            <div class="wl-splash-world" id="wl-splash-world">Locating your world…</div>
+            <div class="wl-splash-sub" id="wl-splash-sub">WorldLink Gateway</div>
+            <div class="wl-splash-dots"><span></span><span></span><span></span></div>
           </div>
         </div>
-
-        <!-- Recent Tasks -->
-        <div class="card">
-          <div class="flex" style="justify-content:space-between;margin-bottom:16px;">
-            <span class="card-title" style="margin-bottom:0">Recent Tasks</span>
-            <span class="view-all-link" onclick="navigate('tasks')">View All →</span>
-          </div>
-          <div id="ov-tasks-list">
-            <div class="empty-state"><div class="empty-icon">⚙</div>No tasks yet</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Messages card (shown when messages exist) -->
-      <div class="card" id="ov-messages-card" style="display:none;margin-bottom:16px;">
-        <div class="card-title">Messages</div>
-        <div id="ov-messages-list"></div>
-      </div>
-
-      <!-- Audit log -->
-      <div class="card">
-        <div class="card-title">Audit Log <span style="opacity:0.5;font-weight:400;font-size:11px;">(last 10)</span></div>
-        <div class="audit-scroll" id="ov-audit-list">
-          <div class="empty-state" style="padding:16px"><div class="empty-icon">☰</div>No events</div>
-        </div>
+        <div id="world-label-layer"></div>
+        <div id="world-hint">Click a world to open its session</div>
+        <div id="world-peer-count"></div>
       </div>
     </div>
 
     <!-- Peers -->
+    <!-- ── Connections page ──────────────────────────────────────────── -->
+    <div class="page" id="page-connections">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Connections</div>
+          <div class="section-sub">Connect to other WorldLink worlds and manage active links.</div>
+        </div>
+      </div>
+
+      <!-- Your identity card -->
+      <div class="conn-identity-card" id="conn-identity-card">
+        <div class="conn-identity-orb"></div>
+        <div class="conn-identity-body">
+          <div class="conn-identity-label">Your World</div>
+          <div class="conn-identity-name" id="conn-my-name">—</div>
+          <div class="conn-identity-id" id="conn-my-id">—</div>
+        </div>
+        <button class="conn-edit-name-btn" onclick="startEditName()" id="conn-edit-btn" title="Edit world name">✎</button>
+      </div>
+      <!-- Inline name editor (hidden by default) -->
+      <div class="conn-name-editor" id="conn-name-editor" style="display:none">
+        <input class="form-input" id="conn-name-input" placeholder="Enter your world name…" maxlength="48" style="flex:1;" onkeydown="if(event.key==='Enter')saveWorldName();if(event.key==='Escape')cancelEditName();">
+        <button class="btn-primary" onclick="saveWorldName()">Save</button>
+        <button class="btn" onclick="cancelEditName()">Cancel</button>
+      </div>
+
+      <!-- Share URL -->
+      <div class="conn-share-row" id="conn-share-row">
+        <div class="conn-share-label">Share this URL so others can connect to you</div>
+        <div class="conn-share-url-row">
+          <span class="conn-share-url" id="conn-share-url">loading…</span>
+          <button class="conn-copy-btn" onclick="copyShareUrl()" title="Copy">⎘</button>
+        </div>
+      </div>
+
+      <!-- Capabilities -->
+      <div class="conn-section-title" style="margin-top:28px;">
+        Your Capabilities
+        <span class="conn-cap-subtitle">What other worlds are allowed to do when they connect to you</span>
+      </div>
+      <div id="conn-caps-list" class="conn-caps-list"></div>
+      <div class="conn-cap-warning">
+        <span class="conn-cap-warning-icon">⚠</span>
+        <span>Both worlds must share at least one matching capability for a connection to succeed. Enable <strong>Message Exchange</strong> as a minimum to allow basic connections.</span>
+      </div>
+
+      <!-- Connected peers -->
+      <div class="conn-section-title" style="margin-top:28px;">Connected Worlds</div>
+      <div id="conn-peers-list">
+        <div class="session-empty" style="padding:24px 0;">No worlds connected yet.</div>
+      </div>
+
+      <!-- Connect form -->
+      <div class="conn-section-title" style="margin-top:24px;">Connect to a World</div>
+      <div class="conn-form">
+        <input class="form-input" id="conn-url-input" placeholder="Paste a WorldLink gateway URL…" style="flex:1;" onkeydown="if(event.key==='Enter')connectToWorld();">
+        <button class="btn-primary" id="conn-connect-btn" onclick="connectToWorld()">Connect →</button>
+      </div>
+      <div class="conn-form-hint" id="conn-form-status"></div>
+    </div>
+
     <div class="page" id="page-peers">
       <div class="card">
         <div class="card-title">All Peers</div>
@@ -841,12 +1341,55 @@ body {
   </div>
 </div>
 
+<!-- Session drawer -->
+<div id="session-drawer">
+  <div class="session-header">
+    <button class="session-back" onclick="closeSession()">←</button>
+    <div class="session-title-group">
+      <div id="session-name" class="session-name">—</div>
+      <div class="session-status-row">
+        <div id="session-status-dot" class="status-dot offline"></div>
+        <span id="session-status-txt" class="session-status-txt">offline</span>
+      </div>
+    </div>
+    <button class="session-close-btn" onclick="closeSession()">✕</button>
+  </div>
+  <div class="session-tabs">
+    <button class="session-tab active" data-tab="session" onclick="switchSessionTab('session')">Session</button>
+    <button class="session-tab" data-tab="memory" onclick="switchSessionTab('memory')">Memory</button>
+    <button class="session-tab" data-tab="info" onclick="switchSessionTab('info')">Info</button>
+  </div>
+  <div id="session-timeline" class="session-timeline">
+    <div class="session-empty">Select a world to start a session.</div>
+  </div>
+  <div class="session-composer">
+    <div class="composer-cap-row" id="composer-cap-row">
+      <select id="composer-cap-select" class="form-select" style="font-size:11px;padding:4px 8px;height:28px;" onchange="_gwCapChanged(this.value)"></select>
+    </div>
+    <div class="composer-row">
+      <button class="composer-type-btn" id="composer-type-btn" onclick="toggleComposerMenu()">Message ▾</button>
+      <div id="composer-type-menu" class="composer-type-menu">
+        <div class="composer-type-item" onclick="setComposerType('message')">💬 Message</div>
+        <div class="composer-type-item" onclick="setComposerType('task')">⚙ Task</div>
+      </div>
+      <textarea id="composer-input" class="composer-input" placeholder="Type a message or task…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComposerMsg();}"
+        oninput="this.dataset.autoFilled='';this.style.height='';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button class="composer-send-btn" onclick="sendComposerMsg()" title="Send">→</button>
+    </div>
+  </div>
+</div>
+
 <!-- Artifact modal -->
 <div class="modal-backdrop" id="modal-artifact">
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title">Artifact</span>
-      <button class="modal-close" onclick="closeModal('modal-artifact')">✕</button>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button id="artifact-send-btn" style="display:none;padding:4px 11px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);border-radius:7px;color:#06b6d4;font:500 11px -apple-system,sans-serif;cursor:pointer;" onclick="artifactSendAsMessage()">→ Send as message</button>
+        <button id="artifact-copy-btn" style="padding:4px 11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#94a3b8;font:500 11px -apple-system,sans-serif;cursor:pointer;" onclick="artifactCopy(this)">Copy</button>
+        <button class="modal-close" onclick="closeModal('modal-artifact')">✕</button>
+      </div>
     </div>
     <div class="artifact-content" id="artifact-body"></div>
   </div>
@@ -883,6 +1426,19 @@ function navigate(page, el) {
   if (pageEl) pageEl.classList.add('active');
   const navEl = el || document.querySelector(`.nav-item[data-page="${page}"]`);
   if (navEl) navEl.classList.add('active');
+  // Full-bleed spatial view for overview
+  const content = document.querySelector('.content');
+  if (content) content.classList.toggle('content-spatial', page === 'overview');
+  if (page === 'overview') {
+    requestAnimationFrame(() => {
+      const wrap = document.getElementById('world-scene-wrap');
+      if (wrap && _wrenderer) {
+        _wrenderer.setSize(wrap.clientWidth, wrap.clientHeight);
+        _wcamera.aspect = wrap.clientWidth / wrap.clientHeight;
+        _wcamera.updateProjectionMatrix();
+      }
+    });
+  }
   // Mark messages as read on visit
   if (page === 'messages') {
     _state.messages.forEach(m => m.read = true);
@@ -951,124 +1507,1201 @@ function statusBadge(s) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
-// ── World visualization ───────────────────────────────────────────
-function renderWorldViz() {
-  const peers = _state.peers.filter(p => p.status === 'online');
-  const myName = _state.worldName || 'My World';
-  const viz = document.getElementById('world-viz');
-  if (!viz) return;
+// ══════════════════════════════════════════════════════════════════
+//  WORLD VISUAL KIT — derived from Project Adrian (world.html)
+//  Inlined here so Gateway remains independently deployable.
+// ══════════════════════════════════════════════════════════════════
 
-  // Build SVG
-  const W = viz.clientWidth || 800;
-  const H = 220;
-  const cx = W / 2;
+let _wrenderer = null, _wscene, _wcamera, _wcontrols;
+let _wislands   = new Map(); // worldId → { group, labelEl }
+let _wMyGroup   = null, _wMyLabelEl = null;
+let _wArcs      = new Map(); // worldId → { line, geom, mat, curve }
+let _wPackets   = [];        // in-flight light packets
+let _wClouds    = [];        // all cloud groups for drift
 
-  // Island SVG drawing function (isometric cube stack)
-  function islandSVG(x, y, name, online, labelAbove) {
-    const tw = 54; const th = 28; // top face width/height
-    // top face: parallelogram-ish (flat-top iso)
-    // Points for top: left, front-left, front-right, right
-    const tl = { x: x - tw/2, y: y - th/2 };
-    const tr = { x: x + tw/2, y: y - th/2 };
-    const bl = { x: x - tw/2, y: y + th/2 };
-    const br = { x: x + tw/2, y: y + th/2 };
-    // Isometric tilt: left face goes down-left, right face goes down-right
-    const sideH = 22;
-    const leftFace = `${tl.x},${tl.y} ${bl.x},${bl.y} ${bl.x},${bl.y+sideH} ${tl.x},${tl.y+sideH}`;
-    const rightFace = `${br.x},${br.y} ${tr.x},${tr.y} ${tr.x},${tr.y+sideH} ${br.x},${br.y+sideH}`;
-    const frontFace = `${bl.x},${bl.y} ${br.x},${br.y} ${br.x},${br.y+sideH} ${bl.x},${bl.y+sideH}`;
-    const topFace = `${tl.x},${tl.y} ${tr.x},${tr.y} ${br.x},${br.y} ${bl.x},${bl.y}`;
+// ── Material helpers (mirrors world.html) ─────────────────────────
+function _wlm(c) { return new THREE.MeshLambertMaterial({ color: c }); }
+function _wsm(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.82, metalness: 0 }, o||{})); }
 
-    // Small tree on top
-    const treeX = x + 6;
-    const treeY = y - th/2 - 22;
-    const treeH = 16;
-    const treeW = 10;
-    const dot = online ? '#4ade80' : '#64748b';
-    const labelY = labelAbove ? y - th/2 - 46 : y + sideH + th/2 + 16;
-    const statusLabel = online ? 'Online' : 'Offline';
-
-    return `
-      <polygon points="${topFace}"  fill="#4ade80" />
-      <polygon points="${leftFace}" fill="#16a34a" />
-      <polygon points="${rightFace}" fill="#15803d" />
-      <polygon points="${frontFace}" fill="#166534" />
-      <!-- Tree trunk -->
-      <rect x="${treeX-1.5}" y="${treeY+treeH*0.55}" width="3" height="${treeH*0.45}" fill="#92400e" />
-      <!-- Tree canopy -->
-      <polygon points="${treeX},${treeY} ${treeX-treeW/2},${treeY+treeH*0.6} ${treeX+treeW/2},${treeY+treeH*0.6}" fill="#22c55e" />
-      <polygon points="${treeX},${treeY+treeH*0.3} ${treeX-treeW/2},${treeY+treeH*0.8} ${treeX+treeW/2},${treeY+treeH*0.8}" fill="#16a34a" />
-      <!-- Label -->
-      <text x="${x}" y="${labelY}" text-anchor="middle" fill="#f1f5f9" font-size="12" font-family="system-ui,sans-serif" font-weight="600">${escSVG(name)}</text>
-      <circle cx="${x+4}" cy="${labelY+14}" r="4" fill="${dot}" />
-      <text x="${x+11}" y="${labelY+18}" fill="${dot}" font-size="10" font-family="system-ui,sans-serif">${statusLabel}</text>
-    `;
-  }
-
-  function escSVG(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  let svgInner = '';
-  let defs = `<defs>
-    <radialGradient id="bg-grad" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#0f2a4a" />
-      <stop offset="100%" stop-color="#060d1a" />
-    </radialGradient>
-    <style>
-      @keyframes dash { to { stroke-dashoffset: -30; } }
-      .dashed-line { animation: dash 1.2s linear infinite; }
-    </style>
-  </defs>`;
-
-  svgInner += `<rect width="100%" height="100%" fill="url(#bg-grad)" />`;
-
-  if (peers.length === 0) {
-    // Just my world island, centered
-    svgInner += islandSVG(cx, H * 0.52, myName, true, false);
-  } else {
-    // My world on left, up to 3 peers on right
-    const myX = cx - 180;
-    const myY = H * 0.52;
-    svgInner += islandSVG(myX, myY, myName, true, false);
-
-    const showPeers = peers.slice(0, 3);
-    const peerXBase = cx + 100;
-    const spacing = H / (showPeers.length + 1);
-    showPeers.forEach((p, i) => {
-      const px = peerXBase + (i % 2 === 0 ? 0 : 50);
-      const py = spacing * (i + 1);
-      // Connection line
-      svgInner += `<line x1="${myX+28}" y1="${myY}" x2="${px-28}" y2="${py}"
-        stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="8 4"
-        class="dashed-line" opacity="0.7" />`;
-      // Small dot at each end
-      svgInner += `<circle cx="${myX+28}" cy="${myY}" r="3" fill="#06b6d4" opacity="0.8" />`;
-      svgInner += `<circle cx="${px-28}" cy="${py}" r="3" fill="#06b6d4" opacity="0.8" />`;
-      svgInner += islandSVG(px, py, p.worldName || p.worldId, p.status === 'online', i > 0);
-    });
-    if (peers.length > 3) {
-      svgInner += `<text x="${peerXBase+25}" y="${H-12}" text-anchor="middle" fill="#64748b" font-size="11" font-family="system-ui,sans-serif">+${peers.length-3} more peers</text>`;
-    }
-  }
-
-  viz.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${defs}${svgInner}</svg>`;
+// ── Seeded pseudo-random from world ID ────────────────────────────
+function _wseed(id) {
+  let h = 0;
+  const s = String(id || 'world');
+  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
 }
+function _wrand(seed, n) { return ((seed * 1973 + n * 37 + 7) % 1000) / 1000; }
+
+// ── Starfield ──────────────────────────────────────────────────────
+function _wMkStarfield(scene) {
+  const count = 1400, p = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 45 + Math.random() * 65;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    p[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    p[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    p[i*3+2] = r * Math.cos(phi);
+  }
+  const sg = new THREE.BufferGeometry();
+  sg.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.11 })));
+}
+
+// ── Cloud blob helper (mirrors mkCloud in world.html) ──────────────
+function _wMkCloud(pos, blobs, mat, speed) {
+  const g = new THREE.Group();
+  blobs.forEach(function(b) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(b[3], 7, 6), mat);
+    m.position.set(b[0], b[1], b[2]); g.add(m);
+  });
+  g.position.set(pos[0], pos[1], pos[2]);
+  g.userData.driftSpeed = speed || 0.5;
+  g.userData.baseX = pos[0];
+  g.userData.baseY = pos[1];
+  return g;
+}
+
+// ── Mini world island (derived from buildBackgroundIslands) ────────
+function _wMkIsland(seed, isLocal, status) {
+  var grp = new THREE.Group();
+  var r = function(n) { return _wrand(seed, n); };
+
+  // ── Materials ──────────────────────────────────────────────────────
+  // Cliff body — deep dark earth, layered
+  var cliffM  = _wsm(0x28211c, { roughness: 0.98 });
+  // Mid-strata — slightly lighter warm rock band
+  var strataM = _wsm(0x4a3d30, { roughness: 1 });
+  // Lower strata — cool dark rock
+  var strata2M = _wsm(0x2e2a24, { roughness: 1 });
+  // Rock faces — two tone slate
+  var rock1M  = _wsm(0x4a5062, { roughness: 1 });
+  var rock2M  = _wsm(0x3a3d48, { roughness: 1 });
+  // Grass surface — rich layered greens
+  var grassM  = _wsm(0x2d5e34, { roughness: 0.9 });   // base cap
+  var grassLipM = _wsm(0x3d7a42, { roughness: 0.85 }); // bright lip / fringe
+  var mossPatchM = _wsm(0x4a8c50, { roughness: 0.9 });  // lighter moss highlights
+  // Tree
+  var treeM   = _wsm(0x19381e, { roughness: 1 });
+  var treeLightM = _wsm(0x234d28, { roughness: 0.95 }); // lit tier
+  // Flower spots
+  var flowerM = _wsm(0xd4a842, { emissive: new THREE.Color(0xd4a842), emissiveIntensity: 0.18, roughness: 0.7 });
+
+  // ── Block cluster ──────────────────────────────────────────────────
+  var BLOCKS = [
+    [0,    0,    0,    2.7,  0.62],
+    [1.8,  0.24, 0.32, 1.65, 0.46],
+    [-1.55,0.14,-0.38, 1.45, 0.38],
+    [0.48,-0.1,  1.55, 1.05, 0.30],
+    [-0.7, 0.04,-1.35, 0.85, 0.24],
+  ];
+  BLOCKS.forEach(function(b) {
+    var bx=b[0],by=b[1],bz=b[2],bs=b[3],bh=b[4];
+    // Main cliff body
+    var body = new THREE.Mesh(new THREE.BoxGeometry(bs, bh, bs), cliffM);
+    body.position.set(bx, by - bh/2, bz);
+    body.castShadow = true; body.receiveShadow = true; grp.add(body);
+    // Upper warm strata band
+    var st1 = new THREE.Mesh(new THREE.BoxGeometry(bs*0.985, 0.055, bs*0.985), strataM);
+    st1.position.set(bx, by - bh*0.28, bz); grp.add(st1);
+    // Lower cool strata band
+    var st2 = new THREE.Mesh(new THREE.BoxGeometry(bs*0.975, 0.04, bs*0.975), strata2M);
+    st2.position.set(bx, by - bh*0.65, bz); grp.add(st2);
+    // Grass cap — base layer
+    var cap = new THREE.Mesh(new THREE.BoxGeometry(bs*1.03, 0.085, bs*1.03), grassM);
+    cap.position.set(bx, by + 0.03, bz);
+    cap.receiveShadow = true; grp.add(cap);
+    // Grass lip — bright fringe around edge (slightly wider, thinner)
+    var lip = new THREE.Mesh(new THREE.BoxGeometry(bs*1.07, 0.032, bs*1.07), grassLipM);
+    lip.position.set(bx, by - 0.005, bz); grp.add(lip);
+    // Bottom ledge — darkest base
+    var ledge = new THREE.Mesh(new THREE.BoxGeometry(bs*1.06, 0.1, bs*1.06), strata2M);
+    ledge.position.set(bx, by - bh + 0.05, bz); grp.add(ledge);
+    // Moss patch on cap (small, random offset)
+    if (r(bx*17+bz*7+3) > 0.5) {
+      var ms = bs * (0.3 + r(bx*5+13) * 0.25);
+      var moss = new THREE.Mesh(new THREE.BoxGeometry(ms, 0.025, ms), mossPatchM);
+      moss.position.set(bx + (r(bx*9+1)-0.5)*bs*0.3, by + 0.07, bz + (r(bz*9+2)-0.5)*bs*0.3);
+      grp.add(moss);
+    }
+  });
+
+  // ── Rocky spires ───────────────────────────────────────────────────
+  var nSpires = 2 + Math.floor(r(7) * 2);
+  for (var i = 0; i < nSpires; i++) {
+    var sx = (r(i*7+1) - 0.5) * 2.6, sz = (r(i*7+2) - 0.5) * 2.2;
+    var sw = 0.20 + r(i*7+3) * 0.14, sh = 0.55 + r(i*7+4) * 0.72;
+    var spire = new THREE.Mesh(new THREE.BoxGeometry(sw, sh, sw), rock1M);
+    spire.position.set(sx, sh/2, sz);
+    spire.castShadow = true; grp.add(spire);
+    // Strata line mid-spire
+    var sSt = new THREE.Mesh(new THREE.BoxGeometry(sw*1.02, 0.035, sw*1.02), strataM);
+    sSt.position.set(sx, sh*0.4, sz); grp.add(sSt);
+    // Grass cap
+    var sCap = new THREE.Mesh(new THREE.BoxGeometry(sw*1.12, 0.06, sw*1.12), grassM);
+    sCap.position.set(sx, sh + 0.02, sz); grp.add(sCap);
+    var sLip = new THREE.Mesh(new THREE.BoxGeometry(sw*1.18, 0.025, sw*1.18), grassLipM);
+    sLip.position.set(sx, sh - 0.01, sz); grp.add(sLip);
+  }
+
+  // ── Surface rocks (larger) ─────────────────────────────────────────
+  var nRocks = 4 + Math.floor(r(19) * 3);
+  for (var j = 0; j < nRocks; j++) {
+    var rx = (r(j*11+1)-0.5)*3.0, rz = (r(j*11+2)-0.5)*2.6;
+    var rs = 0.08 + r(j*11+3)*0.10;
+    var rock = new THREE.Mesh(new THREE.DodecahedronGeometry(rs, 0), (j%2===0?rock1M:rock2M));
+    rock.scale.set(0.82, 0.68, 0.62);
+    rock.position.set(rx, rs*0.35, rz);
+    rock.rotation.set(r(j*11+5)*2, r(j*11+6)*4, r(j*11+7)*2);
+    rock.castShadow = true; rock.receiveShadow = true; grp.add(rock);
+  }
+
+  // ── Tiny pebbles scattered on grass ───────────────────────────────
+  var nPebbles = 6 + Math.floor(r(41) * 5);
+  for (var p2 = 0; p2 < nPebbles; p2++) {
+    var px = (r(p2*17+1)-0.5)*2.8, pz = (r(p2*17+2)-0.5)*2.4;
+    var ps = 0.025 + r(p2*17+3)*0.028;
+    var peb = new THREE.Mesh(new THREE.DodecahedronGeometry(ps, 0), rock2M);
+    peb.scale.set(1, 0.65, 0.85);
+    peb.position.set(px, ps*0.4, pz);
+    peb.rotation.y = r(p2*17+4)*6;
+    grp.add(peb);
+  }
+
+  // ── Tiny flowers / grass tufts ─────────────────────────────────────
+  var nFlowers = 3 + Math.floor(r(53) * 4);
+  for (var f = 0; f < nFlowers; f++) {
+    var fx = (r(f*19+1)-0.5)*2.4, fz2 = (r(f*19+2)-0.5)*2.0;
+    var fc = new THREE.Mesh(new THREE.SphereGeometry(0.028, 5, 4), flowerM);
+    fc.position.set(fx, 0.08, fz2); grp.add(fc);
+    // tiny stem
+    var fstem = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.06, 4), grassLipM);
+    fstem.position.set(fx, 0.03, fz2); grp.add(fstem);
+  }
+
+  // ── Pine trees ─────────────────────────────────────────────────────
+  var nTrees = 2 + Math.floor(r(31) * 3);
+  for (var t = 0; t < nTrees; t++) {
+    var tx = (r(t*13+1)-0.5)*2.1, tz2 = (r(t*13+2)-0.5)*1.9;
+    var tScale = 0.85 + r(t*13+3) * 0.32;
+    // Trunk
+    var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.035*tScale, 0.048*tScale, 0.22*tScale, 5), strataM);
+    trunk.position.set(tx, 0.11*tScale, tz2);
+    trunk.castShadow = true; grp.add(trunk);
+    // 3-tier canopy — alternating dark/lighter mats for depth
+    [[0.30,0.48,0.48],[0.21,0.80,0.36],[0.11,1.06,0.24]].forEach(function(tier, ti) {
+      var cm = ti === 1 ? treeLightM : treeM; // middle tier catches more light
+      var c = new THREE.Mesh(new THREE.ConeGeometry(tier[0]*tScale, tier[2]*tScale, 7), cm);
+      c.position.set(tx, (0.22 + tier[1])*tScale, tz2);
+      c.castShadow = true; c.receiveShadow = true; grp.add(c);
+    });
+  }
+
+  // ── World Core ─────────────────────────────────────────────────────
+  // Derive peer hue from seed so each world has its own colour identity
+  var orbHex = isLocal ? 0xf97316 : (function(){
+    var hue = (seed % 360);
+    // Avoid orange (20-45) and red (355-15) — keep orange for local only
+    if (hue < 50) hue += 130;
+    var c = new THREE.Color(); c.setHSL(hue/360, 0.7, 0.55); return c.getHex();
+  })();
+  var orbCol = new THREE.Color(orbHex);
+
+  // Stone plinth base under the orb
+  var plinthM = _wsm(0x2e2a24, { roughness: 0.95 });
+  var plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.18, 8), plinthM);
+  plinth.position.set(0, 0.09, 0); grp.add(plinth);
+  var pTop = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.04, 8), grassM);
+  pTop.position.set(0, 0.19, 0); grp.add(pTop);
+
+  // Core orb — richer: emissive sphere + inner glow sphere
+  var orbMat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.55, roughness: 0.22, metalness: 0.4 });
+  var orb = new THREE.Mesh(new THREE.SphereGeometry(0.20, 14, 12), orbMat);
+  orb.position.set(0, 1.05, 0); grp.add(orb);
+
+  // Inner glow (slightly smaller, higher emissive, transparent)
+  var glowMat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.9, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false });
+  var glow = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), glowMat);
+  glow.position.set(0, 1.05, 0); grp.add(glow);
+
+  // Primary equatorial ring — flat
+  var ringMat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.22, transparent: true, opacity: 0.52, roughness: 0.8, depthWrite: false });
+  var ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.018, 6, 32), ringMat);
+  ring.rotation.x = Math.PI / 2; ring.position.set(0, 1.05, 0); grp.add(ring);
+
+  // Secondary angled ring (identity marker)
+  var ring2Mat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.14, transparent: true, opacity: 0.30, roughness: 1, depthWrite: false });
+  var ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.010, 5, 28), ring2Mat);
+  ring2.rotation.set(Math.PI*0.35, 0, Math.PI*0.2); ring2.position.set(0, 1.05, 0); grp.add(ring2);
+
+  // Point light from core
+  var ptLight = new THREE.PointLight(orbHex, isLocal ? 1.0 : 0.65, 7);
+  ptLight.position.set(0, 1.05, 0); grp.add(ptLight);
+
+  // ── Under-island cloud wisps ───────────────────────────────────────
+  var cMat = _wsm(0xc2d8ef, { transparent: true, opacity: 0.38, roughness: 1, depthWrite: false });
+  [[-1.2,-1.4,0.5],[1.0,-1.6,-0.8],[-0.3,-1.25,1.4]].forEach(function(cp, ci) {
+    var cg = _wMkCloud(cp, [
+      [0,0,0,0.29],[0.40,0.08,0,0.21],[-0.32,0.06,0.1,0.18],[0.13,0,0.34,0.19]
+    ], cMat, 0.38 + ci * 0.14);
+    grp.add(cg); _wClouds.push(cg);
+  });
+
+  // Cache refs for animation/status
+  grp.userData._orbMat  = orbMat;
+  grp.userData._glowMat = glowMat;
+  grp.userData._ringMat = ringMat;
+  grp.userData._ring2Mat = ring2Mat;
+  grp.userData._ring    = ring;
+  grp.userData._ring2   = ring2;
+  grp.userData._ptLight = ptLight;
+
+  _wSetIslandStatus(grp, status || 'offline');
+  return grp;
+}
+
+// ── Status → emissive tint ─────────────────────────────────────────
+function _wSetIslandStatus(grp, status) {
+  var cmap = { online:0x06b6d4, active:0x22d3ee, pending:0xf59e0b, processing:0xf59e0b, error:0xef4444, offline:0x374151 };
+  var hex  = cmap[status] || cmap.offline;
+  var col  = new THREE.Color(hex);
+  var on   = (status !== 'offline' && status !== 'error');
+  var om   = grp.userData._orbMat;
+  if (om) { om.emissive.copy(col); om.emissiveIntensity = on ? 0.55 : 0.07; om._baseEI = on ? 0.55 : 0.07; }
+  var gm   = grp.userData._glowMat;
+  if (gm) { gm.emissive.copy(col); gm.emissiveIntensity = on ? 0.9 : 0.1; gm.opacity = on ? 0.35 : 0.08; }
+  var rm   = grp.userData._ringMat;
+  if (rm) { rm.emissive.copy(col); rm.opacity = on ? 0.52 : 0.06; }
+  var r2m  = grp.userData._ring2Mat;
+  if (r2m) { r2m.emissive.copy(col); r2m.opacity = on ? 0.30 : 0.04; }
+  var pl   = grp.userData._ptLight;
+  if (pl) { pl.color.copy(col); pl.intensity = on ? 0.5 : 0; }
+}
+
+// ── Peer island position (deterministic, no overlap) ──────────────
+function _wPeerPos(worldId, index, total) {
+  if (total === 1) return new THREE.Vector3(-10, 0, -7);
+  var angle  = (index / total) * Math.PI * 1.3 - Math.PI * 0.65;
+  var radius = 13 + Math.min(total - 1, 4) * 1.2;
+  return new THREE.Vector3(
+    Math.cos(angle) * radius,
+    ((_wseed(worldId) % 7) - 3) * 0.4, // slight Y variation
+    Math.sin(angle) * radius - 4
+  );
+}
+
+// ── Scene init ─────────────────────────────────────────────────────
+function initWorldScene() {
+  var wrap = document.getElementById('world-scene-wrap');
+  if (!wrap || !window.THREE || _wrenderer) return;
+  // Hide onboarding hint if user has already interacted
+  try { if (localStorage.getItem('wl-hint-seen')) { var h = document.getElementById('world-hint'); if (h) h.style.display = 'none'; } } catch(e) {}
+
+  function W() { return wrap.clientWidth || 800; }
+  function H() { return wrap.clientHeight || 600; }
+
+  _wrenderer = new THREE.WebGLRenderer({ antialias: true });
+  _wrenderer.setSize(W(), H());
+  _wrenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  _wrenderer.shadowMap.enabled = true;
+  _wrenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  _wrenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  _wrenderer.toneMappingExposure = 1.15;
+  _wrenderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
+  wrap.insertBefore(_wrenderer.domElement, wrap.firstChild);
+
+  _wscene = new THREE.Scene();
+  _wscene.background = new THREE.Color(0x060d1a);
+  _wscene.fog = new THREE.FogExp2(0x060d1a, 0.016);
+
+  _wcamera = new THREE.PerspectiveCamera(42, W()/H(), 0.1, 130);
+  _wcamera.position.set(0, 10, 20);
+  _wcamera.lookAt(0, 0, 0);
+
+  _wcontrols = new THREE.OrbitControls(_wcamera, _wrenderer.domElement);
+  _wcontrols.enableDamping   = true;
+  _wcontrols.dampingFactor   = 0.08;
+  _wcontrols.enablePan       = false;
+  _wcontrols.minDistance     = 8;
+  _wcontrols.maxDistance     = 45;
+  _wcontrols.maxPolarAngle   = Math.PI / 2.15;
+  _wcontrols.autoRotate      = true;
+  _wcontrols.autoRotateSpeed = 0.22;
+
+  // Lighting (same values as world.html)
+  var hemi = new THREE.HemisphereLight(0x99ccff, 0x5a3a10, 0.32); _wscene.add(hemi);
+  var sun  = new THREE.DirectionalLight(0xffee99, 3.8);
+  sun.position.set(10, 18, 8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -22; sun.shadow.camera.right  = 22;
+  sun.shadow.camera.top  =  22; sun.shadow.camera.bottom = -22;
+  sun.shadow.camera.far  = 70;  sun.shadow.bias = -0.001;
+  _wscene.add(sun);
+  var fill = new THREE.DirectionalLight(0x5577bb, 0.45);
+  fill.position.set(-10, 4, -8); _wscene.add(fill);
+
+  _wMkStarfield(_wscene);
+
+  // Raycasting — click opens session, hover shows pointer
+  var raycaster = new THREE.Raycaster();
+  var mouse     = new THREE.Vector2();
+
+  function getIslandMeshes() {
+    var out = [];
+    _wislands.forEach(function(v) { v.group.traverse(function(o){ if(o.isMesh) out.push(o); }); });
+    return out;
+  }
+  function findIslandForMesh(obj) {
+    var found = null;
+    _wislands.forEach(function(v, wid) {
+      v.group.traverse(function(o){ if(o === obj) found = { worldId: wid, entry: v }; });
+    });
+    return found;
+  }
+
+  _wrenderer.domElement.addEventListener('pointermove', function(e) {
+    var r = _wrenderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - r.left) / r.width)  * 2 - 1;
+    mouse.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, _wcamera);
+    var hits = raycaster.intersectObjects(getIslandMeshes());
+    _wrenderer.domElement.style.cursor = hits.length ? 'pointer' : 'default';
+  });
+
+  _wrenderer.domElement.addEventListener('click', function(e) {
+    var r = _wrenderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - r.left) / r.width)  * 2 - 1;
+    mouse.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, _wcamera);
+    var hits = raycaster.intersectObjects(getIslandMeshes());
+    if (!hits.length) return;
+    var found = findIslandForMesh(hits[0].object);
+    if (!found || found.worldId === '__local__') return;
+    var peer = _state.peers.find(function(p){ return p.worldId === found.worldId; });
+    if (peer) openSession(peer);
+  });
+
+  // Resize observer
+  if (window.ResizeObserver) {
+    new ResizeObserver(function() {
+      _wrenderer.setSize(W(), H());
+      _wcamera.aspect = W() / H();
+      _wcamera.updateProjectionMatrix();
+    }).observe(wrap);
+  }
+
+  // Render loop
+  var T = 0;
+  (function animate() {
+    requestAnimationFrame(animate);
+    if (document.hidden) return;
+    T += 0.016;
+    _wcontrols.update();
+
+    // Cloud drift
+    _wClouds.forEach(function(c) {
+      c.position.x = c.userData.baseX + Math.sin(T * c.userData.driftSpeed * 0.28) * 0.42;
+      c.position.y = c.userData.baseY + Math.sin(T * c.userData.driftSpeed * 0.45) * 0.06;
+    });
+
+    // World core — orb pulse + ring rotation
+    _wislands.forEach(function(v) {
+      var ud = v.group.userData;
+      var base = ud._orbMat && ud._orbMat._baseEI != null ? ud._orbMat._baseEI : 0.55;
+      if (ud._orbMat)  ud._orbMat.emissiveIntensity  = base * (0.76 + Math.sin(T * 1.55) * 0.24);
+      if (ud._glowMat) ud._glowMat.emissiveIntensity = base * 1.6 * (0.70 + Math.sin(T * 1.55 + 0.5) * 0.30);
+      if (ud._ring)    ud._ring.rotation.z  += 0.0035;
+      if (ud._ring2)   ud._ring2.rotation.z += 0.0072;
+    });
+
+    // Ambient heartbeat — one dim packet per arc every ~8s (staggered by worldId)
+    _wArcs.forEach(function(arc, wid) {
+      var stagger = _wseed(wid) % 5;
+      if (T - arc.lastHeartbeat > 8 + stagger) {
+        arc.lastHeartbeat = T;
+        _wSpawnPacket(wid, 'out', 0x06b6d4, 'heartbeat');
+      }
+    });
+
+    // Light packet movement — also move attached point lights
+    _wPackets = _wPackets.filter(function(pkt) {
+      pkt.t += pkt.speed * 0.016;
+      if (pkt.t < 0 || pkt.t > 1) {
+        _wscene.remove(pkt.mesh);
+        pkt.mesh.geometry.dispose();
+        pkt.mesh.material.dispose();
+        if (pkt.light) { _wscene.remove(pkt.light); pkt.light.dispose(); }
+        return false;
+      }
+      var pos = pkt.curve.getPoint(pkt.t);
+      pkt.mesh.position.copy(pos);
+      if (pkt.light) pkt.light.position.copy(pos);
+      return true;
+    });
+
+    _wUpdateLabels();
+    _wrenderer.render(_wscene, _wcamera);
+  })();
+}
+
+// ── Sync scene with current peer state ────────────────────────────
+function syncWorldScene(myName, peers) {
+  if (!_wrenderer) return;
+
+  // My world (created once)
+  if (!_wMyGroup) {
+    _wMyGroup = _wMkIsland(_wseed(myName || 'myworld'), true, 'online');
+    _wMyGroup.position.set(0, 0, 3);
+    _wscene.add(_wMyGroup);
+    _wMyLabelEl = _wMkLabel(myName || 'My World', 'online', true);
+    _wislands.set('__local__', { group: _wMyGroup, labelEl: _wMyLabelEl });
+    var onlinePeers = peers.filter(function(p){ return p.status === 'online'; }).length;
+    _wDismissSplash(myName, onlinePeers);
+  } else {
+    var nm = _wMyLabelEl && _wMyLabelEl.querySelector('.wl-lbl-name');
+    if (nm) nm.firstChild.textContent = (myName || 'My World');
+  }
+
+  // Remove islands for stale peers
+  var currentIds = new Set(peers.map(function(p){ return p.worldId; }));
+  _wislands.forEach(function(v, wid) {
+    if (wid !== '__local__' && !currentIds.has(wid)) {
+      _wscene.remove(v.group);
+      if (v.labelEl) v.labelEl.remove();
+      _wRemoveArc(wid);
+      _wislands.delete(wid);
+    }
+  });
+
+  // Add / update peers
+  peers.forEach(function(peer, i) {
+    var wid = peer.worldId;
+    var entry = _wislands.get(wid);
+    if (!entry) {
+      var grp = _wMkIsland(_wseed(wid), false, peer.status);
+      var pos = _wPeerPos(wid, i, peers.length);
+      grp.position.copy(pos);
+      _wscene.add(grp);
+      var labelEl = _wMkLabel(peer.worldName || peer.worldId, peer.status, false);
+      entry = { group: grp, labelEl: labelEl };
+      _wislands.set(wid, entry);
+    } else {
+      _wSetIslandStatus(entry.group, peer.status);
+      _wUpdateLabel(entry.labelEl, peer.worldName || peer.worldId, peer.status);
+    }
+    // Set base emissive for pulse calculation
+    var om = entry.group.userData._orbMat;
+    if (om) om._baseEI = (peer.status === 'offline') ? 0.07 : 0.45;
+    // Arcs for online peers
+    if (peer.status === 'online') _wEnsureArc(wid, entry.group.position);
+    else _wRemoveArc(wid);
+  });
+
+  // Update peer count badge
+  var online = peers.filter(function(p){ return p.status === 'online'; }).length;
+  var badge = document.getElementById('world-peer-count');
+  if (badge) badge.textContent = peers.length ? online + ' of ' + peers.length + ' worlds online' : '';
+}
+
+// ── Connection arc ─────────────────────────────────────────────────
+// Arcs terminate at world core height (1.05 above island group origin)
+var CORE_Y = 1.05;
+function _wEnsureArc(worldId, targetPos) {
+  if (_wArcs.has(worldId)) return;
+  var myPos = new THREE.Vector3(0, CORE_Y, 3);           // local core
+  var tgt   = new THREE.Vector3(targetPos.x, targetPos.y + CORE_Y, targetPos.z);
+  var dist  = myPos.distanceTo(tgt);
+  var mid   = new THREE.Vector3(
+    (myPos.x + tgt.x) / 2,
+    Math.max(myPos.y, tgt.y) + 3.5 + dist * 0.18,
+    (myPos.z + tgt.z) / 2
+  );
+  var curve = new THREE.QuadraticBezierCurve3(myPos, mid, tgt);
+  var pts   = curve.getPoints(64);
+  var geom  = new THREE.BufferGeometry().setFromPoints(pts);
+  // Dashed material — subtle at rest, meaningful when active
+  var mat   = new THREE.LineDashedMaterial({
+    color: 0x06b6d4, transparent: true, opacity: 0.42,
+    dashSize: 0.35, gapSize: 0.22, linewidth: 1
+  });
+  var line  = new THREE.Line(geom, mat);
+  line.computeLineDistances(); // required for LineDashedMaterial
+  _wscene.add(line);
+  _wArcs.set(worldId, { line: line, geom: geom, mat: mat, curve: curve, lastHeartbeat: -999 });
+}
+
+function _wRemoveArc(worldId) {
+  var arc = _wArcs.get(worldId);
+  if (!arc) return;
+  _wscene.remove(arc.line);
+  arc.geom.dispose(); arc.mat.dispose();
+  _wArcs.delete(worldId);
+}
+
+// ── Light packets ──────────────────────────────────────────────────
+// type: 'message' | 'task' | 'complete' | 'heartbeat'
+function _wSpawnPacket(worldId, dir, colorHex, type) {
+  var arc = _wArcs.get(worldId);
+  if (!arc) return;
+  var isHB   = type === 'heartbeat';
+  var isTask = type === 'task';
+  var radius = isHB ? 0.042 : isTask ? 0.115 : 0.075;
+  var bright = isHB ? 0.28  : isTask ? 1.4   : 1.1;
+  var speed  = isHB ? 0.22  : isTask ? 0.30  : 0.40;
+  var col    = new THREE.Color(colorHex || 0x06b6d4);
+  var mat    = _wsm(colorHex || 0x06b6d4, { emissive: col, emissiveIntensity: bright, roughness: 0.15, metalness: isTask ? 0.4 : 0.1 });
+  // Add a subtle point light on task packets so they cast a travelling glow
+  var pkt = { mesh: new THREE.Mesh(new THREE.SphereGeometry(radius, 9, 7), mat),
+              curve: arc.curve, t: dir === 'in' ? 1 : 0,
+              speed: dir === 'in' ? -speed : speed, type: type || 'message' };
+  if (isTask && !isHB) {
+    pkt.light = new THREE.PointLight(colorHex || 0x06b6d4, 0.6, 3.5);
+    _wscene.add(pkt.light);
+  }
+  _wscene.add(pkt.mesh);
+  _wPackets.push(pkt);
+}
+
+// ── HTML world labels ──────────────────────────────────────────────
+function _wMkLabel(name, status, isLocal) {
+  var layer = document.getElementById('world-label-layer');
+  if (!layer) return null;
+  var el = document.createElement('div');
+  el.className = 'world-label';
+  el.innerHTML = _wLabelHTML(name, status, isLocal);
+  layer.appendChild(el);
+  return el;
+}
+function _wLabelHTML(name, status, isLocal) {
+  var cmap = { online:'#06b6d4',active:'#22d3ee',pending:'#f59e0b',error:'#ef4444',offline:'#52525b' };
+  var dot  = cmap[status] || cmap.offline;
+  var glow = (status !== 'offline') ? ';box-shadow:0 0 5px ' + dot : '';
+  var you  = isLocal ? '<span class="wl-lbl-you">You</span>' : '';
+  return '<div class="wl-lbl-name"><span>' + escHTML(name) + '</span>' + you + '</div>'
+       + '<div class="wl-lbl-status">'
+       + '<span class="wl-lbl-dot" style="background:' + dot + glow + '"></span>'
+       + '<span class="wl-lbl-stxt">' + escHTML(status || 'offline') + '</span>'
+       + '</div>';
+}
+function _wUpdateLabel(el, name, status) {
+  if (!el) return;
+  var isLocal = !!el.querySelector('.wl-lbl-you');
+  el.innerHTML = _wLabelHTML(name, status, isLocal);
+}
+function _wUpdateLabels() {
+  if (!_wrenderer) return;
+  var cw = _wrenderer.domElement.clientWidth;
+  var ch = _wrenderer.domElement.clientHeight;
+  _wislands.forEach(function(v) {
+    if (!v.labelEl) return;
+    var wp = new THREE.Vector3();
+    v.group.getWorldPosition(wp);
+    wp.y += 2.3;
+    wp.project(_wcamera);
+    var x = (wp.x * 0.5 + 0.5) * cw;
+    var y = (-wp.y * 0.5 + 0.5) * ch;
+    // Use individual style properties — assigning cssText would clobber other rules (see learnings)
+    v.labelEl.style.left      = x + 'px';
+    v.labelEl.style.top       = y + 'px';
+    v.labelEl.style.transform = 'translate(-50%, -100%)';
+    v.labelEl.style.opacity   = (wp.z > -1 && wp.z < 1) ? '1' : '0';
+  });
+}
+
+// ── State-change packet triggers ───────────────────────────────────
+function _wCheckNewMessages(prevMsgs, newMsgs) {
+  var prevIds = new Set(prevMsgs.map(function(m){ return m.id; }));
+  newMsgs.forEach(function(m) {
+    if (!prevIds.has(m.id) && m.fromWorld) _wSpawnPacket(m.fromWorld, 'in', 0x06b6d4);
+  });
+}
+function _wCheckTaskChanges(prevTasks, newTasks) {
+  var prevMap = {};
+  prevTasks.forEach(function(t){ prevMap[t.taskId] = t.status; });
+  newTasks.forEach(function(t) {
+    if (!t.sourceWorld) return;
+    var prev = prevMap[t.taskId];
+    if (!prev && (t.status === 'running' || t.status === 'pending-approval'))
+      _wSpawnPacket(t.sourceWorld, 'out', 0xf59e0b, 'task');
+    if (prev && prev !== 'completed' && t.status === 'completed')
+      _wSpawnPacket(t.sourceWorld, 'in', 0x22c55e, 'complete');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SESSION DRAWER
+// ══════════════════════════════════════════════════════════════════
+var _sessionPeer = null;
+var _sessionTab  = 'chat';
+
+function _wDismissHint() {
+  var h = document.getElementById('world-hint');
+  if (!h) return;
+  h.style.transition = 'opacity .4s';
+  h.style.opacity = '0';
+  setTimeout(function(){ h.style.display = 'none'; }, 420);
+  try { localStorage.setItem('wl-hint-seen', '1'); } catch(e) {}
+}
+
+function openSession(peer) {
+  // One-time hint dismissal
+  if (!localStorage.getItem('wl-hint-seen')) _wDismissHint();
+
+  _sessionPeer = peer;
+  _sessionTab  = 'session';
+  var drawer = document.getElementById('session-drawer');
+  if (!drawer) return;
+  drawer.classList.add('open');
+  if (_wcontrols) _wcontrols.autoRotate = false;
+  // Highlight selected arc
+  _wArcs.forEach(function(arc, wid) {
+    arc.mat.opacity = (wid === peer.worldId) ? 0.7 : 0.14;
+    arc.mat.color.set(wid === peer.worldId ? 0x22d3ee : 0x06b6d4);
+  });
+  // Populate cap select
+  var capSel = document.getElementById('composer-cap-select');
+  if (capSel) {
+    var caps = peer.capabilities || ['claude-task'];
+    capSel.innerHTML = caps.map(function(c){
+      var def = CAP_DEFS.find(function(d){ return d.id === c; });
+      var label = def ? def.label : c;
+      return '<option value="' + escAttr(c) + '">' + escHTML(label) + '</option>';
+    }).join('');
+    // Seed default prompt for the first capability
+    if (caps.length) _gwCapChanged(caps[0]);
+  }
+  // Reset tabs
+  document.querySelectorAll('.session-tab').forEach(function(el){ el.classList.toggle('active', el.dataset.tab === 'session'); });
+  renderSessionHeader();
+  renderSessionTimeline();
+}
+
+function closeSession() {
+  var prev = _sessionPeer;
+  _sessionPeer = null;
+  var drawer = document.getElementById('session-drawer');
+  if (drawer) drawer.classList.remove('open');
+  if (_wcontrols) _wcontrols.autoRotate = true;
+  // Restore arc opacity
+  _wArcs.forEach(function(arc) { arc.mat.opacity = 0.22; arc.mat.color.set(0x06b6d4); });
+}
+
+function switchSessionTab(tab) {
+  _sessionTab = tab;
+  document.querySelectorAll('.session-tab').forEach(function(el){ el.classList.toggle('active', el.dataset.tab === tab); });
+  renderSessionTimeline();
+}
+
+function renderSessionHeader() {
+  if (!_sessionPeer) return;
+  var p = _sessionPeer;
+  var nameEl = document.getElementById('session-name');
+  if (nameEl) nameEl.textContent = p.worldName || p.worldId;
+  var dot = document.getElementById('session-status-dot');
+  if (dot) dot.className = 'status-dot ' + (p.status === 'online' ? 'online' : 'offline');
+  var stxt = document.getElementById('session-status-txt');
+  if (stxt) stxt.textContent = p.status || 'offline';
+}
+
+function renderSessionTimeline() {
+  var el = document.getElementById('session-timeline');
+  if (!el || !_sessionPeer) return;
+  var peer = _sessionPeer;
+  var peerName = peer.worldName || peer.worldId;
+
+  // ── SESSION — unified chronological conversation ──────────────────
+  if (_sessionTab === 'session') {
+    var timeline = [];
+
+    // Inbound messages from peer
+    _state.messages
+      .filter(function(m){ return m.fromWorld === peer.worldId; })
+      .forEach(function(m){ timeline.push({ _type:'msg-in', text:m.text, _ts:m.timestamp||0 }); });
+
+    // Outbound messages (local outbox — session memory)
+    (_outbox[peer.worldId] || [])
+      .forEach(function(o){ timeline.push({ _type:'msg-out', text:o.text, _ts:o.ts }); });
+
+    // Tasks (all directions with this peer)
+    _state.tasks
+      .filter(function(t){ return t.sourceWorld === peer.worldId || t.targetWorld === peer.worldId; })
+      .forEach(function(t){ timeline.push({ _type:'task', task:t, _ts:t.createdAt||0 }); });
+
+    timeline.sort(function(a,b){ return a._ts - b._ts; });
+
+    if (!timeline.length) {
+      el.innerHTML = '<div class="session-empty">No activity yet.<br>Send a message or task below.</div>';
+      return;
+    }
+
+    var wasLastMine = null;
+    el.innerHTML = timeline.map(function(entry) {
+      if (entry._type === 'msg-out') {
+        wasLastMine = true;
+        return '<div class="tl-entry tl-mine">'
+          + '<div class="tl-sender tl-sender-mine">You</div>'
+          + '<div class="tl-bubble tl-bubble-mine">' + escHTML(entry.text) + '</div>'
+          + '<div class="tl-time tl-time-right">' + fmtTs(entry._ts) + '</div>'
+          + '</div>';
+      }
+      if (entry._type === 'msg-in') {
+        wasLastMine = false;
+        return '<div class="tl-entry tl-theirs">'
+          + '<div class="tl-sender">' + escHTML(peerName) + '</div>'
+          + '<div class="tl-bubble">' + escHTML(entry.text) + '</div>'
+          + '<div class="tl-time">' + fmtTs(entry._ts) + '</div>'
+          + '</div>';
+      }
+      // Task event — inline system entry
+      var t = entry.task;
+      var isOut = (t.sourceWorld !== peer.worldId); // we dispatched it
+      var icon  = t.status === 'completed' ? '✓' : t.status === 'running' ? '⚙' : t.status === 'error' ? '✗' : '◌';
+      var iconColor = t.status === 'completed' ? '#22c55e' : t.status === 'running' ? '#f59e0b' : t.status === 'error' ? '#ef4444' : '#475569';
+      var elapsed = '';
+      if (t.status === 'completed' && t.completedAt && t.createdAt) {
+        elapsed = ' · ' + Math.round((t.completedAt - t.createdAt)/1000) + 's';
+      }
+      var approvalBtns = (t.status === 'pending-approval')
+        ? '<div class="tl-task-approvals"><button class="btn btn-green" onclick="approveTask(\'' + t.taskId + '\')">Approve</button><button class="btn btn-red" onclick="denyTask(\'' + t.taskId + '\')">Deny</button></div>'
+        : '';
+      var artifactBtn = t.artifactId
+        ? '<div class="tl-artifact-inline" onclick="viewArtifact(\'' + t.artifactId + '\',\'' + (t.sourceWorld||'') + '\')">'
+          + '<span style="color:#06b6d4;">▣</span> ' + escHTML(t.capability) + '<span class="tl-artifact-open">Open artifact →</span>'
+          + '</div>'
+        : '';
+      return '<div class="tl-system-event">'
+        + '<span class="tl-sys-icon" style="color:' + iconColor + '">' + icon + '</span>'
+        + '<div class="tl-sys-body">'
+        + '<span class="tl-sys-cap">' + escHTML(t.capability) + '</span>'
+        + '<span class="tl-sys-status">' + escHTML(t.status) + elapsed + '</span>'
+        + (t.prompt ? '<div class="tl-sys-prompt">' + escHTML(t.prompt) + '</div>' : '')
+        + approvalBtns + artifactBtn
+        + '</div>'
+        + '<div class="tl-time">' + fmtTs(entry._ts) + '</div>'
+        + '</div>';
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+
+  // ── MEMORY — shared brain context ────────────────────────────────
+  } else if (_sessionTab === 'memory') {
+    var records = _state.brain || [];
+    if (!records.length) {
+      el.innerHTML = '<div class="session-empty">No brain context yet.<br>Brain records shared with peers will appear here.</div>';
+      return;
+    }
+    var shared = records.filter(function(r){ return r.scope === 'shared' || !r.scope; });
+    var local  = records.filter(function(r){ return r.scope === 'local'; });
+    var html = '';
+    if (shared.length) {
+      html += '<div class="mem-section-label">Shared with ' + escHTML(peerName) + '</div>';
+      html += shared.map(function(r) {
+        return '<div class="mem-record">'
+          + '<div class="mem-record-head">'
+          + '<span class="mem-type">' + escHTML(r.type || 'fact') + '</span>'
+          + '<span class="mem-time">' + relTime(r.createdAt) + '</span>'
+          + '</div>'
+          + '<div class="mem-summary">' + escHTML(r.summary || '') + '</div>'
+          + '</div>';
+      }).join('');
+    }
+    if (local.length) {
+      html += '<div class="mem-section-label" style="margin-top:16px;">Local only</div>';
+      html += local.map(function(r) {
+        return '<div class="mem-record mem-record-local">'
+          + '<div class="mem-record-head">'
+          + '<span class="mem-type">' + escHTML(r.type || 'fact') + '</span>'
+          + '<span class="mem-time">' + relTime(r.createdAt) + '</span>'
+          + '</div>'
+          + '<div class="mem-summary">' + escHTML(r.summary || '') + '</div>'
+          + '</div>';
+      }).join('');
+    }
+    el.innerHTML = html;
+
+  // ── INFO ─────────────────────────────────────────────────────────
+  } else if (_sessionTab === 'info') {
+    el.innerHTML = '<div style="padding:6px 0;">'
+      + '<div class="info-row"><span class="info-label">World&nbsp;ID</span><span class="info-val" style="font-family:monospace;font-size:11px;word-break:break-all">' + escHTML(peer.worldId||'—') + '</span></div>'
+      + '<div class="info-row"><span class="info-label">Host</span><span class="info-val">' + escHTML(peer.host||'—') + '</span></div>'
+      + '<div class="info-row"><span class="info-label">Status</span><span class="info-val">' + escHTML(peer.status||'—') + '</span></div>'
+      + '<div class="info-row"><span class="info-label">Last&nbsp;seen</span><span class="info-val">' + relTime(peer.lastSeen) + '</span></div>'
+      + (peer.capabilities && peer.capabilities.length ? '<div class="info-row"><span class="info-label">Caps</span><div class="caps-row">' + peer.capabilities.map(function(c){ return '<span class="cap-badge">' + escHTML(c) + '</span>'; }).join('') + '</div></div>' : '')
+      + '</div>';
+  }
+}
+
+// ── Outbound message store (in-session memory for "You" side) ───────
+var _outbox = {}; // peerId → [{text, ts}]
+function _outboxPush(peerId, text) {
+  if (!_outbox[peerId]) _outbox[peerId] = [];
+  _outbox[peerId].push({ text: text, ts: Date.now() });
+}
+
+// ── Composer ────────────────────────────────────────────────────────
+var _composerType = 'message';
+
+function setComposerType(type) {
+  _composerType = type;
+  var btn = document.getElementById('composer-type-btn');
+  if (btn) btn.textContent = type === 'message' ? 'Message ▾' : 'Task ▾';
+  var capRow = document.getElementById('composer-cap-row');
+  if (capRow) capRow.classList.toggle('visible', type === 'task');
+  var menu = document.getElementById('composer-type-menu');
+  if (menu) menu.classList.remove('open');
+}
+
+function toggleComposerMenu() {
+  var menu = document.getElementById('composer-type-menu');
+  if (!menu) return;
+  menu.classList.toggle('open');
+  if (menu.classList.contains('open')) {
+    function onDoc(e) { if (!menu.contains(e.target)) { menu.classList.remove('open'); document.removeEventListener('click', onDoc); } }
+    setTimeout(function(){ document.addEventListener('click', onDoc); }, 0);
+  }
+}
+
+async function sendComposerMsg() {
+  if (!_sessionPeer) return;
+  var input = document.getElementById('composer-input');
+  var text  = input && input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = '';
+
+  if (_composerType === 'message') {
+    try {
+      var res = await fetch('/worldlink/local/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, text: text })
+      });
+      var data = await res.json();
+      if (data.error) { _wlGwToast('✗ ' + data.error, 'err'); return; }
+      _outboxPush(_sessionPeer.worldId, text);
+      _wSpawnPacket(_sessionPeer.worldId, 'out', 0x06b6d4, 'message');
+      _wlGwToast('Message sent');
+      await refreshAll();
+      renderSessionTimeline();
+    } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+  } else {
+    var cap = (document.getElementById('composer-cap-select') || {}).value || 'claude-task';
+    try {
+      var res2 = await fetch('/worldlink/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, capability: cap, prompt: text, sharedContext: { from: _state.worldName, timestamp: Date.now() } })
+      });
+      var data2 = await res2.json();
+      if (data2.error) { _wlGwToast('✗ ' + data2.error, 'err'); return; }
+      _wSpawnPacket(_sessionPeer.worldId, 'out', 0xf59e0b, 'task');
+      _wlGwToast('Task sent');
+      await refreshAll();
+      renderSessionTimeline();
+    } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+  }
+}
+
+function _gwCapChanged(capId) {
+  var ta = document.getElementById('composer-input');
+  if (!ta) return;
+  var def = CAP_DEFAULTS[capId] || '';
+  if (!ta.value || ta.dataset.autoFilled === '1') {
+    ta.value = def;
+    ta.dataset.autoFilled = def ? '1' : '';
+    ta.style.height = '';
+    if (def) ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  }
+}
+
+function _wlGwToast(msg, type) {
+  var el = document.getElementById('wl-gw-toast');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'wl-gw-toast';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d1929;border:1px solid #1a3a5c;border-radius:8px;padding:8px 18px;font:500 12px/1 -apple-system,sans-serif;color:#e2e8f0;z-index:9999;opacity:0;transition:opacity .25s;white-space:nowrap;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.borderColor = type === 'err' ? '#ef4444' : '#1a3a5c';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.style.opacity = '0'; }, 2800);
+}
+
+// ── Loading splash ─────────────────────────────────────────────────
+var _splashDone = false;
+function _wDismissSplash(worldName, peerCount) {
+  if (_splashDone) return;
+  var el = document.getElementById('world-loading');
+  if (!el) { _splashDone = true; return; }
+
+  // Phase 1: update text to show the resolved world name
+  var worldEl = document.getElementById('wl-splash-world');
+  var subEl   = document.getElementById('wl-splash-sub');
+  var orbEl   = document.getElementById('wl-splash-orb');
+  if (worldEl) worldEl.textContent = worldName || 'Your World';
+  if (subEl)   subEl.textContent   = peerCount === 1 ? '1 peer online' : peerCount + ' peers online';
+  if (orbEl)   orbEl.classList.add('ready');
+
+  // Phase 2: fade out after a short beat so user sees the name
+  setTimeout(function() {
+    el.classList.add('fade-out');
+    _splashDone = true;
+    setTimeout(function() { el.classList.add('gone'); }, 580);
+  }, 700);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CONNECTIONS PAGE
+// ══════════════════════════════════════════════════════════════════
+
+var _myShareUrl = '';
+
+var CAP_DEFAULTS = {
+  'message':          '',
+  'claude-task':      '',
+  'artifact.receive': 'Sending you an artifact — please accept.',
+  'status.read':      'What is your current agent status and what are you working on?',
+  'context-handoff':  'Share your current context snapshot — brain records, active agents, and world state.',
+};
+
+var CAP_DEFS = [
+  { id: 'message',          label: 'Message Exchange',  desc: 'Other worlds can send you messages and start real-time conversations.',                                    requiresApproval: false },
+  { id: 'claude-task',      label: 'AI Task Execution', desc: 'Other worlds can delegate Claude AI tasks to run on your machine. Every task will require your approval.', requiresApproval: true  },
+  { id: 'status.read',      label: 'Status Visibility', desc: 'Other worlds can see your agent\'s live status and current activity.',                                     requiresApproval: false },
+  { id: 'artifact.receive', label: 'Artifact Sharing',  desc: 'Other worlds can send you files, code snippets, and generated artifacts.',                                 requiresApproval: false },
+  { id: 'context-handoff',  label: 'Context Handoff',   desc: 'Other worlds can request a snapshot of your brain records and agent context. Read-only, no approval needed.', requiresApproval: false },
+];
+
+function renderCapabilities() {
+  var el = document.getElementById('conn-caps-list');
+  if (!el) return;
+  var enabled = _state.capabilities || [];
+  el.innerHTML = CAP_DEFS.map(function(c) {
+    var on = enabled.indexOf(c.id) !== -1;
+    return '<div class="conn-cap-row' + (on ? ' enabled' : '') + '">'
+      + '<div class="conn-cap-body">'
+      + '<div class="conn-cap-label">' + c.label
+      + (c.requiresApproval ? '<span class="conn-cap-badge approval">Requires approval</span>' : '')
+      + '</div>'
+      + '<div class="conn-cap-desc">' + c.desc + '</div>'
+      + '</div>'
+      + '<div class="conn-toggle-wrap">'
+      + '<span class="conn-toggle-label">' + (on ? 'On' : 'Off') + '</span>'
+      + '<button class="conn-toggle' + (on ? ' on' : '') + '" onclick="toggleCapability(\'' + c.id + '\')" title="' + (on ? 'Disable' : 'Enable') + '"></button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function toggleCapability(id) {
+  try {
+    var freshRes = await fetch('/worldlink/peers').then(function(r){ return r.json(); }).catch(function(){ return {}; });
+    var current = freshRes.capabilities || [];
+    var isOn = current.indexOf(id) !== -1;
+    var next = isOn ? current.filter(function(c){ return c !== id; }) : current.concat([id]);
+    var res = await fetch('/worldlink/local/set-capabilities', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ capabilities: next })
+    }).then(function(r){ return r.json(); });
+    if (res.ok) {
+      _state.capabilities = res.capabilities;
+      renderCapabilities();
+      _wlGwToast((isOn ? 'Disabled: ' : 'Enabled: ') + (CAP_DEFS.find(function(c){ return c.id === id; }) || {}).label);
+    } else { _wlGwToast('✗ ' + (res.error || 'Failed'), 'err'); }
+  } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+}
+
+async function renderConnections() {
+  // Identity card
+  var nameEl = document.getElementById('conn-my-name');
+  var idEl   = document.getElementById('conn-my-id');
+  if (nameEl) nameEl.textContent = _state.worldName || '—';
+  if (idEl)   idEl.textContent   = _state.worldId   ? _state.worldId.slice(0, 32) + '…' : '—';
+
+  // Share URL — fetched once
+  if (!_myShareUrl) {
+    try {
+      var res = await fetch('/worldlink/local/my-url').then(function(r){ return r.json(); });
+      _myShareUrl = res.url || window.location.origin;
+    } catch { _myShareUrl = window.location.origin; }
+  }
+  var urlEl = document.getElementById('conn-share-url');
+  if (urlEl) urlEl.textContent = _myShareUrl;
+
+  // Capabilities
+  renderCapabilities();
+
+  // Connected peers
+  var list = document.getElementById('conn-peers-list');
+  if (!list) return;
+  if (!_state.peers.length) {
+    list.innerHTML = '<div class="session-empty" style="padding:24px 0;">No worlds connected yet.</div>';
+  } else {
+    list.innerHTML = _state.peers.map(function(p) {
+      var hue  = (_wseed(p.worldId) % 360);
+      if (hue < 50) hue += 130;
+      var hsl  = 'hsl(' + hue + ',60%,48%)';
+      var isOn = p.status === 'online';
+      var isDisabled = p.disabled || p.status === 'paused' || p.status === 'disabled';
+      var statusLabel = isOn ? 'Online' : (isDisabled ? 'Paused' : 'Offline');
+      return '<div class="conn-peer-card">'
+        + '<div class="conn-peer-orb" style="background:radial-gradient(circle at 38% 36%,' + (isOn ? hsl : '#1e2a3a') + ',' + (isOn ? 'hsl(' + hue + ',60%,30%)' : '#111827') + ' 55%,' + (isOn ? 'hsl(' + hue + ',60%,18%)' : '#0d1117') + ' 100%);box-shadow:' + (isOn ? '0 0 10px ' + hsl + '44' : 'none') + '"></div>'
+        + '<div class="conn-peer-body">'
+        + '<div class="conn-peer-name">' + escHTML(p.worldName || p.worldId) + '</div>'
+        + '<div class="conn-peer-meta">' + escHTML(p.host || '—') + ' · ' + statusLabel + ' · ' + relTime(p.lastSeen) + '</div>'
+        + '</div>'
+        + '<div class="conn-toggle-wrap">'
+        + '<span class="conn-toggle-label">' + (isOn ? 'On' : 'Off') + '</span>'
+        + '<button class="conn-toggle' + (isOn ? ' on' : '') + '" onclick="togglePeerConnection(\'' + escAttr(p.worldId) + '\',' + isOn + ',\'' + escAttr(p.host||'') + '\')" title="' + (isOn ? 'Pause connection' : 'Reconnect') + '"></button>'
+        + '</div>'
+        + '<button class="conn-disconnect-btn" onclick="removePeer(\'' + escAttr(p.worldId) + '\',\'' + escAttr(p.worldName||p.worldId) + '\')" title="Remove world">✕</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  // Notification badge — new peer since last visit
+  var badge = document.getElementById('conn-badge');
+  if (badge && _state.audit) {
+    var recent = _state.audit.filter(function(e){
+      return e.type === 'connection.established' && (Date.now()/1000 - (e.timestamp||0)) < 300;
+    });
+    badge.style.display = recent.length ? '' : 'none';
+  }
+}
+
+function copyShareUrl() {
+  if (!_myShareUrl) return;
+  navigator.clipboard.writeText(_myShareUrl).then(function() { _wlGwToast('URL copied'); }).catch(function() {
+    var t = document.getElementById('conn-share-url');
+    if (t) { var r = document.createRange(); r.selectNode(t); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
+  });
+}
+
+function startEditName() {
+  var editor = document.getElementById('conn-name-editor');
+  var card   = document.getElementById('conn-identity-card');
+  var input  = document.getElementById('conn-name-input');
+  if (!editor || !card || !input) return;
+  input.value = _state.worldName || '';
+  editor.style.display = 'flex';
+  card.style.display   = 'none';
+  input.focus(); input.select();
+}
+function cancelEditName() {
+  document.getElementById('conn-name-editor').style.display = 'none';
+  document.getElementById('conn-identity-card').style.display = 'flex';
+}
+async function saveWorldName() {
+  var input = document.getElementById('conn-name-input');
+  var name  = (input && input.value || '').trim();
+  if (!name) return;
+  try {
+    var res = await fetch('/worldlink/local/set-name', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ worldName: name })
+    }).then(function(r){ return r.json(); });
+    if (res.ok) {
+      _state.worldName = name;
+      cancelEditName();
+      renderConnections();
+      var topbar = document.getElementById('topbar-id-text');
+      if (topbar) { var sid = _state.worldId ? _state.worldId.slice(0, 20) + '…' : 'Not initialized'; topbar.textContent = name + ' · ' + sid; }
+      _wlGwToast('World name updated');
+    } else { _wlGwToast('✗ ' + (res.error || 'Failed'), 'err'); }
+  } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+}
+
+async function connectToWorld() {
+  var input = document.getElementById('conn-url-input');
+  var url   = (input && input.value || '').trim();
+  if (!url) return;
+  var btn   = document.getElementById('conn-connect-btn');
+  var hint  = document.getElementById('conn-form-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+  if (hint) { hint.style.color = '#475569'; hint.textContent = 'Reaching ' + url + '…'; }
+  try {
+    var res = await fetch('/worldlink/connect-peer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ host: url })
+    }).then(function(r){ return r.json(); });
+    if (res.error) {
+      var msg = res.error;
+      if (msg.toLowerCase().includes('capabilit')) msg = 'Connection rejected: no matching capabilities. Make sure both worlds have at least one capability in common (e.g. Message Exchange).';
+      throw new Error(msg);
+    }
+    if (input) input.value = '';
+    if (hint) { hint.style.color = '#22c55e'; hint.textContent = '✓ Connected to ' + (res.worldName || res.worldId); }
+    setTimeout(function(){ if (hint) hint.textContent = ''; }, 4000);
+    await refreshAll();
+    renderConnections();
+  } catch(e) {
+    if (hint) { hint.style.color = '#ef4444'; hint.textContent = '✗ ' + e.message; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Connect →'; }
+  }
+}
+
+async function togglePeerConnection(worldId, isCurrentlyOn, host) {
+  if (isCurrentlyOn) {
+    // Pause — drop live connection but keep peer in list
+    try {
+      var pauseRes = await fetch('/worldlink/local/peer/' + encodeURIComponent(worldId) + '/pause', { method: 'POST' });
+      var pauseData = await pauseRes.json().catch(function(){ return {}; });
+      if (!pauseRes.ok) throw new Error(pauseData.error || 'Pause failed');
+      _wlGwToast('Connection paused — toggle back on to reconnect');
+      await refreshAll(); renderConnections();
+    } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+  } else {
+    // Reconnect — find saved host and re-initiate
+    var peer = _state.peers.find(function(p){ return p.worldId === worldId; });
+    var peerHost = (peer && peer.host) || host;
+    if (!peerHost) { _wlGwToast('No saved host for this world', 'err'); return; }
+    try {
+      // Mark as no longer disabled in config
+      await fetch('/worldlink/local/peer/' + encodeURIComponent(worldId) + '/resume', { method: 'POST' });
+      // Initiate live connection
+      var res = await fetch('/worldlink/connect-peer', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host: peerHost })
+      }).then(function(r){ return r.json(); });
+      if (res.error) throw new Error(res.error);
+      _wlGwToast('Reconnected to ' + (peer ? (peer.worldName || worldId) : worldId));
+      await refreshAll(); renderConnections();
+    } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+  }
+}
+
+async function removePeer(worldId, worldName) {
+  var displayName = worldName || worldId;
+  if (!confirm('Remove "' + displayName + '" from your connected worlds?\n\nThis will permanently delete the connection. You\'ll need to paste the gateway URL again to reconnect.')) return;
+  try {
+    await fetch('/worldlink/local/peer/' + encodeURIComponent(worldId), { method: 'DELETE' });
+    _wlGwToast('"' + displayName + '" removed');
+    await refreshAll(); renderConnections();
+  } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+}
+
+// ── renderWorldViz — kept as no-op (Three.js scene is always live) ─
+function renderWorldViz() {}
 
 // ── Render Overview ───────────────────────────────────────────────
 function renderOverview() {
   // My World card
-  document.getElementById('my-world-name').textContent = _state.worldName || '—';
+  const nameEl = document.getElementById('my-world-name'); if (nameEl) nameEl.textContent = _state.worldName || '—';
   const shortId = _state.worldId ? _state.worldId.slice(0, 16) + '…' : '—';
-  document.getElementById('my-world-id').textContent = shortId;
-  document.getElementById('my-peers-count').textContent = _state.peers.filter(p => p.status === 'online').length + ' online';
-  document.getElementById('my-uptime').textContent = uptime();
+  const idEl = document.getElementById('my-world-id'); if (idEl) idEl.textContent = shortId;
+  const pcEl = document.getElementById('my-peers-count'); if (pcEl) pcEl.textContent = _state.peers.filter(p => p.status === 'online').length + ' online';
+  const upEl = document.getElementById('my-uptime'); if (upEl) upEl.textContent = uptime();
 
   const capsEl = document.getElementById('my-caps');
-  if (_state.capabilities?.length) {
+  if (capsEl && _state.capabilities?.length) {
     capsEl.innerHTML = _state.capabilities.map(c => `<span class="cap-badge">${c.id || c}</span>`).join('');
   }
 
   // Peers
   const ovPeers = document.getElementById('ov-peers-list');
+  if (!ovPeers) return;
   if (!_state.peers.length) {
     ovPeers.innerHTML = '<div class="empty-state"><div class="empty-icon">⬡</div>No peers connected</div>';
   } else {
@@ -1091,54 +2724,61 @@ function renderOverview() {
 
   // Tasks
   const ovTasks = document.getElementById('ov-tasks-list');
-  const recent = [..._state.tasks].reverse().slice(0, 5);
-  if (!recent.length) {
-    ovTasks.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙</div>No tasks yet</div>';
-  } else {
-    ovTasks.innerHTML = recent.map(t => `<div class="task-item">
-      <div style="flex-shrink:0;margin-top:1px;">${statusBadge(t.status)}</div>
-      <div class="task-meta">
-        <div class="task-cap">${escHTML(t.capability)}</div>
-        <div class="task-prompt">${escHTML(t.prompt || '—')}</div>
-        <div class="task-time">${relTime(t.createdAt)}</div>
-      </div>
-      ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}')">View</button>` : ''}
-    </div>`).join('');
+  if (ovTasks) {
+    const recent = [..._state.tasks].reverse().slice(0, 5);
+    if (!recent.length) {
+      ovTasks.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙</div>No tasks yet</div>';
+    } else {
+      ovTasks.innerHTML = recent.map(t => `<div class="task-item">
+        <div style="flex-shrink:0;margin-top:1px;">${statusBadge(t.status)}</div>
+        <div class="task-meta">
+          <div class="task-cap">${escHTML(t.capability)}</div>
+          <div class="task-prompt">${escHTML(t.prompt || '—')}</div>
+          <div class="task-time">${relTime(t.createdAt)}</div>
+        </div>
+        ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}','${t.sourceWorld||''}')">View</button>` : ''}
+      </div>`).join('');
+    }
   }
 
   // Messages card
-  const unread = _state.messages.filter(m => !m.read);
   const msgCard = document.getElementById('ov-messages-card');
-  if (_state.messages.length) {
-    msgCard.style.display = 'block';
-    document.getElementById('ov-messages-list').innerHTML = _state.messages.slice(0, 5).map(m =>
-      `<div class="message-item">
-        <div class="message-from">${escHTML(m.fromWorld || '—')}</div>
-        <div class="message-text">${escHTML(m.text)}</div>
-        <div class="message-time">${relTime(m.timestamp)}</div>
-      </div>`
-    ).join('');
-  } else {
-    msgCard.style.display = 'none';
+  if (msgCard) {
+    if (_state.messages.length) {
+      msgCard.style.display = 'block';
+      const msgsListEl = document.getElementById('ov-messages-list');
+      if (msgsListEl) msgsListEl.innerHTML = _state.messages.slice(0, 5).map(m =>
+        `<div class="message-item">
+          <div class="message-from">${escHTML(m.fromWorld || '—')}</div>
+          <div class="message-text">${escHTML(m.text)}</div>
+          <div class="message-time">${relTime(m.timestamp)}</div>
+        </div>`
+      ).join('');
+    } else {
+      msgCard.style.display = 'none';
+    }
   }
 
   // Audit log (last 10)
   const al = document.getElementById('ov-audit-list');
-  const evts = [..._state.audit].reverse().slice(0, 10);
-  if (!evts.length) {
-    al.innerHTML = '<div class="empty-state" style="padding:12px"><div class="empty-icon">☰</div>No events</div>';
-  } else {
-    al.innerHTML = evts.map(e => `<div class="audit-row">
-      <span class="audit-type">${escHTML(e.type)}</span>
-      <span class="audit-detail">${escHTML(e.taskId || e.sourceWorld || e.targetWorld || e.worldId || e.fromWorld || '')}</span>
-      <span class="audit-time">${fmtTs(e._ts || e.timestamp)}</span>
-    </div>`).join('');
+  if (al) {
+    const evts = [..._state.audit].reverse().slice(0, 10);
+    if (!evts.length) {
+      al.innerHTML = '<div class="empty-state" style="padding:12px"><div class="empty-icon">☰</div>No events</div>';
+    } else {
+      al.innerHTML = evts.map(e => `<div class="audit-row">
+        <span class="audit-type">${escHTML(e.type)}</span>
+        <span class="audit-detail">${escHTML(e.taskId || e.sourceWorld || e.targetWorld || e.worldId || e.fromWorld || '')}</span>
+        <span class="audit-time">${fmtTs(e._ts || e.timestamp)}</span>
+      </div>`).join('');
+    }
   }
 }
 
 // ── Render Peers page ─────────────────────────────────────────────
 function renderPeers() {
   const el = document.getElementById('peers-full-list');
+  if (!el) return;
   if (!_state.peers.length) {
     el.innerHTML = '<div class="empty-state"><div class="empty-icon">⬡</div>No peers configured</div>';
     return;
@@ -1186,7 +2826,7 @@ function renderTasks() {
       <div class="task-time">From: ${escHTML((t.sourceWorld||'').slice(0,24))} · ${relTime(t.createdAt)}</div>
     </div>
     <div class="task-actions">
-      ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}')">View</button>` : ''}
+      ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}','${t.sourceWorld||''}')">View</button>` : ''}
       ${t.status === 'pending-approval' ? `
         <button class="btn btn-green" onclick="approveTask('${t.taskId}')">Approve</button>
         <button class="btn btn-red" onclick="denyTask('${t.taskId}')">Deny</button>
@@ -1210,7 +2850,7 @@ function renderArtifacts() {
       <div class="task-prompt" style="white-space:normal;font-size:12px;">${escHTML(t.prompt || '—')}</div>
       <div class="task-time">${relTime(t.createdAt)}</div>
     </div>
-    <button class="btn" onclick="viewArtifact('${t.artifactId}')">View Artifact</button>
+    <button class="btn" onclick="viewArtifact('${t.artifactId}','${t.sourceWorld||''}')">View Artifact</button>
   </div>`).join('');
 }
 
@@ -1289,17 +2929,45 @@ async function denyTask(taskId) {
 }
 
 // ── Artifact view ─────────────────────────────────────────────────
-async function viewArtifact(artifactId) {
+var _artifactText = '';
+var _artifactSourceWorld = null;
+
+async function viewArtifact(artifactId, sourceWorldId) {
+  _artifactText = '';
+  _artifactSourceWorld = sourceWorldId || null;
   document.getElementById('artifact-body').textContent = 'Loading…';
+  const sendBtn = document.getElementById('artifact-send-btn');
+  if (sendBtn) sendBtn.style.display = _artifactSourceWorld ? '' : 'none';
   openModal('modal-artifact');
   try {
     const res = await fetch(`/worldlink/local/artifact/${artifactId}`);
     const data = await res.json();
-    const body = data?.content?.body || data?.content || JSON.stringify(data, null, 2);
-    document.getElementById('artifact-body').textContent = body;
+    _artifactText = data?.content?.body || data?.content || JSON.stringify(data, null, 2);
+    document.getElementById('artifact-body').textContent = _artifactText;
   } catch(e) {
     document.getElementById('artifact-body').textContent = 'Error loading artifact: ' + e.message;
   }
+}
+
+function artifactCopy(btn) {
+  if (!_artifactText) return;
+  navigator.clipboard?.writeText(_artifactText).then(() => { btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy', 1500); })
+    .catch(() => { var ta = document.createElement('textarea'); ta.value = _artifactText; ta.style.cssText = 'position:fixed;top:-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); btn.textContent = '✓ Copied'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1500); });
+}
+
+async function artifactSendAsMessage() {
+  if (!_artifactText || !_artifactSourceWorld) return;
+  var btn = document.getElementById('artifact-send-btn');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  try {
+    var res = await fetch('/worldlink/local/send-message', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetWorldId: _artifactSourceWorld, text: _artifactText }),
+    });
+    var data = await res.json();
+    if (data.ok) { btn.textContent = '✓ Sent!'; setTimeout(() => closeModal('modal-artifact'), 1000); }
+    else { btn.textContent = '→ Send as message'; btn.disabled = false; alert(data.error || 'Failed'); }
+  } catch(e) { btn.textContent = '→ Send as message'; btn.disabled = false; }
 }
 
 // ── Send message modal ────────────────────────────────────────────
@@ -1422,6 +3090,10 @@ async function loadBrain() {
 
 async function refreshAll() {
   try {
+    // Snapshot prev state for change detection
+    const prevMsgs  = _state.messages.slice();
+    const prevTasks = _state.tasks.slice();
+
     const [peersRes, tasksRes, auditRes, msgsRes, brainRes] = await Promise.all([
       fetch('/worldlink/peers').then(r => r.json()).catch(() => ({})),
       fetch('/worldlink/tasks').then(r => r.json()).catch(() => ({})),
@@ -1442,10 +3114,8 @@ async function refreshAll() {
     _state.messages = newMsgs.map(m => ({ ...m, read: readIds.has(m.id) }));
 
     // Update world ID + name from peers endpoint (includes own identity)
-    if (peersRes.worldId && !_state.worldId) {
-      _state.worldId = peersRes.worldId;
-      _state.worldName = peersRes.worldName || 'My World';
-    }
+    if (peersRes.worldId) _state.worldId = peersRes.worldId;
+    if (peersRes.worldName) _state.worldName = peersRes.worldName;
 
     // Update topbar
     const shortId = _state.worldId ? _state.worldId.slice(0, 20) + '…' : 'Not initialized';
@@ -1462,8 +3132,23 @@ async function refreshAll() {
       } catch {}
     }
 
+    // Detect state changes → spawn light packets
+    _wCheckNewMessages(prevMsgs, _state.messages);
+    _wCheckTaskChanges(prevTasks, _state.tasks);
+
+    // Sync Three.js world scene
+    syncWorldScene(_state.worldName, _state.peers);
+
+    // Refresh session drawer if open
+    if (_sessionPeer) {
+      const updated = _state.peers.find(function(p){ return p.worldId === _sessionPeer.worldId; });
+      if (updated) { _sessionPeer = updated; renderSessionHeader(); }
+      renderSessionTimeline();
+    }
+
     renderOverview();
     renderWorldViz();
+    renderConnections();
     renderPeers();
     renderTasks();
     renderArtifacts();
@@ -1472,7 +3157,7 @@ async function refreshAll() {
     renderAuditFull();
     renderSettings();
     updateMsgBadge();
-    document.getElementById('my-uptime').textContent = uptime();
+    const _upEl = document.getElementById('my-uptime'); if (_upEl) _upEl.textContent = uptime();
 
   } catch(e) {
     console.error('Refresh failed:', e);
@@ -1480,11 +3165,12 @@ async function refreshAll() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────
-document.getElementById('listen-port').textContent = `Listening on :${window.location.port || '7461'}`;
+const _listenPortEl = document.getElementById('listen-port'); if (_listenPortEl) _listenPortEl.textContent = `Listening on :${window.location.port || '7461'}`;
+initWorldScene();
 refreshAll();
 setInterval(refreshAll, 5000);
 setInterval(() => {
-  document.getElementById('my-uptime').textContent = uptime();
+  const _upEl = document.getElementById('my-uptime'); if (_upEl) _upEl.textContent = uptime();
 }, 30000);
 </script>
 </body>

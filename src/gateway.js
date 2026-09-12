@@ -26,9 +26,22 @@ function createGateway(opts = {}) {
 
   // ── Load identity + config ─────────────────────────────────────────
   let wlId  = null;
-  let wlCfg = { worldName: 'My World', capabilities: [], trustedPeers: [], localOnly: true };
+  let wlCfg = { worldName: os.hostname().replace(/\.local$/, '') || 'My World', capabilities: [], trustedPeers: [], localOnly: true };
   try { wlId  = JSON.parse(fs.readFileSync(IDENTITY_FILE, 'utf8')); } catch {}
   try { wlCfg = { ...wlCfg, ...JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')) }; } catch {}
+
+  // In-memory set of paused worldIds (persisted in config.disabledPeers)
+  const disabledPeers = new Set(Array.isArray(wlCfg.disabledPeers) ? wlCfg.disabledPeers : []);
+
+  // ── Auto-init: generate identity on first run (no terminal command needed) ──
+  if (!wlId) {
+    const { publicKey, privateKey } = identity.generateKeypair();
+    wlId = { worldId: `wld_${crypto.randomBytes(12).toString('hex')}`, publicKey, privateKey };
+    try {
+      fs.writeFileSync(IDENTITY_FILE, JSON.stringify(wlId, null, 2));
+      fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2));
+    } catch (e) { console.error('  [WorldLink] Could not write identity:', e.message); }
+  }
 
   // ── In-memory state ────────────────────────────────────────────────
   const sessions   = new Map(); // token → session
@@ -115,6 +128,39 @@ function createGateway(opts = {}) {
     audit.write({ type: 'task.started', taskId, sourceWorld, capability, timestamp: Math.floor(Date.now() / 1000) });
     broadcast({ type: 'task.started', taskId, sourceWorld, capability });
 
+    // context-handoff — assemble brain snapshot without running Claude
+    if (capability === 'context-handoff') {
+      try {
+        const lines = [`# Context Handoff — ${wlCfg.worldName || wlId?.worldId || 'Unknown World'}`];
+        lines.push(`\n_Snapshot taken ${new Date().toISOString()}_`);
+        const records = brain.list();
+        lines.push(`\n## Brain Records (${records.length})`);
+        if (records.length === 0) { lines.push('_No brain records._'); }
+        else { for (const r of records) lines.push(`- **${r.type || 'note'}** [${r.scope || 'global'}]: ${r.summary || r.content || r.text || r.id}`); }
+        const output = lines.join('\n');
+        const artifactId = `wla_${crypto.randomUUID()}`;
+        artifacts.set(artifactId, {
+          artifactId, taskId, sourceWorld, type: 'response',
+          content: { format: 'markdown', body: output },
+          sizeBytes: Buffer.byteLength(output, 'utf8'),
+          createdAt: Date.now(), expiresAt: Date.now() + 3_600_000,
+          checksum: crypto.createHash('sha256').update(output).digest('hex'),
+        });
+        task.status = 'completed'; task.artifactId = artifactId; task.result = output;
+        tasks.set(taskId, task);
+        audit.write({ type: 'task.completed', taskId, artifactId, sourceWorld, timestamp: Math.floor(Date.now() / 1000) });
+        broadcast({ type: 'task.completed', taskId, artifactId, sourceWorld });
+        broadcast({ type: 'artifact.ready', taskId, artifactId, sourceWorld });
+        console.log(`  [WorldLink] Context handoff ${taskId.slice(0, 12)} → ${artifactId.slice(0, 12)}`);
+      } catch (e) {
+        task.status = 'failed'; task.error = e.message; tasks.set(taskId, task);
+        audit.write({ type: 'task.failed', taskId, error: e.message, timestamp: Math.floor(Date.now() / 1000) });
+        broadcast({ type: 'task.failed', taskId, sourceWorld, error: e.message });
+        console.error(`  [WorldLink] Context handoff ${taskId.slice(0, 12)} failed:`, e.message);
+      }
+      return;
+    }
+
     try {
       const brainRecords = brain.querySelf(task.prompt);
       const output   = await execute.runTask(task, brainRecords);
@@ -187,6 +233,7 @@ function createGateway(opts = {}) {
         if (timestamp && Math.abs(Date.now() - timestamp * 1000) > 300_000) { json(400, { error: 'Request expired' }); return; }
         if (signature && !identity.verify(b, signature, sourcePublicKey)) { json(401, { error: 'Invalid signature' }); return; }
 
+        if (disabledPeers.has(sourceWorldId)) { json(403, { error: 'Connection paused by host' }); return; }
         const trusted   = (wlCfg.trustedPeers || []).find(p => p.worldId === sourceWorldId);
         const available = (wlCfg.capabilities || []).filter(c => !requestedCapabilities.length || requestedCapabilities.includes(c.id));
         if (!available.length && !trusted) { json(403, { error: 'No matching capabilities for this world' }); return; }
@@ -211,7 +258,17 @@ function createGateway(opts = {}) {
         const s = sessions.get(sessionToken);
         if (!s || s.worldId !== sourceWorldId) { json(401, { error: 'Invalid session' }); return; }
         if (!identity.verifyChallenge(s.challenge, challengeResponse, s.publicKey)) { json(401, { error: 'Challenge failed' }); return; }
+        if (disabledPeers.has(sourceWorldId)) { json(403, { error: 'Connection paused by host' }); return; }
         s.confirmed = true; sessions.set(sessionToken, s);
+        // Remove stale peer entries from the same host (e.g. after a world restarts with a new worldId)
+        if (s.host) {
+          for (const [staleId, stalePeer] of peers) {
+            if (staleId !== sourceWorldId && stalePeer.host === s.host) {
+              peers.delete(staleId);
+              console.log(`  [WorldLink] Removed stale peer ${staleId} (replaced by ${sourceWorldId} at ${s.host})`);
+            }
+          }
+        }
         // Only update status/host — do NOT overwrite sessionToken (that's our outbound key, set by initiateConnection)
         const existing = peers.get(sourceWorldId) || {};
         peers.set(sourceWorldId, { ...existing, status: 'online', inboundToken: sessionToken, host: s.host || null, lastSeen: Date.now() });
@@ -311,12 +368,13 @@ function createGateway(opts = {}) {
       if (req.method === 'GET' && req.url === '/worldlink/peers') {
         const list = [];
         for (const [worldId, p] of peers) {
-          list.push({ worldId, worldName: p.manifest?.worldName || worldId, status: p.status, host: p.host, capabilities: p.manifest?.capabilities?.map(c => c.id) || [], lastSeen: p.lastSeen });
+          const paused = disabledPeers.has(worldId);
+          list.push({ worldId, worldName: p.manifest?.worldName || worldId, status: paused ? 'paused' : p.status, host: p.host, capabilities: p.manifest?.capabilities?.map(c => c.id) || [], lastSeen: p.lastSeen, disabled: paused });
         }
         for (const cfg of (wlCfg.trustedPeers || [])) {
-          if (!peers.has(cfg.worldId)) list.push({ worldId: cfg.worldId, worldName: cfg.worldId, status: 'offline', host: cfg.host, capabilities: [], lastSeen: null });
+          if (!peers.has(cfg.worldId)) list.push({ worldId: cfg.worldId, worldName: cfg.worldName || cfg.worldId, status: cfg.disabled ? 'disabled' : 'offline', host: cfg.host, capabilities: [], lastSeen: null, disabled: !!cfg.disabled });
         }
-        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, peers: list });
+        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), peers: list });
         return;
       }
 
@@ -356,13 +414,98 @@ function createGateway(opts = {}) {
         return;
       }
 
-      // POST /worldlink/connect-peer  — initiate outbound connection
+      // POST /worldlink/connect-peer  — initiate outbound connection (UI-driven)
       if (req.method === 'POST' && req.url === '/worldlink/connect-peer') {
         const b = await body();
         const { host } = b;
         if (!host) { json(400, { error: 'host required' }); return; }
         try { json(200, await initiateConnection(host)); }
         catch (e) { json(502, { error: e.message }); }
+        return;
+      }
+
+      // POST /worldlink/local/peer/:worldId/pause — soft-disconnect (keep in list, block reconnects)
+      if (req.method === 'POST' && /^\/worldlink\/local\/peer\/[^/]+\/pause$/.test(req.url)) {
+        const worldId = decodeURIComponent(req.url.slice('/worldlink/local/peer/'.length, -'/pause'.length));
+        // Mark as paused in peers map (keeps it visible in UI) rather than deleting
+        const existing = peers.get(worldId) || {};
+        peers.set(worldId, { ...existing, status: 'paused' });
+        // Invalidate all sessions so they can't send further requests
+        for (const [tok, ses] of sessions) { if (ses.worldId === worldId) sessions.delete(tok); }
+        // Add to disabled set and persist
+        disabledPeers.add(worldId);
+        wlCfg.disabledPeers = [...disabledPeers];
+        try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
+        audit.write({ type: 'connection.paused', targetWorld: worldId, timestamp: Math.floor(Date.now() / 1000) });
+        json(200, { ok: true });
+        return;
+      }
+
+      // POST /worldlink/local/peer/:worldId/resume — re-enable a paused peer
+      if (req.method === 'POST' && /^\/worldlink\/local\/peer\/[^/]+\/resume$/.test(req.url)) {
+        const worldId = decodeURIComponent(req.url.slice('/worldlink/local/peer/'.length, -'/resume'.length));
+        disabledPeers.delete(worldId);
+        wlCfg.disabledPeers = [...disabledPeers];
+        // Update peer status to offline so UI knows it's re-enabled but not yet connected
+        const existing = peers.get(worldId);
+        if (existing) peers.set(worldId, { ...existing, status: 'offline' });
+        try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
+        const cfg = (wlCfg.trustedPeers || []).find(p => p.worldId === worldId);
+        json(200, { ok: true, host: existing?.host || cfg?.host });
+        return;
+      }
+
+      // DELETE /worldlink/local/peer/:worldId  — permanently remove a peer (UI-driven)
+      if (req.method === 'DELETE' && req.url.startsWith('/worldlink/local/peer/')) {
+        const worldId = decodeURIComponent(req.url.slice('/worldlink/local/peer/'.length));
+        peers.delete(worldId);
+        // Also remove from trustedPeers config if present
+        wlCfg.trustedPeers = (wlCfg.trustedPeers || []).filter(p => p.worldId !== worldId);
+        try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
+        audit.write({ type: 'connection.removed', targetWorld: worldId, timestamp: Math.floor(Date.now() / 1000) });
+        json(200, { ok: true });
+        return;
+      }
+
+      // POST /worldlink/local/set-name  — update world name from UI
+      if (req.method === 'POST' && req.url === '/worldlink/local/set-name') {
+        const b = await body();
+        const name = (b.worldName || '').trim().slice(0, 48);
+        if (!name) { json(400, { error: 'worldName required' }); return; }
+        wlCfg.worldName = name;
+        try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
+        json(200, { ok: true, worldName: name });
+        return;
+      }
+
+      // POST /worldlink/local/set-capabilities  — update offered capabilities from UI
+      if (req.method === 'POST' && req.url === '/worldlink/local/set-capabilities') {
+        const b = await body();
+        const ids = Array.isArray(b.capabilities) ? b.capabilities : [];
+        const CAP_META = {
+          'message':          { description: 'Accept messages from this world', requiresApproval: false, permissions: ['message'] },
+          'claude-task':      { description: 'Execute Claude AI tasks on behalf of this world', requiresApproval: true,  permissions: ['message','task.request'] },
+          'status.read':      { description: 'Share agent status with this world', requiresApproval: false, permissions: ['status.read'] },
+          'artifact.receive': { description: 'Accept file and artifact transfers from this world', requiresApproval: false, permissions: ['artifact.receive'] },
+          'context-handoff':  { description: 'Let other worlds request a snapshot of your brain records and agent context', requiresApproval: false, permissions: ['status.read'] },
+        };
+        wlCfg.capabilities = ids.filter(id => CAP_META[id]).map(id => ({ id, ...CAP_META[id] }));
+        try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
+        json(200, { ok: true, capabilities: wlCfg.capabilities.map(c => c.id) });
+        return;
+      }
+
+      // GET /worldlink/local/my-url  — return best-guess public URL for sharing
+      if (req.method === 'GET' && req.url === '/worldlink/local/my-url') {
+        const ifaces = os.networkInterfaces();
+        let localIp = '127.0.0.1';
+        for (const list of Object.values(ifaces)) {
+          for (const i of list) {
+            if (i.family === 'IPv4' && !i.internal) { localIp = i.address; break; }
+          }
+          if (localIp !== '127.0.0.1') break;
+        }
+        json(200, { url: `http://${localIp}:${port}`, localUrl: `http://localhost:${port}` });
         return;
       }
 
@@ -543,18 +686,14 @@ function createGateway(opts = {}) {
     server.listen(port, () => {
       console.log(`\n  WorldLink Gateway`);
       console.log(`  ─────────────────────────────────────`);
-      if (wlId) {
-        console.log(`  World    : ${wlCfg.worldName}`);
-        console.log(`  ID       : ${wlId.worldId}`);
-        console.log(`  Port     : ${port}`);
-        console.log(`  Status   : http://localhost:${port}/`);
-        console.log(`  Manifest : http://localhost:${port}/worldlink/manifest`);
-        if (autoApprove) console.log(`  Mode     : AUTO-APPROVE (testing)`);
-      } else {
-        console.log(`  Not initialized. Run: worldlink-gateway init`);
-      }
+      console.log(`  World    : ${wlCfg.worldName}`);
+      console.log(`  ID       : ${wlId.worldId}`);
+      console.log(`  Port     : ${port}`);
+      console.log(`  Status   : http://localhost:${port}/`);
+      console.log(`  Manifest : http://localhost:${port}/worldlink/manifest`);
+      if (autoApprove) console.log(`  Mode     : AUTO-APPROVE (testing)`);
       console.log(`  ─────────────────────────────────────\n`);
-      if (wlId) setTimeout(autoConnect, 1500);
+      setTimeout(autoConnect, 1500);
     });
     return server;
   }
