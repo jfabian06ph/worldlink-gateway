@@ -92,7 +92,7 @@ function createGateway(opts = {}) {
 
   async function initiateConnection(host) {
     if (!wlId) throw new Error('Not initialized. Run: worldlink-gateway init');
-    const base = host.startsWith('http') ? host : `http://${host}`;
+    const base = (host.startsWith('http') ? host : `http://${host}`).replace(/\/+$/, '');
 
     const manifest = await wlFetch(`${base}/worldlink/manifest`);
     if (!manifest.worldId) throw new Error(`No WorldLink manifest at ${host}`);
@@ -683,7 +683,7 @@ function createGateway(opts = {}) {
   }
 
   function start() {
-    server.listen(port, () => {
+    server.listen(port, '0.0.0.0', () => {
       console.log(`\n  WorldLink Gateway`);
       console.log(`  ─────────────────────────────────────`);
       console.log(`  World    : ${wlCfg.worldName}`);

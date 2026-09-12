@@ -7,28 +7,33 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #060d1a;
-  --surface: #0d1929;
-  --surface-2: #111f35;
-  --border: #1a3a5c;
-  --border-light: #1e4470;
-  --text: #e2e8f0;
-  --text-muted: #64748b;
+  --bg: #050b18;
+  --bg2: #07101f;
+  --surface: rgba(10,20,36,0.72);
+  --surface-2: rgba(14,26,44,0.85);
+  --surface-solid: #0d1929;
+  --border: rgba(26,58,92,0.6);
+  --border-light: rgba(30,68,112,0.7);
+  --text: #cbd5e1;
+  --text-muted: #475569;
   --text-strong: #f1f5f9;
   --cyan: #06b6d4;
   --cyan-dim: #0e4a5c;
-  --cyan-glow: rgba(6,182,212,0.15);
+  --cyan-glow: rgba(6,182,212,0.1);
   --green: #4ade80;
   --green-dim: #14532d;
   --amber: #f59e0b;
   --amber-dim: #451a03;
   --red: #f87171;
   --red-dim: #450a0a;
-  --sidebar-w: 180px;
+  --sidebar-w: 200px;
 }
 html, body { height: 100%; }
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(6,182,212,0.035) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 80% 110%, rgba(99,102,241,0.025) 0%, transparent 65%),
+    #050b18;
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-size: 14px;
@@ -40,16 +45,46 @@ body {
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
-  background: var(--surface);
+  background: rgba(7,14,27,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  position: relative;
+}
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(6,182,212,0.4) 30%, rgba(6,182,212,0.15) 70%, transparent);
+  pointer-events: none;
+  z-index: 1;
 }
 .sidebar-header {
-  padding: 18px 16px 14px;
+  padding: 20px 16px 16px;
   border-bottom: 1px solid var(--border);
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sidebar-orb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 36%, #22d3ee 0%, #0891b2 55%, #164e63 100%);
+  box-shadow: 0 0 10px rgba(6,182,212,0.4), 0 0 20px rgba(6,182,212,0.12);
+  flex-shrink: 0;
+  animation: sidebar-orb-pulse 3s ease-in-out infinite;
+}
+@keyframes sidebar-orb-pulse {
+  0%,100% { box-shadow: 0 0 8px rgba(6,182,212,.35), 0 0 16px rgba(6,182,212,.1); }
+  50%      { box-shadow: 0 0 16px rgba(6,182,212,.6), 0 0 32px rgba(6,182,212,.2); }
 }
 .sidebar-title {
   font-size: 13px;
@@ -60,14 +95,15 @@ body {
 }
 .sidebar-badge {
   display: inline-block;
-  background: var(--cyan-dim);
+  background: rgba(6,182,212,0.1);
   color: var(--cyan);
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   padding: 1px 5px;
   border-radius: 3px;
   margin-top: 4px;
+  border: 1px solid rgba(6,182,212,0.2);
 }
 .sidebar-nav {
   flex: 1;
@@ -85,13 +121,16 @@ body {
   font-weight: 500;
   transition: all 0.15s;
   border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  margin: 1px 8px 1px 0;
   user-select: none;
 }
-.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item:hover { color: var(--text); background: rgba(6,182,212,0.05); border-left-color: rgba(6,182,212,0.2); }
 .nav-item.active {
   color: var(--cyan);
   background: var(--cyan-glow);
   border-left-color: var(--cyan);
+  box-shadow: inset 0 0 20px rgba(6,182,212,0.03);
 }
 .nav-item .nav-icon { font-size: 14px; width: 16px; text-align: center; }
 .nav-badge {
@@ -114,6 +153,7 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
+  background: rgba(0,0,0,0.2);
 }
 .online-dot {
   width: 7px;
@@ -126,7 +166,7 @@ body {
 }
 @keyframes pulse-dot {
   0%, 100% { box-shadow: 0 0 4px var(--green); }
-  50% { box-shadow: 0 0 10px var(--green); }
+  50% { box-shadow: 0 0 10px var(--green), 0 0 20px rgba(74,222,128,0.15); }
 }
 .footer-label { font-size: 11px; color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .footer-version { font-size: 10px; color: var(--text-muted); opacity: 0.5; }
@@ -144,9 +184,12 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px;
+  padding: 0 24px;
+  height: 52px;
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background: rgba(5,11,24,0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   flex-shrink: 0;
 }
 .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-strong); }
@@ -167,7 +210,13 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
+  background: rgba(255,255,255,0.03);
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  transition: border-color 0.15s;
 }
+.topbar-worldid:hover { border-color: rgba(6,182,212,0.3); }
 .topbar-worldid:hover .copy-icon { color: var(--cyan); }
 .copy-icon { font-size: 11px; color: var(--text-muted); transition: color 0.15s; }
 .topbar-spacer { flex: 1; }
@@ -175,10 +224,10 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(74,222,128,0.1);
-  border: 1px solid rgba(74,222,128,0.25);
+  background: rgba(74,222,128,0.06);
+  border: 1px solid rgba(74,222,128,0.18);
   color: var(--green);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   padding: 4px 10px;
   border-radius: 6px;
@@ -191,7 +240,7 @@ body {
   animation: pulse-dot 2s infinite;
 }
 .refresh-btn {
-  background: var(--surface-2);
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
   color: var(--text-muted);
   padding: 5px 12px;
@@ -204,13 +253,14 @@ body {
   align-items: center;
   gap: 6px;
 }
-.refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.refresh-btn:hover { border-color: rgba(6,182,212,0.3); color: var(--cyan); background: rgba(6,182,212,0.05); }
 
 /* ── Content ──────────────────────────────── */
 .content {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  background: radial-gradient(ellipse 100% 50% at 50% -5%, rgba(6,182,212,0.02) 0%, transparent 60%);
 }
 .content::-webkit-scrollbar { width: 5px; }
 .content::-webkit-scrollbar-track { background: transparent; }
@@ -221,10 +271,22 @@ body {
 
 /* ── Cards ────────────────────────────────── */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: rgba(10,20,36,0.7);
+  border: 1px solid rgba(26,58,92,0.6);
+  border-radius: 14px;
   padding: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(6,182,212,0.12), transparent);
+  pointer-events: none;
 }
 .card-title {
   font-size: 12px;
@@ -320,7 +382,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(26,58,92,0.4);
 }
 .peer-item:last-child { border-bottom: none; }
 .peer-avatar {
@@ -340,7 +402,7 @@ body {
 .peer-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .peer-actions { display: flex; align-items: center; gap: 6px; }
 .icon-btn {
-  background: var(--surface-2);
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
   color: var(--text-muted);
   width: 28px;
@@ -354,7 +416,7 @@ body {
   transition: all 0.15s;
   font-family: inherit;
 }
-.icon-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.icon-btn:hover { border-color: rgba(6,182,212,0.4); color: var(--cyan); background: rgba(6,182,212,0.06); }
 
 /* ── Task list ────────────────────────────── */
 .task-item {
@@ -362,7 +424,7 @@ body {
   align-items: flex-start;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(26,58,92,0.4);
 }
 .task-item:last-child { border-bottom: none; }
 .task-meta { flex: 1; min-width: 0; }
@@ -371,7 +433,7 @@ body {
 .task-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; opacity: 0.7; }
 .task-actions { display: flex; gap: 5px; flex-shrink: 0; }
 .btn {
-  background: var(--surface-2);
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
   color: var(--text-muted);
   padding: 3px 10px;
@@ -381,7 +443,7 @@ body {
   font-family: inherit;
   transition: all 0.15s;
 }
-.btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn:hover { border-color: rgba(6,182,212,0.35); color: var(--cyan); background: rgba(6,182,212,0.05); }
 .btn-green { border-color: rgba(74,222,128,0.3); color: var(--green); background: rgba(74,222,128,0.06); }
 .btn-green:hover { background: rgba(74,222,128,0.12); }
 .btn-red { border-color: rgba(248,113,113,0.3); color: var(--red); background: rgba(248,113,113,0.06); }
@@ -404,14 +466,6 @@ body {
 .audit-detail { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .audit-time { color: var(--text-muted); font-size: 10px; opacity: 0.6; flex-shrink: 0; }
 
-/* ── Brain record ─────────────────────────── */
-.brain-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
-.brain-item:last-child { border-bottom: none; }
-.brain-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.brain-summary { font-size: 13px; color: var(--text); line-height: 1.5; }
-.brain-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 11px; color: var(--text-muted); }
-.importance-bar { height: 4px; width: 80px; background: var(--border); border-radius: 2px; overflow: hidden; }
-.importance-fill { height: 100%; background: var(--cyan); border-radius: 2px; transition: width 0.3s; }
 
 /* ── Filter tabs ──────────────────────────── */
 .filter-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -431,7 +485,7 @@ body {
 .filter-tab.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-glow); }
 
 /* ── Messages ─────────────────────────────── */
-.message-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.message-item { padding: 10px 0; border-bottom: 1px solid rgba(26,58,92,0.4); }
 .message-item:last-child { border-bottom: none; }
 .message-from { font-size: 12px; font-weight: 600; color: var(--text-strong); margin-bottom: 3px; }
 .message-text { font-size: 13px; color: var(--text); line-height: 1.5; }
@@ -442,7 +496,7 @@ body {
 .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; letter-spacing: 0.04em; text-transform: uppercase; }
 .form-input {
   width: 100%;
-  background: var(--surface-2);
+  background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
   color: var(--text);
   padding: 8px 12px;
@@ -450,9 +504,9 @@ body {
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
-.form-input:focus { border-color: var(--cyan); }
+.form-input:focus { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.03); }
 .form-textarea { min-height: 80px; resize: vertical; }
 .toggle-row { display: flex; align-items: center; justify-content: space-between; }
 .toggle {
@@ -492,9 +546,10 @@ body {
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 20px rgba(6,182,212,0.2);
 }
-.btn-primary:hover { opacity: 0.85; }
+.btn-primary:hover { opacity: 0.9; box-shadow: 0 0 28px rgba(6,182,212,0.35); }
 
 /* ── Modals ───────────────────────────────── */
 .modal-backdrop {
@@ -502,6 +557,8 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 100;
   align-items: center;
   justify-content: center;
@@ -509,25 +566,29 @@ body {
 }
 .modal-backdrop.open { display: flex; }
 .modal {
-  background: var(--surface);
+  background: rgba(10,20,36,0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 24px;
   max-width: 560px;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(6,182,212,0.06);
 }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .modal-title { font-size: 15px; font-weight: 700; color: var(--text-strong); }
 .modal-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px; }
 .modal-close:hover { color: var(--text); }
 .artifact-content {
-  background: var(--bg);
+  background: rgba(5,11,24,0.8);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
   font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
   color: var(--text);
   line-height: 1.7;
   white-space: pre-wrap;
@@ -538,19 +599,9 @@ body {
 .artifact-content::-webkit-scrollbar { width: 4px; }
 .artifact-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* ── Brain form ───────────────────────────── */
-.brain-form-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-}
-.brain-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-@media (max-width: 640px) { .brain-form-grid { grid-template-columns: 1fr; } }
 .form-select {
   width: 100%;
-  background: var(--surface-2);
+  background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
   color: var(--text);
   padding: 8px 12px;
@@ -559,9 +610,9 @@ body {
   font-family: inherit;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
-.form-select:focus { border-color: var(--cyan); }
+.form-select:focus { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.03); }
 .form-range { width: 100%; accent-color: var(--cyan); }
 .form-range-row { display: flex; align-items: center; gap: 10px; }
 .range-val { font-size: 12px; color: var(--text-muted); min-width: 30px; text-align: right; }
@@ -735,14 +786,16 @@ body {
   width: 38%;
   min-width: 340px;
   max-width: 500px;
-  background: #0d1929;
-  border-left: 1px solid #1a3a5c;
+  background: rgba(7,14,27,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(6,182,212,0.06);
   display: flex;
   flex-direction: column;
   z-index: 50;
   transform: translateX(102%);
   transition: transform .28s cubic-bezier(.4,0,.2,1);
-  box-shadow: -8px 0 32px rgba(0,0,0,.5);
+  box-shadow: -12px 0 48px rgba(0,0,0,.5), -1px 0 0 rgba(6,182,212,0.06);
 }
 #session-drawer.open { transform: translateX(0); }
 .session-header {
@@ -750,12 +803,13 @@ body {
   align-items: center;
   gap: 10px;
   padding: 16px 18px;
-  border-bottom: 1px solid #1a3a5c;
+  border-bottom: 1px solid rgba(26,58,92,0.6);
   flex-shrink: 0;
+  background: rgba(0,0,0,0.2);
 }
 .session-back {
-  background: transparent;
-  border: 1px solid #1a3a5c;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(26,58,92,0.6);
   color: #64748b;
   width: 30px; height: 30px;
   border-radius: 7px;
@@ -780,9 +834,10 @@ body {
 .session-close-btn:hover { color: #f1f5f9; }
 .session-tabs {
   display: flex;
-  border-bottom: 1px solid #1a3a5c;
+  border-bottom: 1px solid rgba(26,58,92,0.6);
   padding: 0 14px;
   flex-shrink: 0;
+  background: rgba(0,0,0,0.1);
 }
 .session-tab {
   background: transparent;
@@ -820,22 +875,22 @@ body {
   word-break: break-word;
 }
 .tl-mine .tl-bubble {
-  background: rgba(6,182,212,0.16);
-  border: 1px solid rgba(6,182,212,0.25);
+  background: rgba(6,182,212,0.1);
+  border: 1px solid rgba(6,182,212,0.2);
   color: #e2e8f0;
   border-bottom-right-radius: 4px;
 }
 .tl-theirs .tl-bubble {
-  background: #111f35;
-  border: 1px solid #1a3a5c;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(26,58,92,0.7);
   color: #e2e8f0;
   border-bottom-left-radius: 4px;
 }
 .tl-time { font: 10px/1 -apple-system,sans-serif; color: #64748b; margin-top: 4px; padding: 0 4px; }
 .tl-task { align-items: stretch; }
 .tl-task-card {
-  background: #111f35;
-  border: 1px solid #1a3a5c;
+  background: rgba(14,26,44,0.7);
+  border: 1px solid rgba(26,58,92,0.6);
   border-radius: 10px;
   padding: 11px 13px;
 }
@@ -844,8 +899,8 @@ body {
 .tl-artifact {
   display: flex; align-items: center; gap: 10px;
   padding: 12px;
-  background: #111f35;
-  border: 1px solid #1a3a5c;
+  background: rgba(14,26,44,0.7);
+  border: 1px solid rgba(26,58,92,0.6);
   border-radius: 10px;
   cursor: pointer;
   transition: border-color .15s;
@@ -860,15 +915,16 @@ body {
 /* ── Session composer ─────────────────────────────────────────────── */
 .session-composer {
   padding: 10px 16px 14px;
-  border-top: 1px solid #1a3a5c;
+  border-top: 1px solid rgba(26,58,92,0.6);
   flex-shrink: 0;
+  background: rgba(0,0,0,0.15);
 }
 .composer-cap-row { display: none; margin-bottom: 8px; align-items: center; gap: 8px; }
 .composer-cap-row.visible { display: flex; }
 .composer-row { display: flex; align-items: flex-end; gap: 8px; position: relative; }
 .composer-type-btn {
-  background: #111f35;
-  border: 1px solid #1a3a5c;
+  background: rgba(14,26,44,0.7);
+  border: 1px solid rgba(26,58,92,0.6);
   color: #64748b;
   font: 500 11px/1 -apple-system,sans-serif;
   padding: 9px 10px;
@@ -885,8 +941,10 @@ body {
   bottom: 100%;
   left: 0;
   margin-bottom: 6px;
-  background: #0d1929;
-  border: 1px solid #1a3a5c;
+  background: rgba(10,20,36,0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(26,58,92,0.6);
   border-radius: 8px;
   overflow: hidden;
   z-index: 60;
@@ -902,11 +960,11 @@ body {
   cursor: pointer;
   transition: background .1s;
 }
-.composer-type-item:hover { background: #111f35; }
+.composer-type-item:hover { background: rgba(14,26,44,0.8); }
 .composer-input {
   flex: 1;
-  background: #111f35;
-  border: 1px solid #1a3a5c;
+  background: rgba(14,26,44,0.7);
+  border: 1px solid rgba(26,58,92,0.7);
   color: #e2e8f0;
   padding: 8px 12px;
   border-radius: 8px;
@@ -915,12 +973,12 @@ body {
   resize: none;
   min-height: 36px;
   max-height: 120px;
-  transition: border-color .15s;
+  transition: border-color .15s, background .15s;
   font-family: inherit;
   overflow-y: auto;
 }
-.composer-input:focus { border-color: var(--cyan); }
-.composer-input::placeholder { color: #374151; }
+.composer-input:focus { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.03); }
+.composer-input::placeholder { color: #1e3a5c; }
 .composer-send-btn {
   background: var(--cyan);
   border: none;
@@ -931,7 +989,8 @@ body {
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  transition: opacity .15s;
+  transition: opacity .15s, box-shadow .15s;
+  box-shadow: 0 0 16px rgba(6,182,212,0.25);
 }
 .composer-send-btn:hover { opacity: 0.85; }
 @keyframes wl-pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
@@ -939,7 +998,8 @@ body {
 /* ── Connections page ───────────────────────────────────────────── */
 .conn-identity-card {
   display: flex; align-items: center; gap: 14px;
-  background: #0d1929; border: 1px solid #1a3a5c; border-radius: 12px;
+  background: rgba(10,20,36,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(26,58,92,0.6); border-radius: 12px;
   padding: 16px 18px; margin-bottom: 10px;
 }
 .conn-identity-orb {
@@ -951,24 +1011,24 @@ body {
 .conn-identity-label { font: 500 10px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 5px; }
 .conn-identity-name { font: 700 16px/1.2 -apple-system,sans-serif; color: #f1f5f9; }
 .conn-identity-id { font: 400 11px/1 -apple-system,sans-serif; color: #475569; font-family: monospace; margin-top: 3px; }
-.conn-edit-name-btn { background: transparent; border: 1px solid #1a3a5c; color: #475569; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.conn-edit-name-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(26,58,92,0.6); color: #475569; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
 .conn-edit-name-btn:hover { border-color: var(--cyan); color: var(--cyan); }
 .conn-name-editor { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-.conn-share-row { background: rgba(6,182,212,0.05); border: 1px solid rgba(6,182,212,0.15); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
+.conn-share-row { background: rgba(6,182,212,0.04); border: 1px solid rgba(6,182,212,0.12); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
 .conn-share-label { font: 500 11px/1 -apple-system,sans-serif; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing:.05em; }
 .conn-share-url-row { display: flex; align-items: center; gap: 8px; }
 .conn-share-url { font: 500 13px/1 monospace; color: #06b6d4; word-break: break-all; flex: 1; }
-.conn-copy-btn { background: transparent; border: 1px solid rgba(6,182,212,0.3); color: #06b6d4; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all .15s; flex-shrink: 0; }
-.conn-copy-btn:hover { background: rgba(6,182,212,0.1); }
+/* .conn-copy-btn overridden below — see glassmorphism overrides */
 .conn-section-title { font: 600 11px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 10px; display:flex; align-items:baseline; gap:8px; }
 .conn-cap-subtitle { font: 400 11px/1 -apple-system,sans-serif; color: #334155; text-transform: none; letter-spacing: 0; }
 .conn-caps-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .conn-cap-row {
   display: flex; align-items: flex-start; gap: 14px;
-  background: #0d1929; border: 1px solid #1a3a5c; border-radius: 10px;
+  background: rgba(10,20,36,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(26,58,92,0.6); border-radius: 10px;
   padding: 14px 16px; transition: border-color .2s;
 }
-.conn-cap-row.enabled { border-color: #0e4d6e; }
+.conn-cap-row.enabled { border-color: rgba(6,182,212,0.2); background: rgba(6,182,212,0.03); }
 .conn-cap-body { flex: 1; min-width: 0; }
 .conn-cap-label { font: 600 13px/1.2 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 4px; }
 .conn-cap-desc { font: 400 12px/1.4 -apple-system,sans-serif; color: #475569; }
@@ -983,10 +1043,11 @@ body {
 .conn-cap-warning-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 .conn-peer-card {
   display: flex; align-items: center; gap: 12px;
-  background: #0d1929; border: 1px solid #1a3a5c; border-radius: 10px;
+  background: rgba(10,20,36,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(26,58,92,0.6); border-radius: 10px;
   padding: 14px 16px; margin-bottom: 8px; transition: border-color .2s;
 }
-.conn-peer-card:hover { border-color: #234d6e; }
+.conn-peer-card:hover { border-color: rgba(6,182,212,0.2); }
 .conn-peer-orb { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
 .conn-peer-body { flex: 1; min-width: 0; }
 .conn-peer-name { font: 600 14px/1.2 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 3px; }
@@ -999,14 +1060,14 @@ body {
   background: #1a2d42; border: none; cursor: pointer; position: relative;
   transition: background .2s; flex-shrink: 0; outline: none;
 }
-.conn-toggle.on { background: #0e7490; }
+.conn-toggle.on { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.35); }
 .conn-toggle::after {
   content: ''; position: absolute; top: 3px; left: 3px;
   width: 18px; height: 18px; border-radius: 50%;
   background: #475569; transition: left .2s, background .2s;
 }
-.conn-toggle.on::after { left: 21px; background: #06b6d4; }
-.conn-disconnect-btn { background: transparent; border: 1px solid #2d1a1a; color: #64748b; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.conn-toggle.on::after { left: 21px; background: #06b6d4; box-shadow: 0 0 6px rgba(6,182,212,0.4); }
+.conn-disconnect-btn { background: rgba(255,255,255,0.04); border: 1px solid #2d1a1a; color: #64748b; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
 .conn-disconnect-btn:hover { border-color: #ef4444; color: #ef4444; }
 .conn-form { display: flex; gap: 8px; margin-bottom: 8px; }
 .conn-form-hint { font: 12px/1.4 -apple-system,sans-serif; color: #475569; min-height: 18px; }
@@ -1052,13 +1113,140 @@ body {
 .mem-section-label { font: 600 10px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 8px; }
 .mem-record {
   padding: 9px 11px; margin-bottom: 7px;
-  background: #111f35; border: 1px solid #1a3a5c; border-radius: 8px;
+  background: rgba(14,26,44,0.7); border: 1px solid rgba(26,58,92,0.6); border-radius: 8px;
 }
 .mem-record-local { opacity: 0.6; }
 .mem-record-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
 .mem-type { font: 600 10px/1 -apple-system,sans-serif; color: #06b6d4; text-transform: uppercase; letter-spacing:.06em; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 4px; padding: 2px 6px; }
 .mem-time { font: 10px/1 -apple-system,sans-serif; color: #475569; margin-left: auto; }
 .mem-summary { font: 12px/1.5 -apple-system,sans-serif; color: #94a3b8; }
+
+/* ── Section header (page title + subtitle) ── */
+.section-header { margin-bottom: 24px; }
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.section-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Copy / edit buttons — bigger ── */
+.conn-copy-btn {
+  background: rgba(6,182,212,0.08);
+  border: 1px solid rgba(6,182,212,0.25);
+  color: #06b6d4;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.conn-copy-btn:hover { background: rgba(6,182,212,0.15); border-color: rgba(6,182,212,0.45); }
+.conn-copy-btn svg { width: 20px; height: 20px; stroke: currentColor; }
+.conn-edit-name-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(26,58,92,0.6);
+  color: #64748b;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.conn-edit-name-btn:hover { border-color: rgba(6,182,212,0.45); color: var(--cyan); }
+
+/* ── Brain Redesign ──────────────────────────────── */
+.brain-orbital-wrap {
+  width: 100%; height: 260px; border-radius: 16px; overflow: hidden;
+  position: relative; margin-bottom: 16px; flex-shrink: 0;
+  background: radial-gradient(ellipse 70% 80% at 50% 55%, rgba(6,182,212,0.06) 0%, transparent 70%), #020914;
+}
+#brain-orbital-canvas { width: 100%; height: 100%; display: block; }
+.brain-orbital-info { position: absolute; bottom: 16px; left: 20px; pointer-events: none; }
+.brain-orbital-title { font: 700 16px/1 -apple-system,sans-serif; color: #f1f5f9; letter-spacing: -.02em; }
+.brain-orbital-sub { font: 400 12px/1 -apple-system,sans-serif; color: #475569; margin-top: 5px; }
+
+.brain-action-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+.brain-composer {
+  background: var(--surface-2); backdrop-filter: blur(16px);
+  border: 1px solid var(--border-light); border-radius: 14px;
+  padding: 20px; margin-bottom: 16px;
+}
+.brain-composer-title { font: 700 12px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 16px; }
+.bc-ctx-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+@media (max-width: 640px) { .bc-ctx-grid { grid-template-columns: 1fr; } }
+.bc-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+
+.imp-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+.imp-pill { padding: 5px 10px; border-radius: 20px; font: 600 11px/1 -apple-system,sans-serif; cursor: pointer; border: 1px solid; transition: all .12s; }
+.imp-pill[data-v="low"]      { color: #64748b; border-color: rgba(100,116,139,.3); background: rgba(100,116,139,.07); }
+.imp-pill[data-v="normal"]   { color: #60a5fa; border-color: rgba(96,165,250,.3);  background: rgba(96,165,250,.07); }
+.imp-pill[data-v="high"]     { color: #f59e0b; border-color: rgba(245,158,11,.3);  background: rgba(245,158,11,.07); }
+.imp-pill[data-v="critical"] { color: #f87171; border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.07); }
+.imp-pill.active[data-v="low"]      { background: rgba(100,116,139,.22); border-color: rgba(100,116,139,.6); }
+.imp-pill.active[data-v="normal"]   { background: rgba(96,165,250,.22);  border-color: rgba(96,165,250,.6); }
+.imp-pill.active[data-v="high"]     { background: rgba(245,158,11,.22);  border-color: rgba(245,158,11,.6); }
+.imp-pill.active[data-v="critical"] { background: rgba(248,113,113,.22); border-color: rgba(248,113,113,.6); }
+
+.peer-share-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.peer-share-row { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.peer-share-row input { accent-color: var(--cyan); }
+.peer-share-name { font: 500 12px/1 -apple-system,sans-serif; color: var(--text); }
+.peer-share-sub  { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); }
+
+.brain-tabs { display: flex; gap: 2px; margin-bottom: 16px; background: rgba(255,255,255,.03); border-radius: 10px; padding: 3px; }
+.brain-tab-btn { flex: 1; padding: 7px 10px; border: none; background: transparent; border-radius: 8px; font: 600 12px/1 -apple-system,sans-serif; color: var(--text-muted); cursor: pointer; transition: all .15s; }
+.brain-tab-btn.active { background: var(--surface-2); color: var(--text-strong); }
+
+.brain-mem-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; transition: border-color .15s; }
+.brain-mem-card:hover { border-color: var(--border-light); }
+.brain-mem-row { display: flex; gap: 10px; align-items: flex-start; }
+.brain-mem-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.brain-mem-body { flex: 1; min-width: 0; }
+.brain-mem-summary { font: 600 13px/1.4 -apple-system,sans-serif; color: var(--text-strong); margin-bottom: 5px; }
+.brain-mem-ctx { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); margin-bottom: 7px; }
+.brain-mem-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.brain-mem-tag { padding: 2px 8px; border-radius: 12px; font: 500 10px/1.4 -apple-system,sans-serif; border: 1px solid; }
+.brain-mem-tag-type { background: rgba(6,182,212,.1); color: #06b6d4; border-color: rgba(6,182,212,.2); }
+.brain-mem-tag-imp[data-v="low"]      { background: rgba(100,116,139,.1); color: #64748b; border-color: rgba(100,116,139,.25); }
+.brain-mem-tag-imp[data-v="normal"]   { background: rgba(96,165,250,.1);  color: #60a5fa; border-color: rgba(96,165,250,.25); }
+.brain-mem-tag-imp[data-v="high"]     { background: rgba(245,158,11,.1);  color: #f59e0b; border-color: rgba(245,158,11,.25); }
+.brain-mem-tag-imp[data-v="critical"] { background: rgba(248,113,113,.1); color: #f87171; border-color: rgba(248,113,113,.25); }
+.brain-mem-shared { font: 400 10px/1 -apple-system,sans-serif; color: #22d3ee; }
+.brain-mem-provenance { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(26,58,92,.35); display: flex; gap: 14px; flex-wrap: wrap; font: 400 10px/1 -apple-system,sans-serif; color: var(--text-muted); }
+.brain-mem-provenance span { display: flex; gap: 3px; }
+.brain-mem-provenance strong { color: var(--text); }
+
+.brain-source-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.brain-source-row { display: flex; align-items: flex-start; gap: 12px; }
+.brain-source-ico { font-size: 20px; flex-shrink: 0; padding-top: 2px; }
+.brain-source-body { flex: 1; min-width: 0; }
+.brain-source-name { font: 700 13px/1 -apple-system,sans-serif; color: var(--text-strong); }
+.brain-source-path { font: 400 11px/1.3 -apple-system,sans-serif; color: var(--text-muted); margin-top: 2px; word-break: break-all; }
+.brain-source-indexed { display: flex; align-items: center; gap: 5px; font: 400 11px/1 -apple-system,sans-serif; color: var(--green); margin-top: 7px; }
+.brain-source-sync { display: flex; gap: 14px; margin-top: 5px; font: 400 10px/1 -apple-system,sans-serif; color: var(--text-muted); }
+.brain-source-sync strong { color: var(--text); }
+.brain-source-share { margin-top: 10px; }
+.brain-source-share-label { font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+.brain-source-notice { background: rgba(6,182,212,.05); border: 1px solid rgba(6,182,212,.15); border-radius: 8px; padding: 9px 12px; font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text-muted); margin-top: 10px; }
+
+.brain-access-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.brain-access-peer-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.brain-access-peer-name { font: 700 13px/1 -apple-system,sans-serif; color: var(--text-strong); }
+.brain-access-peer-sub { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); margin-top: 2px; }
+.brain-access-perm { display: flex; align-items: center; gap: 7px; font: 400 12px/1 -apple-system,sans-serif; color: var(--text); margin-bottom: 5px; cursor: pointer; }
+.brain-access-perm input { accent-color: var(--cyan); }
 </style>
 <!-- Three.js r134 — global build matching Adrian World visual system -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
@@ -1069,8 +1257,13 @@ body {
 <!-- Sidebar -->
 <nav class="sidebar">
   <div class="sidebar-header">
-    <div class="sidebar-title">WorldLink<br>Gateway</div>
-    <span class="sidebar-badge">BETA</span>
+    <div class="sidebar-logo">
+      <div class="sidebar-orb"></div>
+      <div>
+        <div class="sidebar-title">WorldLink</div>
+        <span class="sidebar-badge">GATEWAY</span>
+      </div>
+    </div>
   </div>
   <div class="sidebar-nav">
     <div class="nav-item active" data-page="overview" onclick="navigate('overview', this)">
@@ -1177,7 +1370,7 @@ body {
         <div class="conn-share-label">Share this URL so others can connect to you</div>
         <div class="conn-share-url-row">
           <span class="conn-share-url" id="conn-share-url">loading…</span>
-          <button class="conn-copy-btn" onclick="copyShareUrl()" title="Copy">⎘</button>
+          <button class="conn-copy-btn" onclick="copyShareUrl()" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
         </div>
       </div>
 
@@ -1244,50 +1437,143 @@ body {
 
     <!-- Brain -->
     <div class="page" id="page-brain">
-      <div class="brain-form-card">
-        <div class="card-title">Add Brain Record</div>
-        <div class="form-group">
-          <label class="form-label">Summary</label>
-          <textarea class="form-input form-textarea" id="brain-summary" placeholder="Describe what to remember…"></textarea>
+      <!-- Orbital visualization -->
+      <div class="brain-orbital-wrap">
+        <canvas id="brain-orbital-canvas"></canvas>
+        <div class="brain-orbital-info">
+          <div class="brain-orbital-title">World Brain</div>
+          <div class="brain-orbital-sub" id="brain-orbital-sub">Shared knowledge layer</div>
         </div>
-        <div class="brain-form-grid">
-          <div class="form-group" style="margin-bottom:0">
+      </div>
+
+      <!-- Action bar -->
+      <div class="brain-action-bar">
+        <button class="btn" id="bbtn-memory" onclick="brainToggleComposer()">+ Add Memory</button>
+        <button class="btn" id="bbtn-source" onclick="brainToggleAddSource()">+ Add Source</button>
+        <button class="btn" id="bbtn-harvest" onclick="brainHarvestSession()">⚡ Harvest Session</button>
+      </div>
+
+      <!-- Memory composer -->
+      <div id="brain-composer" class="brain-composer" style="display:none">
+        <div class="brain-composer-title">Add to Brain</div>
+        <div class="form-group">
+          <label class="form-label">What should this world remember?</label>
+          <textarea class="form-input form-textarea" id="bc-summary" placeholder="e.g. Authentication uses Supabase. OTP is the primary login method." style="min-height:80px;resize:vertical;"></textarea>
+        </div>
+        <div class="bc-ctx-grid">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Project</label>
+            <input class="form-input" id="bc-project" placeholder="e.g. Bantay Basura">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Repository</label>
+            <input class="form-input" id="bc-repo" placeholder="e.g. owner/repo">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Area / Component</label>
+            <input class="form-input" id="bc-area" placeholder="e.g. Authentication">
+          </div>
+        </div>
+        <div class="bc-type-row">
+          <div class="form-group" style="margin:0">
             <label class="form-label">Type</label>
-            <select class="form-select" id="brain-type">
-              <option value="fact">Fact</option>
+            <select class="form-select" id="bc-type">
               <option value="decision">Decision</option>
+              <option value="fact">Fact</option>
               <option value="constraint">Constraint</option>
+              <option value="convention">Convention</option>
+              <option value="learning">Learning</option>
               <option value="goal">Goal</option>
-              <option value="context">Context</option>
             </select>
           </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Scope</label>
-            <input class="form-input" id="brain-scope" placeholder="e.g. global" />
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Importance</label>
+            <div class="imp-pills" id="bc-imp-pills">
+              <div class="imp-pill" data-v="low" onclick="brainSetImp(this)">Low</div>
+              <div class="imp-pill active" data-v="normal" onclick="brainSetImp(this)">Normal</div>
+              <div class="imp-pill" data-v="high" onclick="brainSetImp(this)">High</div>
+              <div class="imp-pill" data-v="critical" onclick="brainSetImp(this)">Critical</div>
+            </div>
           </div>
         </div>
-        <div class="form-group mt-12">
-          <label class="form-label">Importance (0–1)</label>
-          <div class="form-range-row">
-            <input type="range" class="form-range" id="brain-importance" min="0" max="1" step="0.05" value="0.5"
-              oninput="document.getElementById('brain-importance-val').textContent = this.value">
-            <span class="range-val" id="brain-importance-val">0.5</span>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Access</label>
+          <label class="peer-share-row" style="margin-bottom:8px;">
+            <input type="checkbox" id="bc-private"> <span><span class="peer-share-name">Private</span> <span class="peer-share-sub">— only this world</span></span>
+          </label>
+          <div style="font:600 10px/1 -apple-system,sans-serif;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Share with peers</div>
+          <div class="peer-share-list" id="bc-peer-list">
+            <div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No connected peers</div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Visibility</label>
-          <select class="form-select" id="brain-visibility">
-            <option value="self">Self only</option>
-            <option value="pod">Pod (shared peers)</option>
-          </select>
+        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+          <span id="bc-save-msg" style="font:400 12px/1 -apple-system,sans-serif;color:var(--green);"></span>
+          <button class="btn" onclick="brainToggleComposer()">Cancel</button>
+          <button class="btn-primary" onclick="brainAddMemory()">Add Memory</button>
         </div>
-        <button class="btn-primary" onclick="addBrainRecord()">+ Add Record</button>
-        <span id="brain-save-msg" style="font-size:12px;margin-left:10px;color:var(--green);"></span>
       </div>
-      <div class="card">
-        <div class="card-title">Brain Records</div>
+
+      <!-- Add Source form -->
+      <div id="brain-add-source-form" class="brain-composer" style="display:none">
+        <div class="brain-composer-title">Add Knowledge Source</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Type</label>
+            <select class="form-select" id="bs-type">
+              <option value="repository">GitHub Repository</option>
+              <option value="folder">Local Folder</option>
+              <option value="file">File / Document</option>
+              <option value="api-spec">API Spec</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Name</label>
+            <input class="form-input" id="bs-name" placeholder="e.g. project-adrian">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Path / URL</label>
+          <input class="form-input" id="bs-path" placeholder="e.g. github.com/joseph/project-adrian or /Users/joseph/docs">
+        </div>
+        <div class="brain-source-notice" style="margin-bottom:14px">
+          ℹ Share knowledge, not source access. Peers can receive permitted Brain context derived from this source. This does not grant access to the underlying repository or files.
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn" onclick="brainToggleAddSource()">Cancel</button>
+          <button class="btn-primary" onclick="brainAddSource()">Add Source</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="brain-tabs">
+        <button class="brain-tab-btn active" id="btab-memories" onclick="brainTab('memories')">Memories</button>
+        <button class="brain-tab-btn" id="btab-sources" onclick="brainTab('sources')">Sources</button>
+        <button class="brain-tab-btn" id="btab-access" onclick="brainTab('access')">Access</button>
+      </div>
+
+      <!-- Memories -->
+      <div id="brain-tab-memories">
         <div id="brain-list">
-          <div class="empty-state"><div class="empty-icon">◎</div>No brain records</div>
+          <div class="empty-state"><div class="empty-icon">◎</div>No memories yet — add the first one above</div>
+        </div>
+      </div>
+
+      <!-- Sources -->
+      <div id="brain-tab-sources" style="display:none">
+        <div id="brain-sources-list">
+          <div class="empty-state"><div class="empty-icon">◈</div>No knowledge sources connected</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn" onclick="brainToggleAddSource()">+ Repository</button>
+          <button class="btn" onclick="brainToggleAddSource()">+ Folder</button>
+          <button class="btn" onclick="brainToggleAddSource()">+ Files</button>
+        </div>
+      </div>
+
+      <!-- Access -->
+      <div id="brain-tab-access" style="display:none">
+        <div id="brain-access-list">
+          <div class="empty-state"><div class="empty-icon">◎</div>No connected peers</div>
         </div>
       </div>
     </div>
@@ -1439,6 +1725,8 @@ function navigate(page, el) {
       }
     });
   }
+  // Brain canvas — init/resume on first visit
+  if (page === 'brain') requestAnimationFrame(_brainOrbitalInit);
   // Mark messages as read on visit
   if (page === 'messages') {
     _state.messages.forEach(m => m.read = true);
@@ -1465,7 +1753,10 @@ function flashMsg(id, text, ms) {
 // ── Time helpers ──────────────────────────────────────────────────
 function relTime(ms) {
   if (!ms) return '—';
-  const diff = Date.now() - ms;
+  // Accept ISO strings (brain records) or numeric ms timestamps
+  const t = typeof ms === 'string' ? new Date(ms).getTime() : ms;
+  if (!t || isNaN(t)) return '—';
+  const diff = Date.now() - t;
   if (diff < 60000) return `${Math.floor(diff/1000)}s ago`;
   if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
   return `${Math.floor(diff/3600000)}h ${Math.floor((diff%3600000)/60000)}m ago`;
@@ -1518,6 +1809,7 @@ let _wMyGroup   = null, _wMyLabelEl = null;
 let _wArcs      = new Map(); // worldId → { line, geom, mat, curve }
 let _wPackets   = [];        // in-flight light packets
 let _wClouds    = [];        // all cloud groups for drift
+let _wFalls     = [];        // waterfall streams for opacity animation
 
 // ── Material helpers (mirrors world.html) ─────────────────────────
 function _wlm(c) { return new THREE.MeshLambertMaterial({ color: c }); }
@@ -1545,7 +1837,7 @@ function _wMkStarfield(scene) {
   }
   const sg = new THREE.BufferGeometry();
   sg.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.11 })));
+  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.28 })));
 }
 
 // ── Cloud blob helper (mirrors mkCloud in world.html) ──────────────
@@ -1577,13 +1869,13 @@ function _wMkIsland(seed, isLocal, status) {
   // Rock faces — two tone slate
   var rock1M  = _wsm(0x4a5062, { roughness: 1 });
   var rock2M  = _wsm(0x3a3d48, { roughness: 1 });
-  // Grass surface — rich layered greens
-  var grassM  = _wsm(0x2d5e34, { roughness: 0.9 });   // base cap
-  var grassLipM = _wsm(0x3d7a42, { roughness: 0.85 }); // bright lip / fringe
-  var mossPatchM = _wsm(0x4a8c50, { roughness: 0.9 });  // lighter moss highlights
-  // Tree
-  var treeM   = _wsm(0x19381e, { roughness: 1 });
-  var treeLightM = _wsm(0x234d28, { roughness: 0.95 }); // lit tier
+  // Grass surface — Lambert for true-colour rendering (no PBR desaturation)
+  var grassM     = _wlm(0x1a9c0a);   // base cap — deep vivid green
+  var grassLipM  = _wlm(0x2ecc08);   // bright lip (Adrian World leaf exact)
+  var mossPatchM = _wlm(0x42e818);   // highlight — very bright lime
+  // Tree — Lambert, dark canopy with bright tier
+  var treeM      = _wlm(0x0e5c08);   // dark canopy
+  var treeLightM = _wlm(0x1eaa0c);   // lit tier
   // Flower spots
   var flowerM = _wsm(0xd4a842, { emissive: new THREE.Color(0xd4a842), emissiveIntensity: 0.18, roughness: 0.7 });
 
@@ -1747,6 +2039,31 @@ function _wMkIsland(seed, isLocal, status) {
     grp.add(cg); _wClouds.push(cg);
   });
 
+  // ── Waterfalls (local/parent world only) ──────────────────────────
+  if (isLocal) {
+    var fMat1 = _wsm(0x80d8f8, { transparent: true, opacity: 0.58, roughness: 1, depthWrite: false });
+    var fMat2 = _wsm(0xb8f0ff, { transparent: true, opacity: 0.38, roughness: 1, depthWrite: false });
+    var mistMat = _wsm(0xd0f8ff, { transparent: true, opacity: 0.20, roughness: 1, depthWrite: false });
+    // Fall A — front-left of main block (z+ face)
+    var fh1 = 1.1, fw1 = 0.38;
+    var fa1 = new THREE.Mesh(new THREE.BoxGeometry(fw1, fh1, 0.03), fMat1);
+    fa1.position.set(-0.55, -fh1/2 + 0.02, 1.38); grp.add(fa1);
+    var fa2 = new THREE.Mesh(new THREE.BoxGeometry(fw1*0.6, fh1*0.85, 0.02), fMat2);
+    fa2.position.set(-0.55, -fh1*0.85/2 + 0.03, 1.41); grp.add(fa2);
+    // Mist pool A
+    var mistA = new THREE.Mesh(new THREE.SphereGeometry(0.30, 7, 5), mistMat);
+    mistA.position.set(-0.55, -fh1 - 0.05, 1.38); grp.add(mistA);
+    // Fall B — front-right, shorter
+    var fh2 = 0.85, fw2 = 0.28;
+    var fb1 = new THREE.Mesh(new THREE.BoxGeometry(fw2, fh2, 0.025), fMat1);
+    fb1.position.set(0.42, -fh2/2 + 0.02, 1.39); grp.add(fb1);
+    var mistB = new THREE.Mesh(new THREE.SphereGeometry(0.22, 6, 5), mistMat);
+    mistB.position.set(0.42, -fh2 - 0.04, 1.39); grp.add(mistB);
+    // Register for opacity animation
+    _wFalls.push({ mat: fMat1, phase: 0.0 });
+    _wFalls.push({ mat: fMat2, phase: 1.2 });
+  }
+
   // Cache refs for animation/status
   grp.userData._orbMat  = orbMat;
   grp.userData._glowMat = glowMat;
@@ -1806,7 +2123,7 @@ function initWorldScene() {
   _wrenderer.shadowMap.enabled = true;
   _wrenderer.shadowMap.type = THREE.PCFSoftShadowMap;
   _wrenderer.toneMapping = THREE.ACESFilmicToneMapping;
-  _wrenderer.toneMappingExposure = 1.15;
+  _wrenderer.toneMappingExposure = 1.45;
   _wrenderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
   wrap.insertBefore(_wrenderer.domElement, wrap.firstChild);
 
@@ -1828,9 +2145,9 @@ function initWorldScene() {
   _wcontrols.autoRotate      = true;
   _wcontrols.autoRotateSpeed = 0.22;
 
-  // Lighting (same values as world.html)
-  var hemi = new THREE.HemisphereLight(0x99ccff, 0x5a3a10, 0.32); _wscene.add(hemi);
-  var sun  = new THREE.DirectionalLight(0xffee99, 3.8);
+  // Lighting — neutral daylight so grass reads true green
+  var hemi = new THREE.HemisphereLight(0xaaddcc, 0x5a3a10, 0.45); _wscene.add(hemi);
+  var sun  = new THREE.DirectionalLight(0xf0ffec, 2.4);
   sun.position.set(10, 18, 8);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
@@ -1898,6 +2215,11 @@ function initWorldScene() {
     if (document.hidden) return;
     T += 0.016;
     _wcontrols.update();
+
+    // Waterfall opacity flicker
+    _wFalls.forEach(function(f) {
+      f.mat.opacity = (f.mat.opacity > 0.5 ? 0.42 : 0.38) + Math.sin(T * 4.5 + f.phase) * 0.14;
+    });
 
     // Cloud drift
     _wClouds.forEach(function(c) {
@@ -2854,28 +3176,386 @@ function renderArtifacts() {
   </div>`).join('');
 }
 
-// ── Render Brain page ─────────────────────────────────────────────
+// ── Brain redesign — state ─────────────────────────────────────────
+var _bSources = [];   // { id, type, name, path, indexed, lastIndexed, branch, commit, syncMode, memCount, sharedWith }
+var _bCurrentTab = 'memories';
+
+// ── Brain orbital canvas ───────────────────────────────────────────
+var _boCtx = null, _boAnimId = null, _boW = 0, _boH = 0, _boT = 0, _boReady = false;
+
+function _brainOrbitalInit() {
+  var canvas = document.getElementById('brain-orbital-canvas');
+  if (!canvas) return;
+  var wrap = canvas.parentElement;
+  var W = wrap.clientWidth, H = wrap.clientHeight;
+  if (_boReady && W === _boW && H === _boH) return;
+  _boW = W; _boH = H;
+  canvas.width = W; canvas.height = H;
+  _boCtx = canvas.getContext('2d');
+  _boReady = true;
+  cancelAnimationFrame(_boAnimId);
+  _boLoop();
+}
+
+function _boClusters() {
+  var groups = {};
+  (_state.brain || []).forEach(function(r) {
+    var key = r.project || r.scope || r.type || 'General';
+    if (!groups[key]) groups[key] = 0;
+    groups[key]++;
+  });
+  if (!Object.keys(groups).length) {
+    return [{ label:'Architecture',count:0 },{ label:'Android',count:0 },{ label:'API',count:0 },{ label:'Decisions',count:0 }];
+  }
+  return Object.keys(groups).map(function(k){ return { label:k, count:groups[k] }; });
+}
+
+function _boLoop() {
+  if (!_boCtx) return;
+  _boAnimId = requestAnimationFrame(_boLoop);
+  if (!document.getElementById('page-brain').classList.contains('active')) return;
+  _boT += 0.004;
+  var ctx = _boCtx, W = _boW, H = _boH;
+  var cx = W / 2, cy = H * 0.50;
+  ctx.clearRect(0, 0, W, H);
+
+  var bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W,H)*0.55);
+  bg.addColorStop(0, 'rgba(6,182,212,0.05)'); bg.addColorStop(0.6, 'rgba(99,102,241,0.02)'); bg.addColorStop(1,'rgba(2,9,20,0)');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+  var clusters = _boClusters();
+  var maxR = Math.min(cx * 0.88, cy * 0.78);
+  var minR = maxR * 0.36;
+  var clCols = ['#06b6d4','#a855f7','#22c55e','#f59e0b','#ec4899','#60a5fa','#f87171'];
+
+  clusters.forEach(function(cl, i) {
+    var frac = clusters.length < 2 ? 0.5 : i / (clusters.length - 1);
+    var r = minR + frac * (maxR - minR);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(6,182,212,0.09)'; ctx.lineWidth = 1;
+    ctx.setLineDash([3,7]); ctx.stroke(); ctx.setLineDash([]);
+  });
+
+  clusters.forEach(function(cl, i) {
+    var frac = clusters.length < 2 ? 0.5 : i / (clusters.length - 1);
+    var r = minR + frac * (maxR - minR);
+    var base = (i / clusters.length) * Math.PI * 2 - Math.PI / 2;
+    var angle = base + _boT * (i % 2 === 0 ? 0.45 : -0.32);
+    var nx = cx + Math.cos(angle) * r, ny = cy + Math.sin(angle) * r;
+    var col = clCols[i % clCols.length];
+
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny);
+    ctx.strokeStyle = 'rgba(6,182,212,0.05)'; ctx.lineWidth=1; ctx.stroke();
+
+    var ng = ctx.createRadialGradient(nx,ny,0,nx,ny,20);
+    ng.addColorStop(0, col+'99'); ng.addColorStop(1, col+'00');
+    ctx.fillStyle = ng; ctx.beginPath(); ctx.arc(nx,ny,20,0,Math.PI*2); ctx.fill();
+
+    ctx.beginPath(); ctx.arc(nx,ny,7,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+    if (cl.count > 0) {
+      ctx.font = '700 9px -apple-system,sans-serif'; ctx.fillStyle='#fff';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(cl.count, nx, ny);
+    }
+
+    var lx = cx + Math.cos(angle)*(r+26), ly = cy + Math.sin(angle)*(r+26);
+    ctx.font = '500 11px -apple-system,sans-serif'; ctx.fillStyle='rgba(203,213,225,.82)';
+    ctx.textAlign = lx < cx - 10 ? 'right' : (lx > cx + 10 ? 'left' : 'center');
+    ctx.textBaseline = 'middle'; ctx.fillText(cl.label, lx, ly);
+  });
+
+  var pulse = 0.85 + Math.sin(_boT*2.1)*0.15;
+  var cg = ctx.createRadialGradient(cx,cy,0,cx,cy,42);
+  cg.addColorStop(0,'rgba(6,182,212,0.30)'); cg.addColorStop(0.5,'rgba(6,182,212,0.10)'); cg.addColorStop(1,'rgba(6,182,212,0)');
+  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(cx,cy,42,0,Math.PI*2); ctx.fill();
+
+  var cr = ctx.createRadialGradient(cx-4,cy-4,0,cx,cy,16*pulse);
+  cr.addColorStop(0,'#ccf4ff'); cr.addColorStop(0.45,'#06b6d4'); cr.addColorStop(1,'#0e3a52');
+  ctx.fillStyle=cr; ctx.beginPath(); ctx.arc(cx,cy,16*pulse,0,Math.PI*2); ctx.fill();
+
+  ctx.beginPath(); ctx.arc(cx,cy,22,0,Math.PI*2);
+  ctx.strokeStyle='rgba(6,182,212,0.45)'; ctx.lineWidth=1.5; ctx.stroke();
+
+  ctx.font='600 9px -apple-system,sans-serif'; ctx.fillStyle='rgba(6,182,212,0.55)';
+  ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText('WORLD MEMORY CORE', cx, cy+29);
+}
+
+// ── Brain tab switcher ─────────────────────────────────────────────
+function brainTab(tab) {
+  _bCurrentTab = tab;
+  ['memories','sources','access'].forEach(function(t) {
+    var panel = document.getElementById('brain-tab-'+t);
+    var btn   = document.getElementById('btab-'+t);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+    if (btn)   btn.classList.toggle('active', t === tab);
+  });
+}
+
+// ── Composer toggle ────────────────────────────────────────────────
+function _brainSetActiveBtn(id) {
+  ['bbtn-memory','bbtn-source','bbtn-harvest'].forEach(function(bid) {
+    var b = document.getElementById(bid);
+    if (!b) return;
+    b.className = bid === id ? 'btn-primary' : 'btn';
+  });
+}
+
+function brainToggleComposer() {
+  var el = document.getElementById('brain-composer');
+  if (!el) return;
+  var open = el.style.display === 'none';
+  el.style.display = open ? '' : 'none';
+  document.getElementById('brain-add-source-form').style.display = 'none';
+  _brainSetActiveBtn(open ? 'bbtn-memory' : null);
+  if (open) {
+    brainTab('memories');
+    var peers = (_state.peers || []).filter(function(p){ return p.status === 'online'; });
+    var list = document.getElementById('bc-peer-list');
+    if (peers.length) {
+      list.innerHTML = peers.map(function(p){
+        return '<label class="peer-share-row"><input type="checkbox" data-wid="'+escHTML(p.worldId)+'" checked> '+
+               '<span><span class="peer-share-name">'+escHTML(p.name||p.worldId)+'</span> '+
+               '<span class="peer-share-sub">· '+escHTML(p.status)+'</span></span></label>';
+      }).join('');
+    } else {
+      list.innerHTML = '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No connected peers</div>';
+    }
+  }
+}
+
+function brainToggleAddSource() {
+  var el = document.getElementById('brain-add-source-form');
+  if (!el) return;
+  var open = el.style.display === 'none';
+  el.style.display = open ? '' : 'none';
+  document.getElementById('brain-composer').style.display = 'none';
+  _brainSetActiveBtn(open ? 'bbtn-source' : null);
+  if (open) brainTab('sources');
+}
+
+// ── Importance pill ────────────────────────────────────────────────
+function brainSetImp(el) {
+  document.querySelectorAll('#bc-imp-pills .imp-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+}
+function brainGetImp() {
+  var a = document.querySelector('#bc-imp-pills .imp-pill.active');
+  return a ? a.dataset.v : 'normal';
+}
+function brainImpNum(v) {
+  return { low:0.25, normal:0.5, high:0.75, critical:1.0 }[v] || 0.5;
+}
+function brainImpLabel(num) {
+  if (num >= 0.875) return 'critical';
+  if (num >= 0.625) return 'high';
+  if (num >= 0.375) return 'normal';
+  return 'low';
+}
+function brainTypeIcon(type) {
+  return { decision:'◈', fact:'◉', constraint:'⊘', convention:'≡', learning:'✦', goal:'◎' }[type] || '◉';
+}
+function brainTypeBg(type) {
+  return { decision:'rgba(6,182,212,.12)', fact:'rgba(99,102,241,.12)', constraint:'rgba(248,113,113,.1)', convention:'rgba(34,197,94,.1)', learning:'rgba(245,158,11,.1)', goal:'rgba(168,85,247,.1)' }[type] || 'rgba(100,116,139,.1)';
+}
+function brainTypeColor(type) {
+  return { decision:'#06b6d4', fact:'#818cf8', constraint:'#f87171', convention:'#22c55e', learning:'#f59e0b', goal:'#a855f7' }[type] || '#64748b';
+}
+
+// ── Add Memory ─────────────────────────────────────────────────────
+async function brainAddMemory() {
+  var summary = document.getElementById('bc-summary').value.trim();
+  if (!summary) return;
+  var imp = brainGetImp();
+  var sharedWith = [];
+  document.querySelectorAll('#bc-peer-list input[type=checkbox]:checked').forEach(function(cb){
+    if (cb.dataset.wid) sharedWith.push(cb.dataset.wid);
+  });
+  var isPrivate = document.getElementById('bc-private').checked;
+  var body = {
+    summary: summary,
+    type: document.getElementById('bc-type').value,
+    scope: document.getElementById('bc-area').value || document.getElementById('bc-project').value || 'global',
+    project: document.getElementById('bc-project').value,
+    repository: document.getElementById('bc-repo').value,
+    area: document.getElementById('bc-area').value,
+    importance: brainImpNum(imp),
+    importanceLabel: imp,
+    visibility: isPrivate ? 'self' : 'pod',
+    sharedWith: sharedWith,
+    source: 'manual',
+    createdBy: _state.worldName || 'unknown',
+  };
+  var msg = document.getElementById('bc-save-msg');
+  msg.style.color='var(--text-muted)'; msg.textContent='Saving…';
+  try {
+    var res = await fetch('/worldlink/brain', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if (res.ok) {
+      msg.style.color='var(--green)'; msg.textContent='Saved ✓';
+      document.getElementById('bc-summary').value='';
+      document.getElementById('bc-project').value='';
+      document.getElementById('bc-repo').value='';
+      document.getElementById('bc-area').value='';
+      setTimeout(function(){ msg.textContent=''; }, 2000);
+      await refreshAll();
+      brainToggleComposer();
+    } else { msg.style.color='var(--red)'; msg.textContent='Failed'; }
+  } catch(e) { msg.style.color='var(--red)'; msg.textContent='Error'; }
+}
+
+// ── Add Source ─────────────────────────────────────────────────────
+function brainAddSource() {
+  var name = document.getElementById('bs-name').value.trim();
+  var path = document.getElementById('bs-path').value.trim();
+  if (!name || !path) return;
+  var src = {
+    id: 'src-'+Date.now(),
+    type: document.getElementById('bs-type').value,
+    name: name, path: path,
+    indexed: false, lastIndexed: null,
+    syncMode: 'manual', branch: 'main', commit: null,
+    memCount: 0, sharedWith: []
+  };
+  _bSources.push(src);
+  document.getElementById('bs-name').value='';
+  document.getElementById('bs-path').value='';
+  brainToggleAddSource();
+  renderBrainSources();
+  renderBrainAccess();
+}
+
+// ── Harvest Session ────────────────────────────────────────────────
+function brainHarvestSession() {
+  var composer = document.getElementById('brain-composer');
+  var wasOpen = composer && composer.style.display !== 'none';
+  // Close source form, open composer
+  document.getElementById('brain-add-source-form').style.display = 'none';
+  if (composer) composer.style.display = '';
+  _brainSetActiveBtn(wasOpen ? null : 'bbtn-harvest');
+  if (!wasOpen) {
+    brainTab('memories');
+    var peers = (_state.peers || []).filter(function(p){ return p.status === 'online'; });
+    var list = document.getElementById('bc-peer-list');
+    list.innerHTML = peers.length ? peers.map(function(p){
+      return '<label class="peer-share-row"><input type="checkbox" data-wid="'+escHTML(p.worldId)+'" checked> '+
+             '<span><span class="peer-share-name">'+escHTML(p.name||p.worldId)+'</span>'+
+             '<span class="peer-share-sub">· '+escHTML(p.status)+'</span></span></label>';
+    }).join('') : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No connected peers</div>';
+  }
+  var el = document.getElementById('bc-summary');
+  if (el) { el.placeholder = 'What key decision or learning came out of this session?'; el.focus(); }
+  var typeEl = document.getElementById('bc-type');
+  if (typeEl) typeEl.value = 'learning';
+}
+
+// ── Render Brain ───────────────────────────────────────────────────
 function renderBrain() {
-  const el = document.getElementById('brain-list');
-  if (!_state.brain.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div>No brain records</div>';
+  // Update orbital subtitle
+  var sub = document.getElementById('brain-orbital-sub');
+  var n = (_state.brain||[]).length, s = _bSources.length;
+  if (sub) sub.textContent = n+' memor'+(n===1?'y':'ies')+' · '+s+' source'+(s===1?'':'s');
+
+  // Memory list
+  var el = document.getElementById('brain-list');
+  if (!el) return;
+  if (!(_state.brain||[]).length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div>No memories yet — add the first one above</div>';
     return;
   }
-  const typeColors = { fact:'badge-cyan', decision:'badge-green', constraint:'badge-red', goal:'badge-amber', context:'badge-muted' };
-  el.innerHTML = _state.brain.map(r => `<div class="brain-item">
-    <div class="brain-header">
-      <span class="badge ${typeColors[r.type] || 'badge-muted'}">${escHTML(r.type || 'fact')}</span>
-      ${r.scope ? `<span class="badge badge-muted" style="font-weight:400;">${escHTML(r.scope)}</span>` : ''}
-      ${r.visibility ? `<span style="font-size:11px;color:var(--text-muted);">${r.visibility}</span>` : ''}
-    </div>
-    <div class="brain-summary">${escHTML(r.summary || '')}</div>
-    <div class="brain-meta">
-      <span>Importance:</span>
-      <div class="importance-bar"><div class="importance-fill" style="width:${Math.round((r.importance||0)*100)}%"></div></div>
-      <span>${r.importance != null ? r.importance.toFixed(2) : '—'}</span>
-      <span style="margin-left:auto;">${relTime(r.createdAt)}</span>
-    </div>
-  </div>`).join('');
+  el.innerHTML = (_state.brain||[]).slice().reverse().map(function(r) {
+    var imp = brainImpLabel(r.importance || 0.5);
+    var impLabel = (r.importanceLabel || imp);
+    var ctx = [r.project, r.repository, r.area||r.scope].filter(Boolean).join(' › ');
+    var icon = brainTypeIcon(r.type);
+    var bg = brainTypeBg(r.type), col = brainTypeColor(r.type);
+    var shared = r.sharedWith && r.sharedWith.length ? '· shared with '+r.sharedWith.length+' peer'+(r.sharedWith.length>1?'s':'') : (r.visibility==='self'?'· private':'');
+    var provenance = [];
+    if (r.source) provenance.push('<span>Source <strong>'+escHTML(r.source)+'</strong></span>');
+    if (r.createdBy) provenance.push('<span>By <strong>'+escHTML(r.createdBy)+'</strong></span>');
+    if (r.derivedFrom) provenance.push('<span>From <strong>'+escHTML(r.derivedFrom)+'</strong></span>');
+    if (r.createdAt) provenance.push('<span>'+relTime(r.createdAt)+'</span>');
+    var statusTag = r.status && r.status!=='active' ? '<span class="brain-mem-tag" style="background:rgba(100,116,139,.1);color:#64748b;border-color:rgba(100,116,139,.2);">'+escHTML(r.status)+'</span>' : '';
+    return '<div class="brain-mem-card"><div class="brain-mem-row">'+
+      '<div class="brain-mem-icon" style="background:'+bg+';color:'+col+';">'+icon+'</div>'+
+      '<div class="brain-mem-body">'+
+        '<div class="brain-mem-summary">'+escHTML(r.summary||'')+'</div>'+
+        (ctx ? '<div class="brain-mem-ctx">'+escHTML(ctx)+'</div>' : '')+
+        '<div class="brain-mem-tags">'+
+          '<span class="brain-mem-tag brain-mem-tag-type">'+escHTML(r.type||'fact')+'</span>'+
+          '<span class="brain-mem-tag brain-mem-tag-imp" data-v="'+impLabel+'">'+impLabel+'</span>'+
+          statusTag+
+          (shared ? '<span class="brain-mem-shared">'+shared+'</span>' : '')+
+        '</div>'+
+        (provenance.length ? '<div class="brain-mem-provenance">'+provenance.join('')+'</div>' : '')+
+      '</div>'+
+    '</div></div>';
+  }).join('');
+}
+
+// ── Render Sources ─────────────────────────────────────────────────
+function renderBrainSources() {
+  var el = document.getElementById('brain-sources-list');
+  if (!el) return;
+  if (!_bSources.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◈</div>No knowledge sources connected</div>';
+    return;
+  }
+  var ico = { repository:'◈', folder:'◫', file:'◻', 'api-spec':'≋' };
+  el.innerHTML = _bSources.map(function(s) {
+    var peers = (_state.peers||[]).filter(function(p){ return p.status==='online'; });
+    var peerChecks = peers.length ? peers.map(function(p) {
+      var checked = s.sharedWith.indexOf(p.worldId)>-1;
+      return '<label class="peer-share-row"><input type="checkbox" '+(checked?'checked':'')+
+             ' onchange="brainSourceTogglePeer(\''+s.id+'\',\''+escHTML(p.worldId)+'\',this.checked)"> '+
+             '<span class="peer-share-name">'+escHTML(p.name||p.worldId)+'</span></label>';
+    }).join('') : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No online peers</div>';
+    var indexed = s.indexed
+      ? '<div class="brain-source-indexed"><span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;flex-shrink:0;"></span>Indexed · '+(s.lastIndexed?relTime(s.lastIndexed):'unknown')+'</div>'+
+        '<div class="brain-source-sync"><span>Mode <strong>'+s.syncMode+'</strong></span>'+(s.branch?'<span>Branch <strong>'+escHTML(s.branch)+'</strong></span>':'')+(s.commit?'<span>Commit <strong>'+escHTML(s.commit.slice(0,7))+'</strong></span>':'')+'</div>'
+      : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);margin-top:6px;">Not yet indexed</div>';
+    return '<div class="brain-source-card"><div class="brain-source-row">'+
+      '<div class="brain-source-ico">'+(ico[s.type]||'◈')+'</div>'+
+      '<div class="brain-source-body">'+
+        '<div class="brain-source-name">'+escHTML(s.name)+'</div>'+
+        '<div class="brain-source-path">'+escHTML(s.path)+'</div>'+
+        indexed+
+        '<div class="brain-source-share"><div class="brain-source-share-label">Share knowledge with</div>'+peerChecks+'</div>'+
+        '<div class="brain-source-notice">ℹ Share knowledge, not source access. Peers receive permitted Brain context derived from this source. This does not grant access to the underlying repository or files.</div>'+
+      '</div>'+
+    '</div></div>';
+  }).join('');
+}
+
+function brainSourceTogglePeer(srcId, worldId, checked) {
+  var src = _bSources.find(function(s){ return s.id===srcId; });
+  if (!src) return;
+  var idx = src.sharedWith.indexOf(worldId);
+  if (checked && idx<0) src.sharedWith.push(worldId);
+  if (!checked && idx>-1) src.sharedWith.splice(idx,1);
+}
+
+// ── Render Access ──────────────────────────────────────────────────
+function renderBrainAccess() {
+  var el = document.getElementById('brain-access-list');
+  if (!el) return;
+  var peers = (_state.peers||[]);
+  if (!peers.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div>No connected peers</div>';
+    return;
+  }
+  el.innerHTML = peers.map(function(p) {
+    var dot = p.status==='online' ? '#4ade80' : '#374151';
+    var sourcesAllowed = _bSources.filter(function(s){ return s.sharedWith.indexOf(p.worldId)>-1; }).length;
+    var sharedMems = (_state.brain||[]).filter(function(r){ return r.sharedWith && r.sharedWith.indexOf(p.worldId)>-1; }).length;
+    return '<div class="brain-access-card">'+
+      '<div class="brain-access-peer-row">'+
+        '<div style="width:36px;height:36px;border-radius:10px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);display:flex;align-items:center;justify-content:center;font:700 14px/1 -apple-system,sans-serif;color:#06b6d4;flex-shrink:0;">'+escHTML((p.name||'?').charAt(0).toUpperCase())+'</div>'+
+        '<div><div class="brain-access-peer-name" style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:'+dot+';flex-shrink:0;display:inline-block;"></span>'+escHTML(p.name||p.worldId)+'</div>'+
+        '<div class="brain-access-peer-sub">'+escHTML(p.status)+' · '+sharedMems+' memor'+(sharedMems===1?'y':'ies')+' shared · '+sourcesAllowed+' source'+(sourcesAllowed===1?'':'s')+' allowed</div></div>'+
+      '</div>'+
+      '<div class="brain-access-perm"><label class="brain-access-perm"><input type="checkbox" '+(sharedMems>0?'checked':'')+' disabled> Receives shared memory context</label></div>'+
+      '<div class="brain-access-perm"><label class="brain-access-perm"><input type="checkbox" '+(sourcesAllowed>0?'checked':'')+' disabled> Receives knowledge derived from sources</label></div>'+
+    '</div>';
+  }).join('');
 }
 
 // ── Render Messages page ──────────────────────────────────────────
@@ -3004,42 +3684,6 @@ async function sendMessage() {
   }
 }
 
-// ── Brain add record ──────────────────────────────────────────────
-async function addBrainRecord() {
-  const summary = document.getElementById('brain-summary').value.trim();
-  if (!summary) return;
-  const body = {
-    summary,
-    type: document.getElementById('brain-type').value,
-    scope: document.getElementById('brain-scope').value || 'global',
-    importance: parseFloat(document.getElementById('brain-importance').value),
-    visibility: document.getElementById('brain-visibility').value,
-  };
-  const msg = document.getElementById('brain-save-msg');
-  msg.textContent = 'Saving…';
-  msg.style.color = 'var(--text-muted)';
-  try {
-    const res = await fetch('/worldlink/brain', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      msg.style.color = 'var(--green)';
-      msg.textContent = 'Saved!';
-      document.getElementById('brain-summary').value = '';
-      setTimeout(() => { msg.textContent = ''; }, 2000);
-      await loadBrain();
-      renderBrain();
-    } else {
-      msg.style.color = 'var(--red)';
-      msg.textContent = 'Error saving';
-    }
-  } catch(e) {
-    msg.style.color = 'var(--red)';
-    msg.textContent = 'Network error';
-  }
-}
 
 // ── Settings save ─────────────────────────────────────────────────
 async function saveSettings() {
@@ -3163,6 +3807,7 @@ async function refreshAll() {
     console.error('Refresh failed:', e);
   }
 }
+
 
 // ── Init ──────────────────────────────────────────────────────────
 const _listenPortEl = document.getElementById('listen-port'); if (_listenPortEl) _listenPortEl.textContent = `Listening on :${window.location.port || '7461'}`;
