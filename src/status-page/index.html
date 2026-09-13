@@ -1458,29 +1458,59 @@ body {
 .brain-tooltip-types { font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text); margin-top: 3px; }
 
 /* ── Dense memory rows ─────────────────────────────────────────── */
-.brain-mem-row-dense {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 9px 0; border-bottom: 1px solid var(--border);
+.brain-mem-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  margin-bottom: 6px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+  background: var(--surface);
 }
-.brain-mem-row-dense:last-child { border-bottom: none; }
-.brain-mem-dot {
-  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px;
+.brain-mem-card:hover { border-color: var(--border-active); background: var(--surface-2); }
+.brain-mem-card:last-child { margin-bottom: 0; }
+.brain-mem-type-badge {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  flex-shrink: 0; width: 36px; padding-top: 1px;
 }
-.brain-mem-dense-body { flex: 1; min-width: 0; }
-.brain-mem-dense-summary {
-  font: 400 13px/1.4 -apple-system,sans-serif; color: var(--text-strong);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.brain-mem-type-icon {
+  font-size: 16px; line-height: 1;
 }
-.brain-mem-dense-meta {
-  font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text-muted); margin-top: 2px;
+.brain-mem-type-label {
+  font: 600 9px/1 -apple-system,sans-serif; text-transform: uppercase; letter-spacing: .04em; opacity: .8;
+}
+.brain-mem-body { flex: 1; min-width: 0; }
+.brain-mem-summary {
+  font: 400 13px/1.5 -apple-system,sans-serif; color: var(--text-strong);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  margin-bottom: 5px;
+}
+.brain-mem-meta {
+  font: 400 11px/1.4 -apple-system,sans-serif; color: var(--text-muted);
   display: flex; gap: 5px; align-items: center; flex-wrap: wrap;
 }
-.brain-mem-dense-tag {
-  padding: 1px 5px; border-radius: var(--r-xs); font: 500 10px/1.4 -apple-system,sans-serif;
+.brain-mem-imp-tag {
+  padding: 1px 6px; border-radius: var(--r-xs); font: 500 10px/1.5 -apple-system,sans-serif;
   border: 1px solid transparent;
 }
-.brain-mem-dense-access { margin-left: auto; flex-shrink: 0; font: 400 10px/1 -apple-system,sans-serif; color: var(--text-dim); }
-.brain-mem-dense-access.shared { color: var(--cyan); }
+.brain-mem-access {
+  margin-left: auto; flex-shrink: 0;
+  font: 500 10px/1 -apple-system,sans-serif;
+  padding: 2px 7px; border-radius: var(--r-pill);
+  border: 1px solid var(--border); color: var(--text-dim);
+}
+.brain-mem-access.shared { color: var(--cyan); border-color: rgba(6,182,212,0.3); background: rgba(6,182,212,0.08); }
+.brain-mem-pagination {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+  font: 400 12px/1 -apple-system,sans-serif; color: var(--text-muted);
+}
+.brain-mem-pagination button {
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--r-xs); padding: 4px 12px; font: 500 11px/1 -apple-system,sans-serif;
+  cursor: pointer; transition: border-color .12s;
+}
+.brain-mem-pagination button:hover:not(:disabled) { border-color: var(--border-active); }
+.brain-mem-pagination button:disabled { opacity: .35; cursor: default; }
 
 /* ── Harvest workflow ──────────────────────────────────────────── */
 .hv-section-label {
@@ -4355,6 +4385,8 @@ var _hvIgnore  = { chatter: true, commands: true, repeated: true, failed: true }
 var _hvBatchAccess = 'private';
 var _brainDrawerMode = null;
 var _brainFilterType = 'all';
+var _brainPage = 0;
+var _BRAIN_PAGE_SIZE = 10;
 var _brainScopeFilter = null; // set by clicking orbital node
 var _brainSearchQ    = '';
 
@@ -5072,20 +5104,16 @@ function brainAccessPick(row, val) {
 }
 
 // ── Filter + search ────────────────────────────────────────────────
-function brainFilter(btn) {
-  document.querySelectorAll('.brain-filter-pill').forEach(function(p){ p.classList.remove('active'); });
-  btn.classList.add('active');
-  _brainFilterType = btn.dataset.type;
-  renderBrain();
-}
 function _brainClearScopeFilter() {
   _brainScopeFilter = null;
   _boClickedKey = null;
+  _brainPage = 0;
   renderBrain();
 }
 
 function brainSearch(q) {
   _brainSearchQ = q.toLowerCase();
+  _brainPage = 0;
   renderBrain();
 }
 
@@ -5193,7 +5221,6 @@ function brainAddSource() {
 
 // ── Render Brain ───────────────────────────────────────────────────
 function renderBrain() {
-  // Live stats
   var all = _state.brain || [];
   var sharedCount = all.filter(function(r){ return r.sharedWith && r.sharedWith.length; }).length;
   var el = function(id){ return document.getElementById(id); };
@@ -5201,7 +5228,6 @@ function renderBrain() {
   if (el('bo-stat-src-n'))    el('bo-stat-src-n').textContent    = _bSources.length;
   if (el('bo-stat-shared-n')) el('bo-stat-shared-n').textContent = sharedCount;
 
-  // Filter pill counts
   var types = ['decision','fact','learning','constraint','convention','goal'];
   if (el('bfc-all')) el('bfc-all').textContent = all.length;
   types.forEach(function(t){
@@ -5209,7 +5235,6 @@ function renderBrain() {
     if (fc) fc.textContent = all.filter(function(r){ return r.type===t; }).length;
   });
 
-  // Apply filter + search + scope (from orbital click)
   var filtered = all.slice().reverse().filter(function(r){
     if (_brainFilterType !== 'all' && r.type !== _brainFilterType) return false;
     if (_brainScopeFilter) {
@@ -5232,7 +5257,13 @@ function renderBrain() {
     return;
   }
 
-  // Show active scope filter badge if set
+  // Clamp page
+  var totalPages = Math.ceil(filtered.length / _BRAIN_PAGE_SIZE);
+  if (_brainPage >= totalPages) _brainPage = Math.max(0, totalPages - 1);
+  var pageItems = filtered.slice(_brainPage * _BRAIN_PAGE_SIZE, (_brainPage + 1) * _BRAIN_PAGE_SIZE);
+
+  var impColors = { critical:'#f87171', high:'#f59e0b', normal:'#64748b', low:'#475569' };
+
   var scopeBadge = '';
   if (_brainScopeFilter) {
     scopeBadge = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 10px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.2);border-radius:7px;">'+
@@ -5241,28 +5272,163 @@ function renderBrain() {
     '</div>';
   }
 
-  listEl.innerHTML = scopeBadge + filtered.map(function(r) {
+  var cards = pageItems.map(function(r) {
     var col = brainTypeColor(r.type);
+    var icon = brainTypeIcon(r.type);
     var imp = brainImpLabel(r.importance || 0.5);
-    var crumbs = [r.project, r.repository, r.area].filter(Boolean);
+    var crumbs = [r.project, r.area].filter(Boolean);
     if (!crumbs.length && r.scope && r.scope !== 'global') crumbs.push(r.scope);
-    var ctx = crumbs.join(' › ');
+    var ctx = crumbs.join(' / ');
     var isShared = r.sharedWith && r.sharedWith.length;
     var accessLabel = isShared ? 'shared' : 'private';
-    var impColors = { critical:'#f87171', high:'#f59e0b', normal:'#475569', low:'#374151' };
-    var typeTag = '<span class="brain-mem-dense-tag" style="color:'+col+';border-color:'+col+'22;background:'+col+'11;">'+escHTML(r.type||'fact')+'</span>';
-    var impTag  = '<span class="brain-mem-dense-tag" style="color:'+(impColors[imp]||'#475569')+';border-color:'+(impColors[imp]||'#475569')+'33;">'+imp+'</span>';
-    var timeStr = r.createdAt ? relTime(r.createdAt) : '';
-    var srcStr  = r.source && r.source !== 'manual' ? 'via '+escHTML(r.source) : '';
-    var meta = [ctx, typeTag, impTag, srcStr, timeStr].filter(Boolean);
-    return '<div class="brain-mem-row-dense">'+
-      '<div class="brain-mem-dot" style="background:'+col+';"></div>'+
-      '<div class="brain-mem-dense-body">'+
-        '<div class="brain-mem-dense-summary" title="'+escHTML(r.summary||'')+'">'+escHTML(r.summary||'')+'</div>'+
-        '<div class="brain-mem-dense-meta">'+meta.join('<span style="color:#1e293b;">·</span>')+'<span class="brain-mem-dense-access'+(isShared?' shared':'')+'" style="margin-left:auto;">'+accessLabel+'</span></div>'+
+    var impTag = imp !== 'normal'
+      ? '<span class="brain-mem-imp-tag" style="color:'+(impColors[imp]||'#64748b')+';border-color:'+(impColors[imp]||'#64748b')+'33;background:'+(impColors[imp]||'#64748b')+'11;">'+imp+'</span>'
+      : '';
+    var metaParts = [];
+    if (ctx) metaParts.push('<span>'+escHTML(ctx)+'</span>');
+    if (impTag) metaParts.push(impTag);
+    if (r.source && r.source !== 'manual') metaParts.push('<span>via '+escHTML(r.source)+'</span>');
+    if (r.createdAt) metaParts.push('<span>'+relTime(r.createdAt)+'</span>');
+    var safeId = escAttr(r.id || '');
+    return '<div class="brain-mem-card" onclick="brainShowDetail(\''+safeId+'\')">'+
+      '<div class="brain-mem-type-badge">'+
+        '<span class="brain-mem-type-icon" style="color:'+col+'">'+icon+'</span>'+
+        '<span class="brain-mem-type-label" style="color:'+col+'">'+escHTML(r.type||'fact')+'</span>'+
       '</div>'+
+      '<div class="brain-mem-body">'+
+        '<div class="brain-mem-summary">'+escHTML(r.summary||'')+'</div>'+
+        '<div class="brain-mem-meta">'+metaParts.join('<span style="color:var(--border-active)">·</span>')+'</div>'+
+      '</div>'+
+      '<span class="brain-mem-access'+(isShared?' shared':'')+'">'+accessLabel+'</span>'+
     '</div>';
   }).join('');
+
+  var pagination = '';
+  if (totalPages > 1) {
+    pagination = '<div class="brain-mem-pagination">'+
+      '<button '+ (_brainPage === 0 ? 'disabled' : '') +' onclick="_brainPageGo('+(_brainPage-1)+')">← Prev</button>'+
+      '<span>'+(_brainPage+1)+' / '+totalPages+'</span>'+
+      '<button '+(_brainPage >= totalPages-1 ? 'disabled' : '')+' onclick="_brainPageGo('+(_brainPage+1)+')">Next →</button>'+
+    '</div>';
+  }
+
+  listEl.innerHTML = scopeBadge + cards + pagination;
+}
+
+function _brainPageGo(n) {
+  _brainPage = n;
+  renderBrain();
+}
+
+function brainFilter(btn) {
+  document.querySelectorAll('.brain-filter-pill').forEach(function(p){ p.classList.remove('active'); });
+  btn.classList.add('active');
+  _brainFilterType = btn.dataset.type;
+  _brainPage = 0;
+  renderBrain();
+}
+
+async function brainShowDetail(id) {
+  if (!id) return;
+  var r = (_state.brain || []).find(function(m){ return m.id === id; });
+  if (!r) return;
+  var title = document.getElementById('brain-drawer-title');
+  var body  = document.getElementById('brain-drawer-body');
+  var footer = document.getElementById('brain-drawer-footer');
+  if (!body) return;
+
+  var col = brainTypeColor(r.type);
+  var icon = brainTypeIcon(r.type);
+  var imp = brainImpLabel(r.importance || 0.5);
+  var impColors = { critical:'#f87171', high:'#f59e0b', normal:'#64748b', low:'#475569' };
+  var crumbs = [r.project, r.repository, r.area].filter(Boolean);
+  if (!crumbs.length && r.scope && r.scope !== 'global') crumbs.push(r.scope);
+  var isShared = r.sharedWith && r.sharedWith.length;
+
+  // Peer checkboxes
+  var peers = (_state.peers || []).filter(function(p){ return p.status === 'online'; });
+  var peerChecks = peers.length ? peers.map(function(p) {
+    var checked = r.sharedWith && r.sharedWith.indexOf(p.worldId) > -1;
+    return '<label class="peer-share-row"><input type="checkbox" class="bd-peer-cb" data-wid="'+escAttr(p.worldId)+'" '+(checked?'checked':'')+'>'+
+           '<span class="peer-share-name">'+escHTML(p.worldName||p.worldId)+'</span></label>';
+  }).join('') : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted)">No online peers</div>';
+
+  if (title) title.textContent = 'Memory Detail';
+  body.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'+
+      '<span style="font-size:22px;color:'+col+'">'+icon+'</span>'+
+      '<div>'+
+        '<div style="font:600 12px/1 -apple-system,sans-serif;color:'+col+';text-transform:uppercase;letter-spacing:.05em">'+escHTML(r.type||'fact')+'</div>'+
+        (crumbs.length ? '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-muted);margin-top:3px">'+escHTML(crumbs.join(' › '))+'</div>' : '')+
+      '</div>'+
+      '<span style="margin-left:auto;font:500 10px/1 -apple-system,sans-serif;padding:2px 8px;border-radius:20px;border:1px solid '+(impColors[imp]||'#64748b')+'33;color:'+(impColors[imp]||'#64748b')+';background:'+(impColors[imp]||'#64748b')+'11;">'+imp+'</span>'+
+    '</div>'+
+    '<div style="font:400 14px/1.6 -apple-system,sans-serif;color:var(--text-strong);padding:12px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:16px;white-space:pre-wrap;">'+escHTML(r.summary||'')+'</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">'+
+      '<div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-muted)"><span style="color:var(--text-dim)">Source</span><br>'+escHTML(r.source||'manual')+'</div>'+
+      '<div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-muted)"><span style="color:var(--text-dim)">Added</span><br>'+(r.createdAt?relTime(r.createdAt):'—')+'</div>'+
+    '</div>'+
+    '<div class="form-group" style="margin-bottom:0">'+
+      '<label class="form-label">Access</label>'+
+      '<div class="access-radios" id="bd-access-radios">'+
+        '<label class="access-radio-row'+((!isShared)?' selected':'')+'" onclick="brainAccessPick(this,\'private\')">'+
+          '<input type="radio" name="bd-access" value="private"'+(!isShared?' checked':'')+'>'+
+          '<div><div class="access-radio-label">Private</div><div class="access-radio-sub">Only this world</div></div>'+
+        '</label>'+
+        '<label class="access-radio-row'+(isShared?' selected':'')+'" onclick="brainDetailAccessPick(this,\'selected\')">'+
+          '<input type="radio" name="bd-access" value="selected"'+(isShared?' checked':'')+'>'+
+          '<div><div class="access-radio-label">Shared with</div><div class="access-radio-sub">Choose connected worlds</div></div>'+
+        '</label>'+
+      '</div>'+
+      '<div id="bd-peer-checks" class="brain-peer-checks" style="'+(isShared?'':'display:none;')+'margin-top:8px;">'+peerChecks+'</div>'+
+    '</div>';
+
+  if (footer) footer.innerHTML =
+    '<button class="btn" style="color:#f87171;border-color:#f87171;margin-right:auto" onclick="brainDeleteMemory(\''+escAttr(id)+'\')">Delete</button>'+
+    '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+    '<button class="btn-primary" onclick="brainSaveDetail(\''+escAttr(id)+'\')">Save</button>';
+
+  var overlay = document.getElementById('brain-drawer-overlay');
+  var drawer  = document.getElementById('brain-drawer');
+  if (overlay) overlay.classList.add('open');
+  if (drawer)  drawer.classList.add('open');
+}
+
+function brainDetailAccessPick(label, val) {
+  document.querySelectorAll('#bd-access-radios .access-radio-row').forEach(function(l){ l.classList.remove('selected'); });
+  label.classList.add('selected');
+  var checks = document.getElementById('bd-peer-checks');
+  if (checks) checks.style.display = val === 'selected' ? 'block' : 'none';
+}
+
+async function brainSaveDetail(id) {
+  var accessVal = (document.querySelector('input[name="bd-access"]:checked')||{}).value || 'private';
+  var sharedWith = [];
+  if (accessVal === 'selected') {
+    document.querySelectorAll('.bd-peer-cb:checked').forEach(function(cb){ if(cb.dataset.wid) sharedWith.push(cb.dataset.wid); });
+  }
+  try {
+    var res = await fetch('/worldlink/brain/'+encodeURIComponent(id), {
+      method: 'PATCH', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sharedWith }),
+    });
+    if (!res.ok) throw new Error('Save failed');
+    var updated = await res.json();
+    var idx = (_state.brain||[]).findIndex(function(r){ return r.id === id; });
+    if (idx !== -1) _state.brain[idx] = updated;
+    brainCloseDrawer();
+    renderBrain();
+  } catch(e) { alert('Could not save: '+e.message); }
+}
+
+async function brainDeleteMemory(id) {
+  if (!confirm('Delete this memory? This cannot be undone.')) return;
+  try {
+    await fetch('/worldlink/brain/'+encodeURIComponent(id), { method: 'DELETE' });
+    _state.brain = (_state.brain||[]).filter(function(r){ return r.id !== id; });
+    brainCloseDrawer();
+    renderBrain();
+  } catch(e) { alert('Could not delete: '+e.message); }
 }
 
 // ── Render Sources ─────────────────────────────────────────────────
