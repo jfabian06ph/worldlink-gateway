@@ -132,38 +132,34 @@ function runOpenAI(fullPrompt, cfg) {
   });
 }
 
-// ── Anthropic API — multimodal (images + text, no CLI) ───────────────────────
+// ── Claude stream-json — multimodal via stdin (no API key needed) ────────────
 
-function runClaudeAPI(textPrompt, imageAtts) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return Promise.reject(new Error('ANTHROPIC_API_KEY not set'));
-  const https = require('https');
-  const content = [];
-  for (const att of imageAtts) {
-    if (att.mimeType && att.mimeType.startsWith('image/') && att.data) {
-      content.push({ type: 'image', source: { type: 'base64', media_type: att.mimeType, data: att.data } });
-    }
-  }
-  content.push({ type: 'text', text: textPrompt });
-  const body = JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4096, messages: [{ role: 'user', content }] });
+function runClaudeStreamJSON(textPrompt, imageAtts) {
   return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(body) },
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          if (json.error) return reject(new Error(`Anthropic API: ${json.error.message || json.error.type}`));
-          resolve((json.content?.find(c => c.type === 'text')?.text || '').trim());
-        } catch (e) { reject(new Error(`API bad response: ${data.slice(0, 200)}`)); }
-      });
+    const content = [];
+    for (const att of imageAtts) {
+      if (att.mimeType && att.mimeType.startsWith('image/') && att.data) {
+        content.push({ type: 'image', source: { type: 'base64', media_type: att.mimeType, data: att.data } });
+      }
+    }
+    content.push({ type: 'text', text: textPrompt });
+    const msg = JSON.stringify({ type: 'user', message: { role: 'user', content } });
+    const proc = spawn('claude', ['-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose', '--dangerously-skip-permissions'], {
+      env: { ...process.env }, cwd: process.cwd(),
     });
-    req.on('error', reject);
-    req.setTimeout(120000, () => { req.destroy(); reject(new Error('Anthropic API timed out')); });
-    req.write(body); req.end();
+    let result = null, err = '';
+    proc.stdout.on('data', chunk => {
+      for (const line of chunk.toString().split('\n')) {
+        if (!line.trim()) continue;
+        try { const ev = JSON.parse(line); if (ev.type === 'result' && ev.subtype === 'success') result = ev.result || ''; } catch {}
+      }
+    });
+    proc.stderr.on('data', d => err += d);
+    proc.on('close', code => result !== null ? resolve(result.trim()) : reject(new Error(`claude stream-json exited ${code}: ${err.slice(0, 200)}`)));
+    proc.on('error', e => reject(new Error(`Could not spawn claude: ${e.message}`)));
+    proc.stdin.write(msg + '\n');
+    proc.stdin.end();
+    setTimeout(() => { proc.kill(); reject(new Error('Task timed out (5 min)')); }, 300_000);
   });
 }
 
@@ -180,7 +176,7 @@ async function runTask(task, brainRecords = [], aiBackend = { type: 'claude' }) 
   const imageAtts = (task.attachments || []).filter(a => a.mimeType?.startsWith('image/') && a.data);
   if (imageAtts.length > 0 && type === 'claude') {
     const { fullPrompt, tmpFiles } = buildPrompt({ ...task, attachments: [] }, brainRecords);
-    try { return await runClaudeAPI(fullPrompt, imageAtts); }
+    try { return await runClaudeStreamJSON(fullPrompt, imageAtts); }
     finally { for (const f of tmpFiles) try { fs.unlinkSync(f); } catch {} }
   }
 
