@@ -2830,7 +2830,7 @@ function renderSessionTimeline() {
 
     // Outbound messages (local outbox — session memory)
     (_outbox[peer.worldId] || [])
-      .forEach(function(o){ timeline.push({ _type:'msg-out', text:o.text, _ts:o.ts }); });
+      .forEach(function(o){ timeline.push({ _type:'msg-out', text:o.text, attachments:o.attachments||[], delivered:o.delivered, _ts:o.ts }); });
 
     // Tasks (all directions with this peer)
     _state.tasks
@@ -2854,10 +2854,13 @@ function renderSessionTimeline() {
     el.innerHTML = timeline.map(function(entry) {
       if (entry._type === 'msg-out') {
         wasLastMine = true;
+        var deliveryMark = entry.delivered === false
+          ? '<span style="color:var(--red);font-size:10px;margin-left:4px;" title="Not delivered">✗</span>'
+          : '<span style="color:#4ade80;font-size:10px;margin-left:4px;" title="Delivered">✓</span>';
         return '<div class="tl-entry tl-mine">'
           + '<div class="tl-sender tl-sender-mine">You</div>'
           + '<div class="tl-bubble tl-bubble-mine">' + _renderBubbleContent(entry) + '</div>'
-          + '<div class="tl-time tl-time-right">' + fmtTs(entry._ts) + '</div>'
+          + '<div class="tl-time tl-time-right">' + fmtTs(entry._ts) + deliveryMark + '</div>'
           + '</div>';
       }
       if (entry._type === 'msg-in') {
@@ -3002,9 +3005,9 @@ function renderSessionTimeline() {
 // ── Outbound message store (in-session memory for "You" side) ───────
 var _outbox = {}; // peerId → [{text, ts}]
 var _outboxTasks = {}; // peerId → [{capability, prompt, ts, status}]
-function _outboxPush(peerId, text, attachments) {
+function _outboxPush(peerId, text, attachments, delivered) {
   if (!_outbox[peerId]) _outbox[peerId] = [];
-  _outbox[peerId].push({ text: text || '', attachments: attachments || [], ts: Date.now() });
+  _outbox[peerId].push({ text: text || '', attachments: attachments || [], delivered: delivered !== false, ts: Date.now() });
 }
 function _outboxTaskPush(peerId, capability, prompt) {
   if (!_outboxTasks[peerId]) _outboxTasks[peerId] = [];
@@ -3155,12 +3158,17 @@ async function sendComposerMsg() {
         return;
       }
       _clearPeerError(_sessionPeer.worldId);
-      _outboxPush(_sessionPeer.worldId, text, attachments);
+      _outboxPush(_sessionPeer.worldId, text, attachments, true);
       _wSpawnPacket(_sessionPeer.worldId, 'out', 0x06b6d4, 'message');
-      _wlGwToast(attachments.length ? 'Message + image sent' : 'Message sent');
+      var imgCount = attachments.length;
+      _wlGwToast(imgCount ? '✓ Delivered — ' + imgCount + ' image' + (imgCount > 1 ? 's' : '') : '✓ Delivered');
       await refreshAll();
       renderSessionTimeline();
-    } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+    } catch(e) {
+      _outboxPush(_sessionPeer.worldId, text, attachments, false);
+      _wlGwToast('✗ ' + e.message, 'err');
+      renderSessionTimeline();
+    }
   } else {
     var cap = (document.getElementById('composer-cap-select') || {}).value || 'claude-task';
     try {
