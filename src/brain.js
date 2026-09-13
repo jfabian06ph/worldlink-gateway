@@ -87,19 +87,25 @@ function createBrainStore(dataDir) {
   // Own brain records relevant to a task prompt — injected before claude runs
   function querySelf(text = '') {
     const all = load();
-    if (!text) return all.slice(0, 8); // cap at 8 if no query
-    const terms = text.toLowerCase().split(/\s+/).filter(t => t.length > 3);
-    if (!terms.length) return all.slice(0, 8);
-    return all
+    if (!text) return all.slice(0, 12);
+    // Strip punctuation and filter short words
+    const terms = text.toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(t => t.length > 3);
+    if (!terms.length) return all.slice(0, 12);
+    const scored = all
       .map(r => {
-        const hay = (r.summary + ' ' + r.scope).toLowerCase();
+        const hay = [r.summary, r.scope, r.project, r.area].filter(Boolean).join(' ').toLowerCase();
         const hits = terms.filter(t => hay.includes(t)).length;
         return { r, hits };
       })
       .filter(x => x.hits > 0)
-      .sort((a, b) => b.hits - a.hits || b.r.importance - a.r.importance)
-      .slice(0, 8)
-      .map(x => x.r);
+      .sort((a, b) => b.hits - a.hits || b.r.importance - a.r.importance);
+    // Return all exact matches (high confidence), cap broader matches at 12
+    const exact = scored.filter(x => x.hits >= 2);
+    const rest  = scored.filter(x => x.hits === 1);
+    return [...exact, ...rest].slice(0, 12).map(x => x.r);
   }
 
   return { add, list, get, remove, update, queryForPeer, querySelf };
