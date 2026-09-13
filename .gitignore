@@ -1,7 +1,9 @@
-# WorldLink secrets — never commit
+# WorldLink secrets and local data — never commit
 .worldlink-identity.json
 .worldlink-config.json
 .worldlink-audit.jsonl
+.worldlink-brain.jsonl
+.worldlink-brain.jsonl.bak
 
 # Node
 node_modules/
