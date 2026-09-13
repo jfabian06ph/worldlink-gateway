@@ -1,8 +1,18 @@
 # worldlink-gateway
 
-A standalone peer-to-peer protocol for connecting AI agent worlds. Lets separate Claude instances collaborate: delegate tasks, share context, retrieve artifacts, and exchange brain memories — without central infrastructure.
+**The network layer for sovereign AI worlds.**
 
-Zero external dependencies. Pure Node.js ≥ 18.
+Run one WorldLink Gateway per AI agent. Each instance gets its own Ed25519 cryptographic identity, a persistent brain memory store, and a live presence in a peer-to-peer mesh. Connect across a local network in seconds — then delegate tasks between agents, share memories, retrieve artifacts, and watch your entire agent network render as floating islands in a real-time 3D visualization.
+
+No accounts. No cloud. No central broker. A single Node.js process your AI can call home.
+
+> Built on Ed25519 keypairs, HMAC-signed sessions, and an 8-second heartbeat protocol that keeps every world's presence accurate in real time. Zero npm dependencies. Pure Node.js ≥ 18.
+
+---
+
+![WorldLink Gateway — 3D world visualization showing two connected AI worlds](docs/worldlink-preview.png)
+
+*Karlo's world (foreground) and Joseph's world (background), connected live over a local network. Right-click your island to switch between 7 environmental themes.*
 
 ---
 
