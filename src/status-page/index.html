@@ -6,7 +6,7 @@
 <meta name="description" content="WorldLink Gateway — peer-to-peer network for sovereign AI worlds">
 <meta name="theme-color" content="#07111D">
 <title>WorldLink Gateway</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2307111D'/><circle cx='16' cy='16' r='6' fill='%23f97316'/><ellipse cx='16' cy='16' rx='11' ry='4' fill='none' stroke='%2322d3ee' stroke-width='1.5' opacity='0.85'/><ellipse cx='16' cy='16' rx='8.5' ry='3.2' fill='none' stroke='%2322d3ee' stroke-width='0.8' opacity='0.4' transform='rotate(50 16 16)'/></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2307111D'/><path d='M 8 19 Q 14 4 24 11.5' stroke='%2322d3ee' fill='none' stroke-width='1.5' stroke-linecap='round' opacity='0.8'/><circle cx='15' cy='9.5' r='1.5' fill='%23ffffff' opacity='0.65'/><circle cx='24' cy='8' r='3.5' fill='%2322d3ee'/><circle cx='8' cy='24' r='5' fill='%23f97316'/></svg>">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -2350,7 +2350,7 @@ function _wDesaturateGroup(grp, amount) {
 var _wCurrentTheme = 'default';
 var _wThemes = {
   default: {
-    label: '🌿 Living World',
+    label: 'Avatar',
     sky: 0x060d1a, fog: 0x060d1a,
     grass: 0x217a10, grassLip: 0x2eaa14, moss: 0x3acc1a,
     tree: 0x1a6b0a, treeLight: 0x288c14, cliff: 0x28211c, strata: 0x4a3d30,
@@ -2360,7 +2360,7 @@ var _wThemes = {
     arcs: 0x06b6d4, rareEvent: null,
   },
   deepspace: {
-    label: '🌌 Deep Space',
+    label: 'Star Wars',
     sky: 0x000508, fog: 0x000508,
     grass: 0x1a2440, grassLip: 0x253560, moss: 0x304878,
     tree: 0x0d1a30, treeLight: 0x182848, cliff: 0x0d1020, strata: 0x151828,
@@ -2370,7 +2370,7 @@ var _wThemes = {
     arcs: 0x4080ff, rareEvent: 'shooting_star',
   },
   desert: {
-    label: '🏜️ Desert Planet',
+    label: 'Dune',
     sky: 0x1a0a04, fog: 0x1a0a04,
     grass: 0xc8922a, grassLip: 0xe0a83a, moss: 0xf0be50,
     tree: 0x8b5e18, treeLight: 0xb07828, cliff: 0x6a4018, strata: 0x8a6038,
@@ -2380,7 +2380,7 @@ var _wThemes = {
     arcs: 0xff8030, rareEvent: 'dust_devil',
   },
   iceage: {
-    label: '🧊 Ice Age',
+    label: 'Interstellar',
     sky: 0x060f1a, fog: 0x060f1a,
     grass: 0xb8d8e8, grassLip: 0xd0eaf8, moss: 0x98c4d8,
     tree: 0x6890a8, treeLight: 0x88aac0, cliff: 0x304858, strata: 0x486880,
@@ -2390,7 +2390,7 @@ var _wThemes = {
     arcs: 0x80d0ff, rareEvent: 'aurora',
   },
   sakura: {
-    label: '🌸 Sakura',
+    label: 'Princess Mononoke',
     sky: 0x0d0a12, fog: 0x0d0a12,
     grass: 0x3aaa3a, grassLip: 0x50cc50, moss: 0x60dd60,
     tree: 0xf8a0c0, treeLight: 0xffc8d8, cliff: 0x28211c, strata: 0x4a3d30,
@@ -2400,7 +2400,7 @@ var _wThemes = {
     arcs: 0xff80b0, rareEvent: 'petal_burst',
   },
   neoncity: {
-    label: '🌆 Neon City',
+    label: 'Blade Runner',
     sky: 0x050208, fog: 0x050208,
     grass: 0x0a2a18, grassLip: 0x0e4020, moss: 0x00ff55,
     tree: 0x00aa30, treeLight: 0x00ff44, cliff: 0x111128, strata: 0x1a1a40,
@@ -2410,7 +2410,7 @@ var _wThemes = {
     arcs: 0x00ffaa, rareEvent: 'neon_flash',
   },
   prehistoric: {
-    label: '🦕 Prehistoric',
+    label: 'Jurassic Park',
     sky: 0x020d04, fog: 0x020d04,
     grass: 0x1a8010, grassLip: 0x2aaa18, moss: 0x40cc20,
     tree: 0x0e5808, treeLight: 0x1a8010, cliff: 0x1e3a18, strata: 0x2e5a28,
@@ -2418,6 +2418,16 @@ var _wThemes = {
     hemi: [0x60a830, 0x0a2008, 0.50],
     atmo: { type: 'drift', color: 0x60c840, count: 90, speed: 0.35, range: 32, size: 0.14, op: 0.25 },
     arcs: 0x80ff40, rareEvent: 'meteor',
+  },
+  ghibli: {
+    label: 'Studio Ghibli',
+    sky: 0x1a0c20, fog: 0x1a0c20,                        // Spirited Away warm purple twilight
+    grass: 0x30cc2a, grassLip: 0x44e83e, moss: 0x5aff54, // vivid saturated Totoro-green
+    tree: 0x1c9818, treeLight: 0x2ecc28, cliff: 0x3a2414, strata: 0x5a3c20,
+    orb: 0xffaa30, sun: 0xffc860, sunI: 2.4,             // warm amber spirit lantern
+    hemi: [0xffd090, 0x1a0808, 0.65],                    // golden warmth bakes into everything
+    atmo: { type: 'petals', color: 0xfffaee, count: 280, speed: 0.40, rXZ: 38, rY: 34, yBase: -8, sMin: 0.07, sMax: 0.22, drift: 3.2, op: 0.68 },
+    arcs: 0xffaa40, rareEvent: 'dragon',
   },
 };
 
@@ -2874,6 +2884,7 @@ function _wEnvTick(dt) {
     case 'neon_flash':    _wEvtNeonFlash(); break;
     case 'dust_devil':    _wEvtSpeedPulse(3.5, 2800); break;
     case 'meteor':        _wEvtShootingStar(0x80ff40, 0.9); break;
+    case 'dragon':        _wEvtDragon(); break;
   }
 }
 
@@ -2948,6 +2959,76 @@ function _wEvtSpeedPulse(multiplier, durationMs) {
       for (var i = 0; i < l.speeds.length; i++) l.speeds[i] /= multiplier;
     });
   }, durationMs);
+}
+
+function _wEvtDragon() {
+  if (!_wscene) return;
+  // Spirit spores surge as the dragon arrives, then settle as it passes
+  _wEvtParticlePulse(2.8, 5000);
+  var SEGS = 12;
+  var posHistory = [];
+
+  // Body segments: head is brightest, tapering to tail
+  var meshes = [];
+  for (var i = 0; i < SEGS; i++) {
+    var r = Math.max(1.1 - i * 0.08, 0.22);
+    var geo = new THREE.SphereGeometry(r, 7, 5);
+    var mat = new THREE.MeshBasicMaterial({
+      color: i === 0 ? 0xfff8d0 : 0xffe090,
+      transparent: true, opacity: 0, depthWrite: false
+    });
+    var m = new THREE.Mesh(geo, mat);
+    _wscene.add(m);
+    meshes.push({ mesh: m, mat: mat, baseOp: 1.0 - i * 0.075 });
+  }
+
+  // Warm head light + wide spirit aura
+  var headLight = new THREE.PointLight(0xffcc66, 0, 38);
+  var auraLight = new THREE.PointLight(0xffeebb, 0, 65);
+  _wscene.add(headLight);
+  _wscene.add(auraLight);
+
+  // Randomise direction and path each time
+  var side = Math.random() > 0.5 ? 1 : -1;
+  var startX = -78 * side, endX = 78 * side;
+  var startZ = -15 + (Math.random() - 0.5) * 28;
+  var endZ   = -15 + (Math.random() - 0.5) * 28;
+  var baseY  = 22 + Math.random() * 12;
+  var age = 0, dur = 9.0;
+
+  (function tick() {
+    age += 0.016;
+    var t = Math.min(age / dur, 1);
+
+    // Smooth fade envelope: 12% ease-in, hold, 8% ease-out
+    var fade = t < 0.12 ? t / 0.12 : t > 0.92 ? 1 - (t - 0.92) / 0.08 : 1;
+
+    // Head: linear travel + two-frequency serpentine undulation
+    var hx = startX + (endX - startX) * t;
+    var hz = startZ + (endZ - startZ) * t;
+    var hy = baseY + Math.sin(t * Math.PI * 4) * 4.5 + Math.sin(t * Math.PI * 9) * 1.2;
+
+    posHistory.unshift({ x: hx, y: hy, z: hz });
+    if (posHistory.length > SEGS * 5) posHistory.length = SEGS * 5;
+
+    for (var i = 0; i < SEGS; i++) {
+      var lagIdx = Math.min(Math.floor(i * 4), posHistory.length - 1);
+      var p = posHistory[lagIdx] || { x: hx, y: hy, z: hz };
+      meshes[i].mesh.position.set(p.x, p.y, p.z);
+      meshes[i].mat.opacity = meshes[i].baseOp * fade;
+    }
+
+    headLight.position.set(hx, hy, hz); headLight.intensity = 5 * fade;
+    auraLight.position.set(hx, hy, hz); auraLight.intensity = 2 * fade;
+
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      meshes.forEach(function(e) { _wscene.remove(e.mesh); e.mesh.geometry.dispose(); e.mat.dispose(); });
+      _wscene.remove(headLight); headLight.dispose();
+      _wscene.remove(auraLight); auraLight.dispose();
+    }
+  })();
 }
 
 // ── Cloud blob helper (mirrors mkCloud in world.html) ──────────────
@@ -3122,7 +3203,7 @@ function _wMkIsland(seed, isLocal, status) {
   var orbCol = new THREE.Color(orbHex);
 
   // Stone plinth base under the orb
-  var ORB_Y = 1.9; // raised to float clearly above the tallest building spires
+  var ORB_Y = 2.5; // floats above the label card without disconnecting from the island
 
   var plinthM = _wsm(0x2e2a24, { roughness: 0.95 });
   var plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.18, 8), plinthM);
@@ -3759,7 +3840,7 @@ function _wUpdateLabels() {
     if (!v.labelEl) return;
     var wp = new THREE.Vector3();
     v.group.getWorldPosition(wp);
-    wp.y += 2.3;
+    wp.y += 1.8;
     wp.project(_wcamera);
     var x = (wp.x * 0.5 + 0.5) * cw;
     var y = (-wp.y * 0.5 + 0.5) * ch;
