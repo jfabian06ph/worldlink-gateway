@@ -1812,6 +1812,47 @@ body {
         <button class="btn-primary" onclick="saveSettings()">Save Changes</button>
         <span id="settings-save-msg" style="font-size:12px;margin-left:10px;color:var(--green);"></span>
       </div>
+
+      <div class="card" style="max-width:520px;margin-top:16px;">
+        <div class="card-title">AI Backend</div>
+        <div style="font:400 12px/1.6 -apple-system,sans-serif;color:var(--text-muted);margin-bottom:16px;">
+          Determines how this world executes AI tasks requested by peers.<br>
+          Set to <strong style="color:var(--text);">none</strong> to disable task execution entirely — the capability won't be advertised.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Backend</label>
+          <select class="form-select" id="ai-backend-type" onchange="onAiBackendTypeChange(this.value)">
+            <option value="claude">Claude CLI (default)</option>
+            <option value="ollama">Ollama (local, free)</option>
+            <option value="openai">OpenAI API</option>
+            <option value="none">None — disable AI tasks</option>
+          </select>
+        </div>
+        <div id="ai-backend-ollama" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Model</label>
+            <input class="form-input" id="ai-backend-model" placeholder="llama3.2" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ollama Host</label>
+            <input class="form-input" id="ai-backend-host" placeholder="http://localhost:11434" />
+          </div>
+          <div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-muted);margin-bottom:12px;">
+            Install Ollama at <span style="color:var(--cyan);">ollama.ai</span> and run <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px;color:#a5f3fc;">ollama pull llama3.2</code> to get started.
+          </div>
+        </div>
+        <div id="ai-backend-openai" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Model</label>
+            <input class="form-input" id="ai-backend-openai-model" placeholder="gpt-4o" />
+          </div>
+          <div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-muted);margin-bottom:12px;">
+            Requires <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px;color:#a5f3fc;">OPENAI_API_KEY</code> in the gateway's environment.
+          </div>
+        </div>
+        <button class="btn-primary" onclick="saveAiBackend()">Save AI Backend</button>
+        <span id="ai-backend-msg" style="font-size:12px;margin-left:10px;color:var(--green);"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -5109,6 +5150,47 @@ function renderSettings() {
   } else {
     capsEl.textContent = 'No capabilities configured';
   }
+  // AI backend
+  const ab = _state.aiBackend || { type: 'claude' };
+  var typeEl = document.getElementById('ai-backend-type');
+  if (typeEl) typeEl.value = ab.type || 'claude';
+  var modelEl = document.getElementById('ai-backend-model');
+  if (modelEl) modelEl.value = ab.model || '';
+  var hostEl = document.getElementById('ai-backend-host');
+  if (hostEl) hostEl.value = ab.host || '';
+  var oaiModelEl = document.getElementById('ai-backend-openai-model');
+  if (oaiModelEl) oaiModelEl.value = ab.model || '';
+  onAiBackendTypeChange(ab.type || 'claude');
+}
+
+function onAiBackendTypeChange(type) {
+  var ollamaEl = document.getElementById('ai-backend-ollama');
+  var openaiEl = document.getElementById('ai-backend-openai');
+  if (ollamaEl) ollamaEl.style.display = type === 'ollama' ? '' : 'none';
+  if (openaiEl) openaiEl.style.display = type === 'openai' ? '' : 'none';
+}
+
+async function saveAiBackend() {
+  var type  = (document.getElementById('ai-backend-type') || {}).value || 'claude';
+  var model = type === 'ollama' ? (document.getElementById('ai-backend-model') || {}).value.trim()
+            : type === 'openai' ? (document.getElementById('ai-backend-openai-model') || {}).value.trim()
+            : '';
+  var host  = type === 'ollama' ? (document.getElementById('ai-backend-host') || {}).value.trim() : '';
+  var msg   = document.getElementById('ai-backend-msg');
+  msg.textContent = 'Saving…';
+  try {
+    var res = await fetch('/worldlink/local/set-ai-backend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, ...(model ? { model } : {}), ...(host ? { host } : {}) }),
+    });
+    var data = await res.json();
+    msg.style.color = res.ok ? 'var(--green)' : 'var(--red)';
+    msg.textContent = res.ok ? 'Saved! Reconnect peers to apply.' : (data.error || 'Failed');
+    if (res.ok) { _state.aiBackend = data.aiBackend || { type }; setTimeout(() => { msg.textContent = ''; }, 3000); }
+  } catch(e) {
+    msg.style.color = 'var(--red)'; msg.textContent = e.message;
+  }
 }
 
 // ── Task actions ──────────────────────────────────────────────────
@@ -5380,6 +5462,7 @@ async function refreshAll() {
     _state.tasks = tasksRes.tasks || [];
     _state.audit = auditRes.events || [];
     _state.capabilities = peersRes.capabilities || [];
+    _state.aiBackend = peersRes.aiBackend || _state.aiBackend || { type: 'claude' };
     _state.brain = brainRes.records || [];
     _bSources = sourcesRes.sources || _bSources;
 

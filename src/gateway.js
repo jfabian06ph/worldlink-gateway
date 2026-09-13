@@ -163,7 +163,7 @@ function createGateway(opts = {}) {
 
     try {
       const brainRecords = brain.querySelf(task.prompt);
-      const output   = await execute.runTask(task, brainRecords);
+      const output   = await execute.runTask(task, brainRecords, wlCfg.aiBackend);
       const artifactId = `wla_${crypto.randomUUID()}`;
       artifacts.set(artifactId, {
         artifactId, taskId, sourceWorld, type: 'response',
@@ -218,6 +218,7 @@ function createGateway(opts = {}) {
           publicKey: wlId.publicKey,
           capabilities: (wlCfg.capabilities || [])
             .filter(c => c.visibility !== 'trusted-only')
+            .filter(c => c.id !== 'claude-task' || execute.canExecuteTasks(wlCfg.aiBackend))
             .map(c => ({ id: c.id, description: c.description, requiresApproval: c.requiresApproval ?? true, permissions: c.permissions || ['message','task.request','artifact.receive'] })),
           permissionsSupported: ['message','task.request','artifact.receive','artifact.send','status.read'],
           uiAvailable: false,
@@ -246,7 +247,9 @@ function createGateway(opts = {}) {
 
         if (disabledPeers.has(sourceWorldId)) { json(403, { error: 'Connection paused by host' }); return; }
         const trusted   = (wlCfg.trustedPeers || []).find(p => p.worldId === sourceWorldId);
-        const available = (wlCfg.capabilities || []).filter(c => !requestedCapabilities.length || requestedCapabilities.includes(c.id));
+        const available = (wlCfg.capabilities || [])
+          .filter(c => c.id !== 'claude-task' || execute.canExecuteTasks(wlCfg.aiBackend))
+          .filter(c => !requestedCapabilities.length || requestedCapabilities.includes(c.id));
         if (!available.length && !trusted) { json(403, { error: 'No matching capabilities for this world' }); return; }
 
         const sessionToken = `wl_${crypto.randomBytes(24).toString('hex')}`;
@@ -387,7 +390,7 @@ function createGateway(opts = {}) {
         for (const cfg of (wlCfg.trustedPeers || [])) {
           if (!peers.has(cfg.worldId)) list.push({ worldId: cfg.worldId, worldName: cfg.worldName || cfg.worldId, status: cfg.disabled ? 'disabled' : 'offline', host: cfg.host, capabilities: [], lastSeen: null, disabled: !!cfg.disabled });
         }
-        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), peers: list });
+        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list });
         return;
       }
 
@@ -519,6 +522,21 @@ function createGateway(opts = {}) {
         wlCfg.worldName = name;
         try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
         json(200, { ok: true, worldName: name });
+        return;
+      }
+
+      // POST /worldlink/local/set-ai-backend  — update AI backend from UI
+      if (req.method === 'POST' && req.url === '/worldlink/local/set-ai-backend') {
+        const b = await body();
+        const { type, model, host: backendHost } = b;
+        const allowed = ['claude', 'ollama', 'openai', 'none'];
+        if (!allowed.includes(type)) { json(400, { error: `type must be one of: ${allowed.join(', ')}` }); return; }
+        wlCfg.aiBackend = { type, ...(model ? { model } : {}), ...(backendHost ? { host: backendHost } : {}) };
+        if (type === 'none') {
+          wlCfg.capabilities = (wlCfg.capabilities || []).filter(c => c.id !== 'claude-task');
+        }
+        try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
+        json(200, { ok: true, aiBackend: wlCfg.aiBackend });
         return;
       }
 
