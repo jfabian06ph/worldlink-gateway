@@ -797,6 +797,8 @@ body {
 }
 .world-label.peer-clickable { pointer-events: auto; cursor: pointer; }
 .world-label.peer-clickable:hover { border-color: var(--cyan); transform: translate(-50%, -100%) translateY(-2px); }
+.world-label.peer-offline { cursor: default; opacity: 0.72; }
+.world-label.peer-offline:hover { border-color: rgba(71,85,105,0.4); transform: translate(-50%, -100%); }
 .world-label.has-error { pointer-events: auto; border-color: var(--amber); cursor: pointer; }
 .wl-lbl-alerts { display: flex; gap: 4px; margin-top: 5px; justify-content: center; flex-wrap: wrap; }
 .wl-alert-pill {
@@ -1141,6 +1143,8 @@ body {
 .bubble-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
 .bubble-img { max-width: 100%; max-height: 240px; border-radius: 8px; display: block; cursor: zoom-in; object-fit: contain; }
 @keyframes wl-pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+@keyframes wl-hiatus-in { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
+#wl-hiatus-overlay > div { animation: wl-hiatus-in 0.25s cubic-bezier(0.34,1.56,0.64,1) both; }
 
 /* ── Connections page ───────────────────────────────────────────── */
 .conn-identity-card {
@@ -2567,6 +2571,70 @@ function _wCloseThemeMenu() {
   if (menu) menu.style.display = 'none';
 }
 
+// ── Offline / Hiatus overlay ───────────────────────────────────────
+function _wShowHiatusOverlay(peer) {
+  _wHideHiatusOverlay();
+
+  // Derive the peer's orb color (same seed logic as _wMkIsland)
+  var orbHex = (function() {
+    var seed = _wseed(peer.worldId || peer.worldName || 'world');
+    var hue = seed % 360;
+    if (hue < 50) hue += 130;
+    var c = new THREE.Color(); c.setHSL(hue / 360, 0.7, 0.55);
+    return '#' + c.getHexString();
+  })();
+
+  var ov = document.createElement('div');
+  ov.id = 'wl-hiatus-overlay';
+  ov.style.cssText = 'position:absolute;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,5,14,0.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);';
+
+  ov.innerHTML = [
+    '<div style="background:linear-gradient(160deg,#0d1b2b 0%,#08111e 100%);border:1px solid rgba(148,163,184,0.10);border-radius:24px;padding:44px 52px;text-align:center;max-width:360px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,0.7);">',
+
+      // Dim orb visual
+      '<div style="width:52px;height:52px;border-radius:50%;margin:0 auto 24px;background:' + orbHex + ';opacity:0.22;filter:blur(1px);box-shadow:0 0 28px ' + orbHex + ';"></div>',
+
+      // World name
+      '<div style="font:700 20px/1 -apple-system,sans-serif;color:#e2e8f0;letter-spacing:-.01em;margin-bottom:12px;">',
+        escHTML(peer.worldName || peer.worldId),
+      '</div>',
+
+      // Hiatus badge
+      '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(51,65,85,0.5);border:1px solid rgba(71,85,105,0.5);border-radius:20px;padding:4px 14px;margin-bottom:24px;">',
+        '<span style="width:7px;height:7px;border-radius:50%;background:#475569;display:inline-block;flex-shrink:0;"></span>',
+        '<span style="font:600 11px/1 -apple-system,sans-serif;color:#94a3b8;letter-spacing:.1em;text-transform:uppercase;">On Hiatus</span>',
+      '</div>',
+
+      // Message
+      '<div style="font:400 14px/1.7 -apple-system,sans-serif;color:#64748b;margin-bottom:32px;">',
+        'This world has stepped away for a while.<br>',
+        'Please come back once it\'s back online.',
+      '</div>',
+
+      // Dismiss
+      '<button id="wl-hiatus-dismiss" style="font:500 13px/1 -apple-system,sans-serif;color:#64748b;background:transparent;border:1px solid rgba(100,116,139,0.28);border-radius:10px;padding:9px 28px;cursor:pointer;transition:color .15s,border-color .15s;">',
+        'Dismiss',
+      '</button>',
+
+    '</div>',
+  ].join('');
+
+  ov.querySelector('#wl-hiatus-dismiss').addEventListener('mouseover', function() { this.style.color = '#94a3b8'; this.style.borderColor = 'rgba(148,163,184,0.45)'; });
+  ov.querySelector('#wl-hiatus-dismiss').addEventListener('mouseout',  function() { this.style.color = '#64748b'; this.style.borderColor = 'rgba(100,116,139,0.28)'; });
+  ov.querySelector('#wl-hiatus-dismiss').addEventListener('click', _wHideHiatusOverlay);
+  ov.addEventListener('click', function(e) { if (e.target === ov) _wHideHiatusOverlay(); });
+
+  var wrap = document.getElementById('world-scene-wrap');
+  if (wrap) wrap.appendChild(ov);
+}
+
+function _wHideHiatusOverlay() {
+  var ov = document.getElementById('wl-hiatus-overlay');
+  if (ov) ov.remove();
+  // Restore auto-rotate if no session is open
+  if (_wcontrols && !_sessionPeer) _wcontrols.autoRotate = true;
+}
+
 // ── Atmosphere System (per-theme particles — replaces snow-only system) ─────
 function _wAtmoStart(cfg) {
   _wAtmoStop();
@@ -3216,7 +3284,7 @@ function initWorldScene() {
     if (!found || found.worldId === '__local__') return;
     var peer = _state.peers.find(function(p){ return p.worldId === found.worldId; });
     if (!peer) return;
-    // Smooth camera ease toward selected world before opening session
+    // Smooth camera ease toward selected world
     var entry = _wislands.get(found.worldId);
     if (entry && _wcontrols) {
       var tgt = entry.group.position.clone();
@@ -3225,10 +3293,15 @@ function initWorldScene() {
       _wCamLerp.toTarget = tgt;
       _wCamLerp.active = true;
       _wCamLerp.progress = 0;
-      _wCamLerp.onDone = function() { openSession(peer); };
       _wcontrols.autoRotate = false;
+      if (peer.status === 'offline') {
+        _wCamLerp.onDone = function() { _wShowHiatusOverlay(peer); };
+      } else {
+        _wCamLerp.onDone = function() { openSession(peer); };
+      }
     } else {
-      openSession(peer);
+      if (peer.status === 'offline') { _wShowHiatusOverlay(peer); }
+      else { openSession(peer); }
     }
   });
 
@@ -3509,7 +3582,9 @@ function _wMkLabel(name, status, isLocal, worldId) {
     el.onclick = function() {
       if (_peerErrors[worldId]) { _peerAuthFix(worldId); return; }
       var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
-      if (peer) openSession(peer);
+      if (!peer) return;
+      if (peer.status === 'offline') { _wShowHiatusOverlay(peer); return; }
+      openSession(peer);
     };
   }
   layer.appendChild(el);
@@ -3549,13 +3624,18 @@ function _wUpdateLabel(el, name, status, worldId) {
   var isLocal = !!el.querySelector('.wl-lbl-you');
   if (worldId) el.dataset.worldId = worldId;
   var isLocal = !!el.dataset.local;
+  var _peerObj = worldId ? (_state.peers || []).find(function(p){ return p.worldId === worldId; }) : null;
+  var _isOffline = !isLocal && _peerObj && _peerObj.status === 'offline';
   el.classList.toggle('has-error', !isLocal && !!worldId && !!_peerErrors[worldId]);
   el.classList.toggle('peer-clickable', !isLocal && !!worldId);
+  el.classList.toggle('peer-offline', !!_isOffline);
   el.innerHTML = _wLabelHTML(name, status, isLocal, worldId);
   el.onclick = (!isLocal && worldId) ? function() {
     if (_peerErrors[worldId]) { _peerAuthFix(worldId); return; }
     var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
-    if (peer) openSession(peer);
+    if (!peer) return;
+    if (peer.status === 'offline') { _wShowHiatusOverlay(peer); return; }
+    openSession(peer);
   } : null;
 }
 function _wUpdateLabels() {
