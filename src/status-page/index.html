@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="WorldLink Gateway — peer-to-peer network for sovereign AI worlds">
+<meta name="theme-color" content="#07111D">
 <title>WorldLink Gateway</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2307111D'/><circle cx='16' cy='16' r='6' fill='%23f97316'/><ellipse cx='16' cy='16' rx='11' ry='4' fill='none' stroke='%2322d3ee' stroke-width='1.5' opacity='0.85'/><ellipse cx='16' cy='16' rx='8.5' ry='3.2' fill='none' stroke='%2322d3ee' stroke-width='0.8' opacity='0.4' transform='rotate(50 16 16)'/></svg>">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -578,18 +581,26 @@ body {
 
 /* ── Modals ───────────────────────────────── */
 .modal-backdrop {
-  display: none;
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.7);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 100;
+  display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
-.modal-backdrop.open { display: flex; }
+.modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.modal-backdrop .modal {
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-backdrop.open .modal { transform: scale(1) translateY(0); }
 .modal {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -2279,7 +2290,9 @@ let _wStarfieldGrp = null;   // starfield group for parallax
 let _wHemiLight    = null;   // hemisphere light ref for per-theme sky color
 var _wEnvTimer     = 60;     // seconds until next rare environmental event
 var _wThemeTx      = null;   // active theme color transition { items, t, duration }
-var _wLowMotion    = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+var _wLowMotion     = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+var _wHoveredIsland = null;  // worldId of currently hovered island (hover glow)
+var _wPrevStatus    = new Map(); // worldId → last known status (wake/sleep animations)
 // Camera lerp state — smooth fly-to on world select
 var _wCamLerp = { active: false, fromPos: null, toTarget: null, progress: 0, onDone: null };
 
@@ -2564,11 +2577,61 @@ function _wPickTheme(key) {
   _wApplyTheme(key);
   _wCloseThemeMenu();
   try { localStorage.setItem('wl-world-theme', key); } catch(e) {}
+  // Send a wave of packets along all arcs to celebrate the new theme
+  if (!_wLowMotion) {
+    var th = _wThemes[key];
+    var col = (th && th.arcs) ? th.arcs : 0x06b6d4;
+    var delay = 0;
+    _wArcs.forEach(function(arc, wid) {
+      setTimeout(function() { _wSpawnPacket(wid, 'out', col, 'theme'); }, delay);
+      setTimeout(function() { _wSpawnPacket(wid, 'in',  col, 'theme'); }, delay + 180);
+      delay += 100;
+    });
+  }
 }
 
 function _wCloseThemeMenu() {
   var menu = document.getElementById('world-theme-menu');
   if (menu) menu.style.display = 'none';
+}
+
+// ── World wake / sleep animations ─────────────────────────────────
+function _wWakeUpBurst(grp) {
+  if (_wLowMotion || !_wscene) return;
+  // Bright cyan flash from the orb — world coming online
+  var pos = grp.position.clone().add(new THREE.Vector3(0, 1.9, 0));
+  var light = new THREE.PointLight(0x22d3ee, 0, 16);
+  light.position.copy(pos);
+  _wscene.add(light);
+  var age = 0, dur = 1.4;
+  (function tick() {
+    age += 0.016;
+    var t = age / dur;
+    // Fast rise, slow fall
+    var env = t < 0.15 ? t / 0.15 : Math.pow(1 - (t - 0.15) / 0.85, 1.6);
+    light.intensity = 5 * env;
+    if (age < dur) requestAnimationFrame(tick);
+    else { _wscene.remove(light); light.dispose(); }
+  })();
+  // Also trigger a click-pulse feel on the orb
+  if (grp.userData) grp.userData._clickPulse = 0;
+}
+
+function _wSleepFlash(grp) {
+  if (_wLowMotion || !_wscene) return;
+  // Brief dim grey pulse — world going offline
+  var pos = grp.position.clone().add(new THREE.Vector3(0, 1.9, 0));
+  var light = new THREE.PointLight(0x475569, 0, 10);
+  light.position.copy(pos);
+  _wscene.add(light);
+  var age = 0, dur = 0.8;
+  (function tick() {
+    age += 0.016;
+    var t = age / dur;
+    light.intensity = 2 * Math.sin(t * Math.PI);
+    if (age < dur) requestAnimationFrame(tick);
+    else { _wscene.remove(light); light.dispose(); }
+  })();
 }
 
 // ── Offline / Hiatus overlay ───────────────────────────────────────
@@ -3270,7 +3333,15 @@ function initWorldScene() {
     mouse.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
     raycaster.setFromCamera(mouse, _wcamera);
     var hits = raycaster.intersectObjects(getIslandMeshes());
-    _wrenderer.domElement.style.cursor = hits.length ? 'pointer' : 'default';
+    if (hits.length) {
+      var found = findIslandForMesh(hits[0].object);
+      var newHover = found ? found.worldId : null;
+      if (newHover !== _wHoveredIsland) _wHoveredIsland = newHover;
+      _wrenderer.domElement.style.cursor = 'pointer';
+    } else {
+      _wHoveredIsland = null;
+      _wrenderer.domElement.style.cursor = 'default';
+    }
   });
 
   _wrenderer.domElement.addEventListener('click', function(e) {
@@ -3284,8 +3355,9 @@ function initWorldScene() {
     if (!found || found.worldId === '__local__') return;
     var peer = _state.peers.find(function(p){ return p.worldId === found.worldId; });
     if (!peer) return;
-    // Smooth camera ease toward selected world
+    // Click pulse feedback on the island orb
     var entry = _wislands.get(found.worldId);
+    if (entry) entry.group.userData._clickPulse = 0;
     if (entry && _wcontrols) {
       var tgt = entry.group.position.clone();
       tgt.y = 0;
@@ -3349,15 +3421,39 @@ function initWorldScene() {
       c.position.y = c.userData.baseY + Math.sin(T * c.userData.driftSpeed * 0.45) * 0.06;
     });
 
-    // World core — orb pulse + ring rotation + independent island float
+    // World core — orb pulse + ring rotation + hover glow + click pulse + float
     _wislands.forEach(function(v, wid) {
       var ud = v.group.userData;
       var base = ud._orbMat && ud._orbMat._baseEI != null ? ud._orbMat._baseEI : 0.55;
-      if (ud._orbMat)  ud._orbMat.emissiveIntensity  = base * (0.76 + Math.sin(T * 1.55) * 0.24);
-      if (ud._glowMat) ud._glowMat.emissiveIntensity = base * 1.6 * (0.70 + Math.sin(T * 1.55 + 0.5) * 0.30);
-      if (ud._ring)    ud._ring.rotation.z  += 0.0035;
-      if (ud._ring2)   ud._ring2.rotation.z += 0.0072;
-      // Independent float — each island bobs at its own phase & speed
+
+      // Hover glow — brighten orb when pointer is over this island
+      var isHovered = (_wHoveredIsland === wid);
+      var hoverBoost = isHovered ? 0.28 : 0;
+      // Ease hover boost in/out smoothly
+      ud._hoverGlow = ud._hoverGlow || 0;
+      ud._hoverGlow += (hoverBoost - ud._hoverGlow) * 0.12;
+
+      // Click pulse — brief emissive surge (t goes 0→1, then removed)
+      var clickBoost = 0;
+      if (ud._clickPulse != null) {
+        ud._clickPulse = Math.min(ud._clickPulse + 0.016 / 0.35, 1);
+        clickBoost = Math.sin(ud._clickPulse * Math.PI) * 0.9;
+        if (ud._clickPulse >= 1) ud._clickPulse = null;
+      }
+
+      var pulse = 0.76 + Math.sin(T * 1.55) * 0.24;
+      if (ud._orbMat)  ud._orbMat.emissiveIntensity  = (base + ud._hoverGlow + clickBoost) * pulse;
+      if (ud._glowMat) ud._glowMat.emissiveIntensity = (base + ud._hoverGlow + clickBoost) * 1.6 * (0.70 + Math.sin(T * 1.55 + 0.5) * 0.30);
+
+      // Ring speed picks up on hover
+      var ringMul = isHovered ? 2.2 : 1;
+      if (ud._ring)  ud._ring.rotation.z  += 0.0035 * ringMul;
+      if (ud._ring2) ud._ring2.rotation.z += 0.0072 * ringMul;
+
+      // Point light brightens on hover
+      if (ud._ptLight) ud._ptLight.intensity = (base > 0.1 ? (isHovered ? 1.0 : 0.5) : 0);
+
+      // Independent float
       if (ud._floatPhase != null) {
         var amp = (wid === '__local__') ? 0.07 : 0.055;
         v.group.position.y = ud._baseY + Math.sin(T * ud._floatSpeed + ud._floatPhase) * amp;
@@ -3491,9 +3587,16 @@ function syncWorldScene(myName, peers, myStatus) {
       entry = { group: grp, labelEl: labelEl };
       _wislands.set(wid, entry);
     } else {
+      // Detect status transitions for wake/sleep animations
+      var prevSt = _wPrevStatus.get(wid);
+      if (prevSt && prevSt !== peer.status) {
+        if (peer.status === 'online')  _wWakeUpBurst(entry.group);
+        if (peer.status === 'offline') _wSleepFlash(entry.group);
+      }
       _wSetIslandStatus(entry.group, peer.status);
       _wUpdateLabel(entry.labelEl, peer.worldName || peer.worldId, peer.status, wid);
     }
+    _wPrevStatus.set(wid, peer.status);
     // Set base emissive for pulse calculation
     var om = entry.group.userData._orbMat;
     if (om) om._baseEI = (peer.status === 'offline') ? 0.07 : 0.45;
@@ -3533,6 +3636,16 @@ function _wEnsureArc(worldId, targetPos) {
   line.computeLineDistances(); // required for LineDashedMaterial
   _wscene.add(line);
   _wArcs.set(worldId, { line: line, geom: geom, mat: mat, curve: curve, lastHeartbeat: -999 });
+  // Celebrate the new connection — burst of packets in both directions
+  if (!_wLowMotion) {
+    var th = _wThemes[_wCurrentTheme];
+    var arcColor = (th && th.arcs) ? th.arcs : 0x06b6d4;
+    for (var _bi = 0; _bi < 4; _bi++) {
+      (function(delay, dir) {
+        setTimeout(function() { _wSpawnPacket(worldId, dir, arcColor, 'connect'); }, delay);
+      })(_bi * 120, _bi % 2 === 0 ? 'out' : 'in');
+    }
+  }
 }
 
 function _wRemoveArc(worldId) {
