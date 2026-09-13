@@ -2826,7 +2826,7 @@ function renderSessionTimeline() {
     // Inbound messages from peer
     _state.messages
       .filter(function(m){ return m.fromWorld === peer.worldId; })
-      .forEach(function(m){ timeline.push({ _type:'msg-in', text:m.text, _ts:m.timestamp||0 }); });
+      .forEach(function(m){ timeline.push({ _type:'msg-in', text:m.text, attachments:m.attachments||[], _ts:m.timestamp||0 }); });
 
     // Outbound messages (local outbox — session memory)
     (_outbox[peer.worldId] || [])
