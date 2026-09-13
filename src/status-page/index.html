@@ -787,6 +787,56 @@ body {
   transition: opacity .25s;
 }
 .world-label.has-error { pointer-events: auto; border-color: var(--amber); cursor: pointer; }
+.wl-lbl-alerts { display: flex; gap: 4px; margin-top: 4px; justify-content: center; }
+.wl-alert-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: rgba(0,0,0,0.4); border-radius: 10px;
+  padding: 1px 6px; font: 600 9px/1.5 -apple-system,sans-serif;
+}
+.wl-alert-msg { color: #06b6d4; }
+.wl-alert-task { color: #f59e0b; }
+
+/* Notifications tray on overview */
+#world-notif-panel {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 240px;
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+}
+.notif-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.notif-card:hover { background: var(--surface-3,#27272a); border-color: var(--cyan); }
+.notif-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 11px/1 -apple-system,sans-serif; color: #fff;
+  flex-shrink: 0;
+}
+.notif-body { flex: 1; min-width: 0; }
+.notif-name { font: 600 11px/1.3 -apple-system,sans-serif; color: var(--text-strong); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notif-alerts { display: flex; gap: 5px; flex-wrap: wrap; }
+.notif-tag {
+  font: 500 10px/1.6 -apple-system,sans-serif;
+  border-radius: var(--r-pill); padding: 1px 7px;
+  display: inline-flex; align-items: center; gap: 3px;
+}
+.notif-tag-msg { background: rgba(6,182,212,0.15); color: #06b6d4; border: 1px solid rgba(6,182,212,0.25); }
+.notif-tag-task { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
 .wl-lbl-warn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 14px; height: 14px; border-radius: 50%;
@@ -1573,6 +1623,7 @@ body {
     </div>
     <div class="nav-item" data-page="tasks" onclick="navigate('tasks', this)">
       <span class="nav-icon">⚙</span> Tasks
+      <span class="nav-badge" id="task-badge" style="display:none">0</span>
     </div>
     <div class="nav-item" data-page="brain" onclick="navigate('brain', this)">
       <span class="nav-icon">◎</span> Brain
@@ -1627,6 +1678,7 @@ body {
         <div id="world-label-layer"></div>
         <div id="world-hint">Click a world to open its session</div>
         <div id="world-peer-count"></div>
+        <div id="world-notif-panel" style="display:none"></div>
       </div>
     </div>
 
@@ -2024,6 +2076,10 @@ function navigate(page, el) {
   if (page === 'messages') {
     _state.messages.forEach(m => m.read = true);
     updateMsgBadge();
+  }
+  // Mark all incoming tasks as seen on visit
+  if (page === 'tasks') {
+    _markTasksSeen(null);
   }
 }
 
@@ -2696,11 +2752,23 @@ function _wLabelHTML(name, status, isLocal, worldId) {
   var glow = (status !== 'offline') ? ';box-shadow:0 0 5px ' + dot : '';
   var you  = isLocal ? '<span class="wl-lbl-you">You</span>' : '';
   var warn = (!isLocal && worldId && _peerErrors[worldId]) ? '<span class="wl-lbl-warn">!</span>' : '';
+  var alertsHtml = '';
+  if (!isLocal && worldId) {
+    var unreadMsgs = (_state.messages || []).filter(function(m){ return m.fromWorld === worldId && !m.read; }).length;
+    var unseenTasks = (_state.tasks || []).filter(function(t){ return t.sourceWorld === worldId && !_seenTaskIds.has(t.taskId); }).length;
+    if (unreadMsgs || unseenTasks) {
+      alertsHtml = '<div class="wl-lbl-alerts">';
+      if (unreadMsgs) alertsHtml += '<span class="wl-alert-pill wl-alert-msg">✉ ' + unreadMsgs + '</span>';
+      if (unseenTasks) alertsHtml += '<span class="wl-alert-pill wl-alert-task">⚙ ' + unseenTasks + '</span>';
+      alertsHtml += '</div>';
+    }
+  }
   return '<div class="wl-lbl-name"><span>' + escHTML(name) + '</span>' + you + warn + '</div>'
        + '<div class="wl-lbl-status">'
        + '<span class="wl-lbl-dot" style="background:' + dot + glow + '"></span>'
        + '<span class="wl-lbl-stxt">' + escHTML(status || 'offline') + '</span>'
-       + '</div>';
+       + '</div>'
+       + alertsHtml;
 }
 function _wUpdateLabel(el, name, status, worldId) {
   if (!el) return;
@@ -5503,6 +5571,9 @@ async function artifactSendAsMessage() {
 function openPeerSession(worldId) {
   var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
   if (!peer) return;
+  _markTasksSeen(worldId);
+  _state.messages.forEach(function(m) { if (m.fromWorld === worldId) m.read = true; });
+  updateMsgBadge();
   navigate('overview');
   setTimeout(function(){ openSession(peer); }, 80);
 }
@@ -5687,6 +5758,73 @@ function updateMsgBadge() {
   else { badge.style.display = 'none'; }
 }
 
+// ── Task badge + seen tracking ────────────────────────────────────
+var _seenTaskIds = new Set();
+
+function updateTaskBadge() {
+  var unseen = _state.tasks.filter(function(t) {
+    return t.sourceWorld && !_seenTaskIds.has(t.taskId);
+  }).length;
+  var badge = document.getElementById('task-badge');
+  if (!badge) return;
+  if (unseen > 0) { badge.textContent = unseen; badge.style.display = 'flex'; }
+  else { badge.style.display = 'none'; }
+}
+
+function _markTasksSeen(worldId) {
+  _state.tasks.forEach(function(t) {
+    if (!worldId || t.sourceWorld === worldId) _seenTaskIds.add(t.taskId);
+  });
+  updateTaskBadge();
+  _updateWorldLabelAlerts();
+}
+
+function _updateWorldLabelAlerts() {
+  if (_wislands) {
+    _wislands.forEach(function(v, wid) {
+      if (!v.labelEl || wid === '__local__') return;
+      var peer = (_state.peers || []).find(function(p){ return p.worldId === wid; });
+      if (peer) _wUpdateLabel(v.labelEl, peer.worldName || wid, peer.status, wid);
+    });
+  }
+  renderNotifPanel();
+}
+
+function renderNotifPanel() {
+  var panel = document.getElementById('world-notif-panel');
+  if (!panel) return;
+  var peerAlerts = {};
+  (_state.messages || []).forEach(function(m) {
+    if (!m.fromWorld || m.read) return;
+    if (!peerAlerts[m.fromWorld]) peerAlerts[m.fromWorld] = { msgs: 0, tasks: 0 };
+    peerAlerts[m.fromWorld].msgs++;
+  });
+  (_state.tasks || []).forEach(function(t) {
+    if (!t.sourceWorld || _seenTaskIds.has(t.taskId)) return;
+    if (!peerAlerts[t.sourceWorld]) peerAlerts[t.sourceWorld] = { msgs: 0, tasks: 0 };
+    peerAlerts[t.sourceWorld].tasks++;
+  });
+  var entries = Object.keys(peerAlerts);
+  if (!entries.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'flex';
+  panel.innerHTML = entries.map(function(wid) {
+    var a = peerAlerts[wid];
+    var peer = (_state.peers || []).find(function(p){ return p.worldId === wid; });
+    var name = (peer && peer.worldName) || (wid.slice(0, 12) + '…');
+    var initials = peerInitials(name);
+    var color = avatarColor(name);
+    var tags = [];
+    if (a.msgs) tags.push('<span class="notif-tag notif-tag-msg">✉ ' + a.msgs + (a.msgs > 1 ? ' msgs' : ' msg') + '</span>');
+    if (a.tasks) tags.push('<span class="notif-tag notif-tag-task">⚙ ' + a.tasks + (a.tasks > 1 ? ' tasks' : ' task') + '</span>');
+    return '<div class="notif-card" onclick="openPeerSession(\'' + escAttr(wid) + '\')">'
+      + '<div class="notif-avatar" style="background:' + color + '">' + escHTML(initials) + '</div>'
+      + '<div class="notif-body">'
+      + '<div class="notif-name">' + escHTML(name) + '</div>'
+      + '<div class="notif-alerts">' + tags.join('') + '</div>'
+      + '</div></div>';
+  }).join('');
+}
+
 // ── Data loading ──────────────────────────────────────────────────
 async function loadBrain() {
   try {
@@ -5770,6 +5908,8 @@ async function refreshAll() {
     renderAuditFull();
     renderSettings();
     updateMsgBadge();
+    updateTaskBadge();
+    _updateWorldLabelAlerts();
     const _upEl = document.getElementById('my-uptime'); if (_upEl) _upEl.textContent = uptime();
 
   } catch(e) {
