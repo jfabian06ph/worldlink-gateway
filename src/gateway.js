@@ -390,7 +390,7 @@ function createGateway(opts = {}) {
         for (const cfg of (wlCfg.trustedPeers || [])) {
           if (!peers.has(cfg.worldId)) list.push({ worldId: cfg.worldId, worldName: cfg.worldName || cfg.worldId, status: cfg.disabled ? 'disabled' : 'offline', host: cfg.host, capabilities: [], lastSeen: null, disabled: !!cfg.disabled });
         }
-        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list });
+        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), capabilitiesConfig: wlCfg.capabilities || [], aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list });
         return;
       }
 
@@ -554,6 +554,19 @@ function createGateway(opts = {}) {
         wlCfg.capabilities = ids.filter(id => CAP_META[id]).map(id => ({ id, ...CAP_META[id] }));
         try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
         json(200, { ok: true, capabilities: wlCfg.capabilities.map(c => c.id) });
+        return;
+      }
+
+      // POST /worldlink/local/set-capability-approval — toggle requiresApproval per capability
+      if (req.method === 'POST' && req.url === '/worldlink/local/set-capability-approval') {
+        const b = await body();
+        const { id, requiresApproval } = b;
+        if (!id) { json(400, { error: 'id required' }); return; }
+        const cap = (wlCfg.capabilities || []).find(c => c.id === id);
+        if (!cap) { json(404, { error: `Capability '${id}' not found` }); return; }
+        cap.requiresApproval = !!requiresApproval;
+        try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
+        json(200, { ok: true, id, requiresApproval: cap.requiresApproval });
         return;
       }
 

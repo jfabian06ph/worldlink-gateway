@@ -545,6 +545,14 @@ body {
 }
 .toggle input:checked + .toggle-slider { background: var(--cyan); }
 .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+.cap-perm-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.cap-perm-row:last-child { border-bottom:none; }
+.cap-perm-info { flex:1; min-width:0; }
+.cap-perm-name { font:600 13px/1.4 -apple-system,sans-serif; color:var(--text); display:block; }
+.cap-perm-desc { font:400 11px/1.5 -apple-system,sans-serif; color:var(--text-muted); display:block; margin-top:2px; }
+.cap-perm-tag { font-size:10px; padding:2px 7px; border-radius:10px; white-space:nowrap; }
+.cap-perm-tag.auto { background:rgba(6,182,212,.12); color:var(--cyan); }
+.cap-perm-tag.approval { background:rgba(245,158,11,.12); color:#f59e0b; }
 .btn-primary {
   background: var(--cyan);
   color: #021218;
@@ -1845,12 +1853,17 @@ body {
             </label>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Capabilities</label>
-          <div id="settings-caps" style="font-size:13px;color:var(--text-muted)">Loading…</div>
-        </div>
         <button class="btn-primary" onclick="saveSettings()">Save Changes</button>
         <span id="settings-save-msg" style="font-size:12px;margin-left:10px;color:var(--green);"></span>
+      </div>
+
+      <div class="card" style="max-width:520px;margin-top:16px;">
+        <div class="card-title">Capability Permissions</div>
+        <div style="font:400 12px/1.6 -apple-system,sans-serif;color:var(--text-muted);margin-bottom:16px;">
+          Control whether each capability requires your manual approval before peers can use it, or runs automatically.
+        </div>
+        <div id="settings-caps">Loading…</div>
+        <span id="settings-caps-msg" style="font-size:12px;margin-top:10px;display:block;color:var(--green);"></span>
       </div>
 
       <div class="card" style="max-width:520px;margin-top:16px;">
@@ -5338,13 +5351,32 @@ function renderAuditFull() {
 }
 
 // ── Render Settings ───────────────────────────────────────────────
+var _CAP_LABELS = { message:'Message Exchange', 'claude-task':'AI Task Execution', 'status.read':'Status Share', 'artifact.receive':'Artifact Receive', 'context-handoff':'Context Handoff' };
+
 function renderSettings() {
   document.getElementById('settings-name').value = _state.worldName || '';
-  const capsEl = document.getElementById('settings-caps');
-  if (_state.capabilities?.length) {
-    capsEl.innerHTML = _state.capabilities.map(c => `<span class="cap-badge" style="margin-right:4px;">${escHTML(c.id || c)}</span>`).join('');
+  var capsEl = document.getElementById('settings-caps');
+  var caps = _state.capabilitiesConfig || [];
+  if (caps.length) {
+    capsEl.innerHTML = caps.map(function(c) {
+      var label = _CAP_LABELS[c.id] || c.id;
+      var reqApproval = !!c.requiresApproval;
+      return '<div class="cap-perm-row">'
+        + '<div class="cap-perm-info">'
+        + '<span class="cap-perm-name">' + escHTML(label) + '</span>'
+        + '<span class="cap-perm-desc">' + escHTML(c.description || '') + '</span>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
+        + '<span class="cap-perm-tag ' + (reqApproval ? 'approval' : 'auto') + '" id="cap-tag-' + c.id + '">' + (reqApproval ? 'Approve' : 'Auto') + '</span>'
+        + '<label class="toggle" title="Require manual approval">'
+        + '<input type="checkbox" ' + (reqApproval ? 'checked' : '') + ' onchange="toggleCapabilityApproval(\'' + c.id + '\',this.checked)">'
+        + '<span class="toggle-slider"></span>'
+        + '</label>'
+        + '</div>'
+        + '</div>';
+    }).join('');
   } else {
-    capsEl.textContent = 'No capabilities configured';
+    capsEl.innerHTML = '<span style="font-size:13px;color:var(--text-muted)">No capabilities configured</span>';
   }
   // AI backend
   const ab = _state.aiBackend || { type: 'claude' };
@@ -5386,6 +5418,31 @@ async function saveAiBackend() {
     if (res.ok) { _state.aiBackend = data.aiBackend || { type }; setTimeout(() => { msg.textContent = ''; }, 3000); }
   } catch(e) {
     msg.style.color = 'var(--red)'; msg.textContent = e.message;
+  }
+}
+
+async function toggleCapabilityApproval(id, requiresApproval) {
+  var msg = document.getElementById('settings-caps-msg');
+  if (msg) { msg.textContent = 'Saving…'; msg.style.color = 'var(--text-muted)'; }
+  try {
+    var res = await fetch('/worldlink/local/set-capability-approval', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, requiresApproval })
+    });
+    var data = await res.json();
+    if (res.ok && _state.capabilitiesConfig) {
+      var cap = _state.capabilitiesConfig.find(function(c){ return c.id === id; });
+      if (cap) cap.requiresApproval = requiresApproval;
+      var tag = document.getElementById('cap-tag-' + id);
+      if (tag) {
+        tag.textContent = requiresApproval ? 'Approve' : 'Auto';
+        tag.className = 'cap-perm-tag ' + (requiresApproval ? 'approval' : 'auto');
+      }
+    }
+    if (msg) { msg.textContent = res.ok ? 'Saved!' : (data.error || 'Failed'); msg.style.color = res.ok ? 'var(--green)' : 'var(--red)'; setTimeout(function(){ if (msg) msg.textContent = ''; }, 2000); }
+  } catch(e) {
+    if (msg) { msg.textContent = e.message; msg.style.color = 'var(--red)'; }
   }
 }
 
@@ -5658,6 +5715,7 @@ async function refreshAll() {
     _state.tasks = tasksRes.tasks || [];
     _state.audit = auditRes.events || [];
     _state.capabilities = peersRes.capabilities || [];
+    _state.capabilitiesConfig = peersRes.capabilitiesConfig || _state.capabilitiesConfig || [];
     _state.aiBackend = peersRes.aiBackend || _state.aiBackend || { type: 'claude' };
     _state.brain = brainRes.records || [];
     _bSources = sourcesRes.sources || _bSources;
