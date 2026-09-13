@@ -1032,6 +1032,45 @@ body {
   transition: opacity .15s;
 }
 .composer-send-btn:hover { opacity: 0.85; }
+.composer-attach-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 36px; height: 36px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  transition: border-color .15s, color .15s;
+}
+.composer-attach-btn:hover { border-color: var(--border-light); color: var(--text); }
+.composer-attach-btn.has-files { border-color: var(--cyan); color: var(--cyan); }
+.composer-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 0 8px;
+}
+.composer-preview-img {
+  position: relative;
+  width: 60px; height: 60px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.composer-preview-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.composer-preview-img button {
+  position: absolute; top: 2px; right: 2px;
+  background: rgba(0,0,0,.65); border: none; color: #fff;
+  border-radius: 50%; width: 16px; height: 16px;
+  font-size: 10px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.bubble-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.bubble-img { max-width: 100%; max-height: 240px; border-radius: 8px; display: block; cursor: zoom-in; object-fit: contain; }
 @keyframes wl-pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
 
 /* ── Connections page ───────────────────────────────────────────── */
@@ -1880,9 +1919,11 @@ body {
     <div class="session-empty">Select a world to start a session.</div>
   </div>
   <div class="session-composer">
+    <div class="composer-preview" id="composer-preview" style="display:none;"></div>
     <div class="composer-cap-row" id="composer-cap-row">
       <select id="composer-cap-select" class="form-select" style="font-size:11px;padding:4px 8px;height:28px;" onchange="_gwCapChanged(this.value)"></select>
     </div>
+    <input type="file" id="composer-file" accept="image/*" multiple style="display:none" onchange="onFilesPicked(this)">
     <div class="composer-row">
       <div id="session-auth-warn" style="display:none;" class="session-auth-warn">
         <span style="font-size:16px;flex-shrink:0;">⚠</span>
@@ -1898,6 +1939,7 @@ body {
       <textarea id="composer-input" class="composer-input" placeholder="Type a message or task…" rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComposerMsg();}"
         oninput="this.dataset.autoFilled='';this.style.height='';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button class="composer-attach-btn" id="composer-attach-btn" onclick="document.getElementById('composer-file').click()" title="Attach image">⊕</button>
       <button class="composer-send-btn" onclick="sendComposerMsg()" title="Send">→</button>
     </div>
   </div>
@@ -2814,7 +2856,7 @@ function renderSessionTimeline() {
         wasLastMine = true;
         return '<div class="tl-entry tl-mine">'
           + '<div class="tl-sender tl-sender-mine">You</div>'
-          + '<div class="tl-bubble tl-bubble-mine">' + _mdRender(entry.text) + '</div>'
+          + '<div class="tl-bubble tl-bubble-mine">' + _renderBubbleContent(entry) + '</div>'
           + '<div class="tl-time tl-time-right">' + fmtTs(entry._ts) + '</div>'
           + '</div>';
       }
@@ -2822,7 +2864,7 @@ function renderSessionTimeline() {
         wasLastMine = false;
         return '<div class="tl-entry tl-theirs">'
           + '<div class="tl-sender">' + escHTML(peerName) + '</div>'
-          + '<div class="tl-bubble">' + _mdRender(entry.text) + '</div>'
+          + '<div class="tl-bubble">' + _renderBubbleContent(entry) + '</div>'
           + '<div class="tl-time">' + fmtTs(entry._ts) + '</div>'
           + '</div>';
       }
@@ -2960,9 +3002,9 @@ function renderSessionTimeline() {
 // ── Outbound message store (in-session memory for "You" side) ───────
 var _outbox = {}; // peerId → [{text, ts}]
 var _outboxTasks = {}; // peerId → [{capability, prompt, ts, status}]
-function _outboxPush(peerId, text) {
+function _outboxPush(peerId, text, attachments) {
   if (!_outbox[peerId]) _outbox[peerId] = [];
-  _outbox[peerId].push({ text: text, ts: Date.now() });
+  _outbox[peerId].push({ text: text || '', attachments: attachments || [], ts: Date.now() });
 }
 function _outboxTaskPush(peerId, capability, prompt) {
   if (!_outboxTasks[peerId]) _outboxTasks[peerId] = [];
@@ -2994,20 +3036,117 @@ function toggleComposerMenu() {
   }
 }
 
+// ── Image attachment helpers ─────────────────────────────────────────
+var _pendingAttachments = []; // [{filename, mimeType, data, previewUrl}]
+
+function _compressImage(file) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var MAX = 1024;
+        var w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        resolve({ filename: file.name.replace(/\.[^.]+$/, '.jpg'), mimeType: 'image/jpeg', data: dataUrl.split(',')[1], previewUrl: dataUrl });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function onFilesPicked(input) {
+  var files = Array.from(input.files || []);
+  input.value = '';
+  Promise.all(files.map(_compressImage)).then(function(results) {
+    results.forEach(function(a) { _pendingAttachments.push(a); });
+    _renderAttachmentPreview();
+  });
+}
+
+function _renderAttachmentPreview() {
+  var el = document.getElementById('composer-preview');
+  var btn = document.getElementById('composer-attach-btn');
+  if (!el) return;
+  if (!_pendingAttachments.length) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    if (btn) btn.classList.remove('has-files');
+    return;
+  }
+  if (btn) btn.classList.add('has-files');
+  el.style.display = 'flex';
+  el.innerHTML = _pendingAttachments.map(function(a, i) {
+    return '<div class="composer-preview-img">'
+      + '<img src="' + a.previewUrl + '" alt="' + escHTML(a.filename) + '">'
+      + '<button onclick="_removeAttachment(' + i + ')" title="Remove">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function _removeAttachment(i) {
+  _pendingAttachments.splice(i, 1);
+  _renderAttachmentPreview();
+}
+
+function _clearAttachments() {
+  _pendingAttachments = [];
+  _renderAttachmentPreview();
+}
+
+function _renderBubbleContent(entry) {
+  var html = '';
+  var atts = entry.attachments || [];
+  if (atts.length) {
+    html += '<div class="bubble-attachments">';
+    atts.forEach(function(a) {
+      if (a.mimeType && a.mimeType.startsWith('image/')) {
+        var src = 'data:' + escHTML(a.mimeType) + ';base64,' + a.data;
+        html += '<img class="bubble-img" src="' + src + '" alt="' + escHTML(a.filename || 'image') + '" onclick="_imgZoom(this)">';
+      }
+    });
+    html += '</div>';
+  }
+  if (entry.text) html += _mdRender(entry.text);
+  return html;
+}
+
+function _imgZoom(img) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out;';
+  var big = document.createElement('img');
+  big.src = img.src;
+  big.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.8);';
+  overlay.appendChild(big);
+  overlay.onclick = function() { document.body.removeChild(overlay); };
+  document.body.appendChild(overlay);
+}
+// ────────────────────────────────────────────────────────────────────
+
 async function sendComposerMsg() {
   if (!_sessionPeer) return;
   var input = document.getElementById('composer-input');
   var text  = input && input.value.trim();
-  if (!text) return;
+  var attachments = _pendingAttachments.map(function(a) { return { filename: a.filename, mimeType: a.mimeType, data: a.data }; });
+  if (!text && !attachments.length) return;
   input.value = '';
   input.style.height = '';
+  _clearAttachments();
 
   if (_composerType === 'message') {
     try {
       var res = await fetch('/worldlink/local/send-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, text: text })
+        body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, text: text, attachments: attachments })
       });
       var data = await res.json();
       if (data.error) {
@@ -3016,9 +3155,9 @@ async function sendComposerMsg() {
         return;
       }
       _clearPeerError(_sessionPeer.worldId);
-      _outboxPush(_sessionPeer.worldId, text);
+      _outboxPush(_sessionPeer.worldId, text, attachments);
       _wSpawnPacket(_sessionPeer.worldId, 'out', 0x06b6d4, 'message');
-      _wlGwToast('Message sent');
+      _wlGwToast(attachments.length ? 'Message + image sent' : 'Message sent');
       await refreshAll();
       renderSessionTimeline();
     } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }

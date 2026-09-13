@@ -654,12 +654,13 @@ function createGateway(opts = {}) {
         const s = verifyToken(bearer());
         if (!s) { json(401, { error: 'Invalid or expired session token' }); return; }
         const b = await body();
-        const { text, fromWorld } = b;
-        if (!text) { json(400, { error: 'text required' }); return; }
+        const { text, fromWorld, attachments } = b;
+        if (!text && !(attachments && attachments.length)) { json(400, { error: 'text or attachments required' }); return; }
         const msg = {
           id: `wlm_${crypto.randomUUID()}`,
           fromWorld: fromWorld || s.worldId,
-          text,
+          text: text || '',
+          attachments: Array.isArray(attachments) ? attachments : [],
           timestamp: Date.now(),
           read: false,
         };
