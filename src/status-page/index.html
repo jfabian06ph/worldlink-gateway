@@ -1379,7 +1379,9 @@ body {
 .brain-mem-provenance span { display: flex; gap: 3px; }
 .brain-mem-provenance strong { color: var(--text); }
 
-.brain-source-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; margin-bottom: 8px; }
+.brain-source-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s, background .15s; display: flex; align-items: center; gap: 12px; }
+.brain-source-card:hover { border-color: var(--border-active); background: var(--surface-2); }
+.brain-source-card:last-child { margin-bottom: 0; }
 .brain-source-row { display: flex; align-items: flex-start; gap: 12px; }
 .brain-source-ico { font-size: 20px; flex-shrink: 0; padding-top: 2px; }
 .brain-source-body { flex: 1; min-width: 0; }
@@ -5428,37 +5430,104 @@ function renderBrainSources() {
   }
   var ico = { repository:'◈', folder:'◫', file:'◻', 'api-spec':'≋' };
   el.innerHTML = _bSources.map(function(s) {
-    var peers = (_state.peers||[]).filter(function(p){ return p.status==='online'; });
-    var peerChecks = peers.length ? peers.map(function(p) {
-      var checked = s.sharedWith.indexOf(p.worldId)>-1;
-      return '<label class="peer-share-row"><input type="checkbox" '+(checked?'checked':'')+
-             ' onchange="brainSourceTogglePeer(\''+s.id+'\',\''+escHTML(p.worldId)+'\',this.checked)"> '+
-             '<span class="peer-share-name">'+escHTML(p.worldName||p.name||p.worldId)+'</span></label>';
-    }).join('') : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No online peers</div>';
-    var indexed = s.indexed
-      ? '<div class="brain-source-indexed"><span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;flex-shrink:0;"></span>Indexed · '+(s.lastIndexed?relTime(s.lastIndexed):'unknown')+'</div>'+
-        '<div class="brain-source-sync"><span>Mode <strong>'+s.syncMode+'</strong></span>'+(s.branch?'<span>Branch <strong>'+escHTML(s.branch)+'</strong></span>':'')+(s.commit?'<span>Commit <strong>'+escHTML(s.commit.slice(0,7))+'</strong></span>':'')+'</div>'
-      : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);margin-top:6px;">Not yet indexed</div>';
-    return '<div class="brain-source-card"><div class="brain-source-row">'+
-      '<div class="brain-source-ico">'+(ico[s.type]||'◈')+'</div>'+
-      '<div class="brain-source-body">'+
+    var sharedCount = (s.sharedWith||[]).length;
+    var sharedPeerNames = (s.sharedWith||[]).map(function(wid) {
+      var p = (_state.peers||[]).find(function(p){ return p.worldId===wid; });
+      return p ? (p.worldName||p.worldId) : wid.slice(0,10)+'…';
+    });
+    var shareBadge = sharedCount
+      ? '<span style="font:500 11px/1 -apple-system,sans-serif;color:var(--cyan);border:1px solid rgba(6,182,212,.3);background:rgba(6,182,212,.08);border-radius:10px;padding:2px 8px;">Shared · '+escHTML(sharedPeerNames.join(', '))+'</span>'
+      : '<span style="font:500 11px/1 -apple-system,sans-serif;color:var(--text-dim);">Private</span>';
+    var indexedBadge = s.indexed
+      ? '<span style="font:500 11px/1 -apple-system,sans-serif;color:#4ade80;">● Indexed</span>'
+      : '<span style="font:500 11px/1 -apple-system,sans-serif;color:var(--text-dim);">Not indexed</span>';
+    return '<div class="brain-source-card" onclick="brainShowSourceDetail(\''+escAttr(s.id)+'\')">'+
+      '<div style="font-size:18px;color:var(--text-muted);flex-shrink:0;">'+(ico[s.type]||'◈')+'</div>'+
+      '<div style="flex:1;min-width:0;">'+
         '<div class="brain-source-name">'+escHTML(s.name)+'</div>'+
         '<div class="brain-source-path">'+escHTML(s.path)+'</div>'+
-        indexed+
-        '<div class="brain-source-share"><div class="brain-source-share-label">Share knowledge with</div>'+peerChecks+'</div>'+
-        '<div class="brain-source-notice">ℹ Share knowledge, not source access. Peers receive permitted Brain context derived from this source. This does not grant access to the underlying repository or files.</div>'+
+        '<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;">'+indexedBadge+shareBadge+'</div>'+
       '</div>'+
-    '</div></div>';
+      '<span style="font-size:14px;color:var(--text-dim);">›</span>'+
+    '</div>';
   }).join('');
 }
 
-function brainSourceTogglePeer(srcId, worldId, checked) {
-  var src = _bSources.find(function(s){ return s.id===srcId; });
+function brainShowSourceDetail(id) {
+  var s = _bSources.find(function(src){ return src.id===id; });
+  if (!s) return;
+  var title  = document.getElementById('brain-drawer-title');
+  var body   = document.getElementById('brain-drawer-body');
+  var footer = document.getElementById('brain-drawer-footer');
+  if (!body) return;
+
+  var ico = { repository:'◈', folder:'◫', file:'◻', 'api-spec':'≋' };
+  var peers = (_state.peers||[]).filter(function(p){ return p.status==='online'; });
+  var peerChecks = peers.length ? peers.map(function(p) {
+    var checked = (s.sharedWith||[]).indexOf(p.worldId) > -1;
+    return '<label class="peer-share-row"><input type="checkbox" class="bds-peer-cb" data-wid="'+escAttr(p.worldId)+'" '+(checked?'checked':'')+'>'+
+           '<span class="peer-share-name">'+escHTML(p.worldName||p.worldId)+'</span></label>';
+  }).join('') : '<div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-muted)">No online peers</div>';
+
+  var indexed = s.indexed
+    ? '<div style="display:flex;align-items:center;gap:6px;font:400 12px/1 -apple-system,sans-serif;color:#4ade80;"><span>●</span>Indexed · '+(s.lastIndexed?relTime(s.lastIndexed):'unknown')+'</div>'
+    : '<div style="font:400 12px/1 -apple-system,sans-serif;color:var(--text-dim)">Not yet indexed</div>';
+
+  if (title) title.textContent = 'Source Detail';
+  body.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'+
+      '<span style="font-size:22px;color:var(--text-muted)">'+(ico[s.type]||'◈')+'</span>'+
+      '<div>'+
+        '<div style="font:700 14px/1 -apple-system,sans-serif;color:var(--text-strong)">'+escHTML(s.name)+'</div>'+
+        '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-muted);margin-top:3px;word-break:break-all">'+escHTML(s.path)+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:16px;">'+
+      '<div><div style="font:600 10px/1 -apple-system,sans-serif;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Type</div>'+
+        '<div style="font:400 12px/1 -apple-system,sans-serif;color:var(--text)">'+escHTML(s.type||'repository')+'</div></div>'+
+      '<div><div style="font:600 10px/1 -apple-system,sans-serif;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Status</div>'+
+        indexed+'</div>'+
+    '</div>'+
+    '<div class="form-group" style="margin-bottom:0">'+
+      '<label class="form-label">Share knowledge with</label>'+
+      '<div class="brain-peer-checks" id="bds-peer-checks">'+peerChecks+'</div>'+
+      '<div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-dim);margin-top:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs)">'+
+        'ℹ Share knowledge, not source access. Peers receive permitted Brain context derived from this source.'+
+      '</div>'+
+    '</div>';
+
+  if (footer) footer.innerHTML =
+    '<button class="btn" style="color:#f87171;border-color:#f87171;margin-right:auto" onclick="brainDeleteSource(\''+escAttr(id)+'\')">Delete</button>'+
+    '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+    '<button class="btn-primary" onclick="brainSaveSource(\''+escAttr(id)+'\')">Save</button>';
+
+  var overlay = document.getElementById('brain-drawer-overlay');
+  var drawer  = document.getElementById('brain-drawer');
+  if (overlay) overlay.classList.add('open');
+  if (drawer)  drawer.classList.add('open');
+}
+
+async function brainSaveSource(id) {
+  var src = _bSources.find(function(s){ return s.id===id; });
   if (!src) return;
-  var idx = src.sharedWith.indexOf(worldId);
-  if (checked && idx<0) src.sharedWith.push(worldId);
-  if (!checked && idx>-1) src.sharedWith.splice(idx,1);
-  fetch('/worldlink/local/sources', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: _bSources }) }).catch(function(){});
+  var sharedWith = [];
+  document.querySelectorAll('.bds-peer-cb:checked').forEach(function(cb){ if(cb.dataset.wid) sharedWith.push(cb.dataset.wid); });
+  src.sharedWith = sharedWith;
+  try {
+    await fetch('/worldlink/local/sources', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: _bSources }) });
+    brainCloseDrawer();
+    renderBrainSources();
+  } catch(e) { alert('Could not save: '+e.message); }
+}
+
+async function brainDeleteSource(id) {
+  if (!confirm('Remove this source? This cannot be undone.')) return;
+  _bSources = _bSources.filter(function(s){ return s.id !== id; });
+  try {
+    await fetch('/worldlink/local/sources', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: _bSources }) });
+    brainCloseDrawer();
+    renderBrainSources();
+  } catch(e) { alert('Could not delete: '+e.message); }
 }
 
 // ── Render Access ──────────────────────────────────────────────────
