@@ -2269,9 +2269,13 @@ let _wMyGroup   = null, _wMyLabelEl = null;
 let _wArcs      = new Map(); // worldId → { line, geom, mat, curve }
 let _wPackets   = [];        // in-flight light packets
 let _wClouds    = [];        // all cloud groups for drift
-let _wSnowLayers = [];       // [{ pts, positions, speeds, drifts, range }] — Ice Age snow
-let _wFalls     = [];        // waterfall streams for opacity animation
-let _wStarfieldGrp = null;  // starfield group for parallax
+let _wAtmoLayers   = [];      // atmosphere particle layers (all themes)
+let _wFalls        = [];      // waterfall streams for opacity animation
+let _wStarfieldGrp = null;   // starfield group for parallax
+let _wHemiLight    = null;   // hemisphere light ref for per-theme sky color
+var _wEnvTimer     = 60;     // seconds until next rare environmental event
+var _wThemeTx      = null;   // active theme color transition { items, t, duration }
+var _wLowMotion    = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 // Camera lerp state — smooth fly-to on world select
 var _wCamLerp = { active: false, fromPos: null, toTarget: null, progress: 0, onDone: null };
 
@@ -2325,32 +2329,95 @@ function _wDesaturateGroup(grp, amount) {
 }
 
 // ── World Themes ───────────────────────────────────────────────────
+// Each theme: terrain colors + hemi light [sky,ground,intensity] + atmosphere config + rare event
 var _wCurrentTheme = 'default';
 var _wThemes = {
-  default:   { label: '🌿 Default',       sky: 0x060d1a, fog: 0x060d1a, grass: 0x217a10, grassLip: 0x2eaa14, moss: 0x3acc1a, tree: 0x1a6b0a, treeLight: 0x288c14, cliff: 0x28211c, strata: 0x4a3d30, orb: null, sun: 0xf0ffec, sunI: 2.4 },
-  starwars:  { label: '⭐ Star Wars',      sky: 0x0d0820, fog: 0x0d0820, grass: 0xb8954a, grassLip: 0xd4aa5a, moss: 0xe0be70, tree: 0x7a5428, treeLight: 0xa07838, cliff: 0x5a4028, strata: 0x7a6040, orb: 0xffdf80, sun: 0xffe070, sunI: 2.8 },
-  dune:      { label: '🏜️ Dune',          sky: 0x1a0f06, fog: 0x1a0f06, grass: 0xc8922a, grassLip: 0xe0a83a, moss: 0xf0be50, tree: 0x8b5e18, treeLight: 0xb07828, cliff: 0x6a4018, strata: 0x8a6038, orb: 0xffa020, sun: 0xff8820, sunI: 3.0 },
-  iceage:    { label: '🧊 Ice Age',        sky: 0x060f1a, fog: 0x060f1a, grass: 0xb8d8e8, grassLip: 0xd0eaf8, moss: 0x98c4d8, tree: 0x6890a8, treeLight: 0x88aac0, cliff: 0x304858, strata: 0x486880, orb: 0x80d0ff, sun: 0xb0d8ff, sunI: 1.8 },
-  cherry:    { label: '🌸 Cherry Blossom', sky: 0x0d0812, fog: 0x0d0812, grass: 0x3aaa3a, grassLip: 0x50cc50, moss: 0x60dd60, tree: 0xf8a0c0, treeLight: 0xffc8d8, cliff: 0x28211c, strata: 0x4a3d30, orb: 0xff80b0, sun: 0xffc0d8, sunI: 2.2 },
-  cyberpunk: { label: '🌆 Cyberpunk',      sky: 0x050208, fog: 0x050208, grass: 0x0a2a18, grassLip: 0x0e4020, moss: 0x00ff55, tree: 0x00aa30, treeLight: 0x00ff44, cliff: 0x111128, strata: 0x1a1a40, orb: 0x00ffaa, sun: 0xff00aa, sunI: 1.6 },
-  jurassic:  { label: '🦖 Jurassic',       sky: 0x020d04, fog: 0x020d04, grass: 0x1a8010, grassLip: 0x2aaa18, moss: 0x40cc20, tree: 0x0e5808, treeLight: 0x1a8010, cliff: 0x1e3a18, strata: 0x2e5a28, orb: 0x80ff40, sun: 0xc8ff80, sunI: 2.0 },
+  default: {
+    label: '🌿 Living World',
+    sky: 0x060d1a, fog: 0x060d1a,
+    grass: 0x217a10, grassLip: 0x2eaa14, moss: 0x3acc1a,
+    tree: 0x1a6b0a, treeLight: 0x288c14, cliff: 0x28211c, strata: 0x4a3d30,
+    orb: null, sun: 0xf0ffec, sunI: 2.4,
+    hemi: [0xaaddcc, 0x5a3a10, 0.45],
+    atmo: null,
+    arcs: 0x06b6d4, rareEvent: null,
+  },
+  deepspace: {
+    label: '🌌 Deep Space',
+    sky: 0x000508, fog: 0x000508,
+    grass: 0x1a2440, grassLip: 0x253560, moss: 0x304878,
+    tree: 0x0d1a30, treeLight: 0x182848, cliff: 0x0d1020, strata: 0x151828,
+    orb: 0x4080ff, sun: 0x8090ff, sunI: 1.4,
+    hemi: [0x203060, 0x050810, 0.30],
+    atmo: { type: 'drift', color: 0x3050a0, count: 180, speed: 0.15, range: 50, size: 0.18, op: 0.28 },
+    arcs: 0x4080ff, rareEvent: 'shooting_star',
+  },
+  desert: {
+    label: '🏜️ Desert Planet',
+    sky: 0x1a0a04, fog: 0x1a0a04,
+    grass: 0xc8922a, grassLip: 0xe0a83a, moss: 0xf0be50,
+    tree: 0x8b5e18, treeLight: 0xb07828, cliff: 0x6a4018, strata: 0x8a6038,
+    orb: 0xff6020, sun: 0xff8820, sunI: 3.2,
+    hemi: [0xffc050, 0x6a3010, 0.60],
+    atmo: { type: 'rise', color: 0xe8a050, count: 120, speed: 1.4, rXZ: 28, rY: 18, yBase: -3, sMin: 0.06, sMax: 0.16, drift: 0.5, op: 0.35 },
+    arcs: 0xff8030, rareEvent: 'dust_devil',
+  },
+  iceage: {
+    label: '🧊 Ice Age',
+    sky: 0x060f1a, fog: 0x060f1a,
+    grass: 0xb8d8e8, grassLip: 0xd0eaf8, moss: 0x98c4d8,
+    tree: 0x6890a8, treeLight: 0x88aac0, cliff: 0x304858, strata: 0x486880,
+    orb: 0x80d0ff, sun: 0xb0d8ff, sunI: 1.8,
+    hemi: [0x90b8d0, 0x1a2a38, 0.50],
+    atmo: { type: 'snow', color: 0xd8eeff, count: 500 },
+    arcs: 0x80d0ff, rareEvent: 'aurora',
+  },
+  sakura: {
+    label: '🌸 Sakura',
+    sky: 0x0d0a12, fog: 0x0d0a12,
+    grass: 0x3aaa3a, grassLip: 0x50cc50, moss: 0x60dd60,
+    tree: 0xf8a0c0, treeLight: 0xffc8d8, cliff: 0x28211c, strata: 0x4a3d30,
+    orb: 0xff80b0, sun: 0xffc0d8, sunI: 2.0,
+    hemi: [0xffd0e8, 0x1a2a10, 0.40],
+    atmo: { type: 'petals', color: 0xffa0c8, count: 80, speed: 0.9, rXZ: 26, rY: 24, yBase: -6, sMin: 0.14, sMax: 0.30, drift: 1.8, op: 0.70 },
+    arcs: 0xff80b0, rareEvent: 'petal_burst',
+  },
+  neoncity: {
+    label: '🌆 Neon City',
+    sky: 0x050208, fog: 0x050208,
+    grass: 0x0a2a18, grassLip: 0x0e4020, moss: 0x00ff55,
+    tree: 0x00aa30, treeLight: 0x00ff44, cliff: 0x111128, strata: 0x1a1a40,
+    orb: 0x00ffaa, sun: 0xff00aa, sunI: 1.6,
+    hemi: [0x400080, 0x001020, 0.35],
+    atmo: { type: 'sparks', color: 0x00ffcc, count: 100, speed: 3.5, rXZ: 14, rY: 14, yBase: -1, sMin: 0.04, sMax: 0.12, drift: 1.4, op: 0.60 },
+    arcs: 0x00ffaa, rareEvent: 'neon_flash',
+  },
+  prehistoric: {
+    label: '🦕 Prehistoric',
+    sky: 0x020d04, fog: 0x020d04,
+    grass: 0x1a8010, grassLip: 0x2aaa18, moss: 0x40cc20,
+    tree: 0x0e5808, treeLight: 0x1a8010, cliff: 0x1e3a18, strata: 0x2e5a28,
+    orb: 0x80ff40, sun: 0xc8ff80, sunI: 2.0,
+    hemi: [0x60a830, 0x0a2008, 0.50],
+    atmo: { type: 'drift', color: 0x60c840, count: 90, speed: 0.35, range: 32, size: 0.14, op: 0.25 },
+    arcs: 0x80ff40, rareEvent: 'meteor',
+  },
 };
 
-function _wApplyTheme(themeKey) {
+function _wApplyThemeInstant(themeKey) {
   var th = _wThemes[themeKey];
   if (!th || !_wscene || !_wMyGroup) return;
   _wCurrentTheme = themeKey;
-
-  // Sky + fog
   _wscene.background.set(th.sky);
-  if (_wscene.fog) { _wscene.fog.color.set(th.fog); }
-
-  // Sun light colour
+  if (_wscene.fog) _wscene.fog.color.set(th.fog);
   _wscene.traverse(function(o) {
     if (o.isDirectionalLight && o.intensity > 1) { o.color.set(th.sun); o.intensity = th.sunI; }
   });
-
-  // Island terrain — direct material ref update (immune to color drift after prior theme swaps)
+  if (_wHemiLight && th.hemi) {
+    _wHemiLight.color.set(th.hemi[0]);
+    _wHemiLight.groundColor.set(th.hemi[1]);
+    _wHemiLight.intensity = th.hemi[2];
+  }
   var mats = _wMyGroup.userData._themeMats;
   if (mats) {
     if (mats.grass)     mats.grass.color.set(th.grass);
@@ -2362,18 +2429,99 @@ function _wApplyTheme(themeKey) {
     if (mats.strata)    mats.strata.color.set(th.strata);
     if (mats.strata2)   mats.strata2.color.set(th.strata);
   }
-
-  // Orb + glow colour override
   if (th.orb) {
-    var orbMat  = _wMyGroup.userData._orbMat;
-    var glowMat = _wMyGroup.userData._glowMat;
+    var orbMat = _wMyGroup.userData._orbMat, glowMat = _wMyGroup.userData._glowMat;
     if (orbMat)  { orbMat.color.set(th.orb);  orbMat.emissive.set(th.orb); }
     if (glowMat) { glowMat.color.set(th.orb); glowMat.emissive.set(th.orb); }
   }
+  // Note: caller (_wApplyTheme) handles _wAtmoStart — don't call it here to avoid double-start
+}
 
-  // Snow — start for Ice Age, stop for all others
-  if (themeKey === 'iceage') { _wMkSnow(); }
-  else { _wDestroySnow(); }
+function _wApplyTheme(themeKey) {
+  var th = _wThemes[themeKey];
+  if (!th || !_wscene || !_wMyGroup) return;
+  _wCurrentTheme = themeKey;
+
+  // Atmosphere: start immediately (particles don't lerp — hard swap looks fine)
+  _wAtmoStart(th.atmo);
+
+  if (_wLowMotion) { _wApplyThemeInstant(themeKey); return; }
+
+  // Build color transition list (1.5s ease-in-out)
+  var items = [];
+  var pushItem = function(mat, prop, toHex) {
+    var from = mat[prop].clone();
+    var to = new THREE.Color(toHex);
+    items.push({ from: from, to: to, apply: function(c) { mat[prop].copy(c); } });
+  };
+  var pushFn = function(fromC, toHex, fn) {
+    var from = fromC.clone();
+    var to = new THREE.Color(toHex);
+    items.push({ from: from, to: to, apply: fn });
+  };
+
+  // Sky + fog
+  pushFn(_wscene.background, th.sky, function(c) {
+    _wscene.background.copy(c);
+    if (_wscene.fog) _wscene.fog.color.copy(c);
+  });
+
+  // Sun direction light
+  _wscene.traverse(function(o) {
+    if (!o.isDirectionalLight || o.intensity <= 1) return;
+    var fromI = o.intensity, toI = th.sunI;
+    pushFn(o.color, th.sun, function(c, t) { o.color.copy(c); o.intensity = fromI + (toI - fromI) * (t || 0); });
+  });
+
+  // Hemi light
+  if (_wHemiLight && th.hemi) {
+    var hSkyFrom = _wHemiLight.color.clone(), hGndFrom = _wHemiLight.groundColor.clone();
+    var hIFrom = _wHemiLight.intensity;
+    var hSkyTo = new THREE.Color(th.hemi[0]), hGndTo = new THREE.Color(th.hemi[1]), hITo = th.hemi[2];
+    items.push({ from: hSkyFrom, to: hSkyTo, apply: function(c, t) {
+      _wHemiLight.color.copy(c);
+      _wHemiLight.groundColor.lerpColors(hGndFrom, hGndTo, t || 0);
+      _wHemiLight.intensity = hIFrom + (hITo - hIFrom) * (t || 0);
+    }});
+  }
+
+  // Terrain materials
+  var mats = _wMyGroup.userData._themeMats;
+  if (mats) {
+    var matPairs = [
+      [mats.grass, th.grass], [mats.grassLip, th.grassLip], [mats.moss, th.moss],
+      [mats.tree, th.tree], [mats.treeLight, th.treeLight],
+      [mats.cliff, th.cliff], [mats.strata, th.strata], [mats.strata2, th.strata],
+    ];
+    matPairs.forEach(function(pair) {
+      if (!pair[0]) return;
+      pushItem(pair[0], 'color', pair[1]);
+    });
+  }
+
+  // Orb (if theme overrides it)
+  if (th.orb) {
+    var orbMat = _wMyGroup.userData._orbMat, glowMat = _wMyGroup.userData._glowMat;
+    if (orbMat)  { pushItem(orbMat, 'color', th.orb); pushItem(orbMat, 'emissive', th.orb); }
+    if (glowMat) { pushItem(glowMat, 'color', th.orb); pushItem(glowMat, 'emissive', th.orb); }
+  }
+
+  _wThemeTx = { items: items, t: 0, duration: 1.5 };
+}
+
+// Advance active theme color transition each frame
+function _wThemeTxTick(dt) {
+  if (!_wThemeTx) return;
+  _wThemeTx.t = Math.min(_wThemeTx.t + dt / _wThemeTx.duration, 1);
+  var t = _wThemeTx.t;
+  // Ease-in-out (smoothstep)
+  var ease = t * t * (3 - 2 * t);
+  var tmp = new THREE.Color();
+  _wThemeTx.items.forEach(function(item) {
+    tmp.lerpColors(item.from, item.to, ease);
+    item.apply(tmp, ease);
+  });
+  if (_wThemeTx.t >= 1) _wThemeTx = null;
 }
 
 function _wShowThemeMenu(x, y) {
@@ -2419,82 +2567,256 @@ function _wCloseThemeMenu() {
   if (menu) menu.style.display = 'none';
 }
 
-// ── Snow particle system (Ice Age theme only) ─────────────────────
-function _wMkSnow() {
-  if (!_wscene) return;
-  _wDestroySnow();
+// ── Atmosphere System (per-theme particles — replaces snow-only system) ─────
+function _wAtmoStart(cfg) {
+  _wAtmoStop();
+  if (!_wscene || !cfg) return;
+  var q = _wLowMotion ? 0.35 : 1.0; // respect prefers-reduced-motion
 
-  // Two layers: BG (distant, sparse, large flakes) + FG (close, dense, small)
-  var layers = [
-    { count: 320, rangeXZ: 38, rangeY: 30, yBase: -4,  sizeMin: 0.18, sizeMax: 0.42, speedMin: 1.2, speedMax: 2.2, driftAmp: 0.8,  opacity: 0.55, color: 0xd8eeff },
-    { count: 180, rangeXZ: 18, rangeY: 22, yBase: -2,  sizeMin: 0.08, sizeMax: 0.22, speedMin: 2.0, speedMax: 3.8, driftAmp: 1.4,  opacity: 0.80, color: 0xeef6ff },
-  ];
+  if (cfg.type === 'snow') {
+    // Two-layer snow (Ice Age feel preserved)
+    var total = Math.floor((cfg.count || 500) * q);
+    _wAtmoBuildFall({ rXZ: 38, rY: 30, yBase: -4, n: Math.floor(total * 0.64), spMin: 1.2, spMax: 2.2, drift: 0.8, op: 0.55, col: cfg.color || 0xd8eeff, sMin: 0.18, sMax: 0.42 }, 'snow');
+    _wAtmoBuildFall({ rXZ: 18, rY: 22, yBase: -2, n: Math.floor(total * 0.36), spMin: 2.0, spMax: 3.8, drift: 1.4, op: 0.80, col: 0xeef6ff, sMin: 0.08, sMax: 0.22 }, 'snow');
 
-  layers.forEach(function(cfg) {
-    var n = cfg.count;
-    var pos    = new Float32Array(n * 3);
-    var speeds = new Float32Array(n);
-    var drifts = new Float32Array(n * 2); // dx, dz per flake
-    var phases = new Float32Array(n);
+  } else if (cfg.type === 'petals') {
+    _wAtmoBuildFall({ rXZ: cfg.rXZ || 26, rY: cfg.rY || 24, yBase: cfg.yBase || -6, n: Math.floor((cfg.count || 80) * q),
+      spMin: (cfg.speed || 0.9) * 0.6, spMax: cfg.speed || 0.9, drift: cfg.drift || 1.8,
+      op: cfg.op || 0.70, col: cfg.color, sMin: cfg.sMin || 0.14, sMax: cfg.sMax || 0.30 }, 'petals');
 
-    for (var i = 0; i < n; i++) {
-      pos[i*3]   = (Math.random() - 0.5) * cfg.rangeXZ * 2;
-      pos[i*3+1] = cfg.yBase + Math.random() * cfg.rangeY;
-      pos[i*3+2] = (Math.random() - 0.5) * cfg.rangeXZ * 2;
-      speeds[i]  = cfg.speedMin + Math.random() * (cfg.speedMax - cfg.speedMin);
-      drifts[i*2]   = (Math.random() - 0.5) * cfg.driftAmp;
-      drifts[i*2+1] = (Math.random() - 0.5) * cfg.driftAmp;
-      phases[i]  = Math.random() * Math.PI * 2;
-    }
+  } else if (cfg.type === 'rise') {
+    _wAtmoBuildRise({ rXZ: cfg.rXZ || 28, rY: cfg.rY || 18, yBase: cfg.yBase || -3, n: Math.floor((cfg.count || 120) * q),
+      spMin: (cfg.speed || 1.4) * 0.5, spMax: cfg.speed || 1.4, drift: cfg.drift || 0.5,
+      op: cfg.op || 0.35, col: cfg.color, sMin: cfg.sMin || 0.06, sMax: cfg.sMax || 0.16 });
 
-    var geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  } else if (cfg.type === 'sparks') {
+    _wAtmoBuildRise({ rXZ: cfg.rXZ || 14, rY: cfg.rY || 14, yBase: cfg.yBase || -1, n: Math.floor((cfg.count || 100) * q),
+      spMin: (cfg.speed || 3.5) * 0.6, spMax: cfg.speed || 3.5, drift: cfg.drift || 1.4,
+      op: cfg.op || 0.60, col: cfg.color, sMin: cfg.sMin || 0.04, sMax: cfg.sMax || 0.12 });
 
-    // Randomise flake sizes per particle via size attribute
-    var sizes = new Float32Array(n);
-    for (var j = 0; j < n; j++) sizes[j] = cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin);
-    geom.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-    var mat = new THREE.PointsMaterial({
-      color: cfg.color, size: (cfg.sizeMin + cfg.sizeMax) / 2,
-      transparent: true, opacity: cfg.opacity,
-      depthWrite: false, sizeAttenuation: true,
-    });
-
-    var pts = new THREE.Points(geom, mat);
-    _wscene.add(pts);
-    _wSnowLayers.push({ pts, pos, speeds, drifts, phases, cfg });
-  });
+  } else if (cfg.type === 'drift') {
+    _wAtmoBuildDrift({ n: Math.floor((cfg.count || 90) * q), range: cfg.range || 35,
+      speed: cfg.speed || 0.35, col: cfg.color, sMin: 0.08, sMax: cfg.size || 0.14, op: cfg.op || 0.25 });
+  }
 }
 
-function _wDestroySnow() {
-  _wSnowLayers.forEach(function(l) {
-    _wscene.remove(l.pts);
+function _wAtmoBuildFall(lc, type) {
+  var n = lc.n;
+  var pos = new Float32Array(n * 3), speeds = new Float32Array(n);
+  var drifts = new Float32Array(n * 2), phases = new Float32Array(n);
+  for (var i = 0; i < n; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * lc.rXZ * 2;
+    pos[i*3+1] = lc.yBase + Math.random() * lc.rY;
+    pos[i*3+2] = (Math.random() - 0.5) * lc.rXZ * 2;
+    speeds[i]  = lc.spMin + Math.random() * (lc.spMax - lc.spMin);
+    drifts[i*2]   = (Math.random() - 0.5) * lc.drift;
+    drifts[i*2+1] = (Math.random() - 0.5) * lc.drift;
+    phases[i]  = Math.random() * Math.PI * 2;
+  }
+  var geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({
+    color: lc.col, size: (lc.sMin + lc.sMax) / 2,
+    transparent: true, opacity: lc.op, depthWrite: false, sizeAttenuation: true,
+  });
+  var pts = new THREE.Points(geom, mat);
+  _wscene.add(pts);
+  _wAtmoLayers.push({ pts, pos, speeds, drifts, phases, lc, type });
+}
+
+function _wAtmoBuildRise(lc) {
+  var n = lc.n;
+  var pos = new Float32Array(n * 3), speeds = new Float32Array(n);
+  var drifts = new Float32Array(n * 2), phases = new Float32Array(n);
+  for (var i = 0; i < n; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * lc.rXZ * 2;
+    pos[i*3+1] = lc.yBase + Math.random() * lc.rY;
+    pos[i*3+2] = (Math.random() - 0.5) * lc.rXZ * 2;
+    speeds[i]  = lc.spMin + Math.random() * (lc.spMax - lc.spMin);
+    drifts[i*2]   = (Math.random() - 0.5) * lc.drift;
+    drifts[i*2+1] = (Math.random() - 0.5) * lc.drift;
+    phases[i]  = Math.random() * Math.PI * 2;
+  }
+  var geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({
+    color: lc.col, size: (lc.sMin + lc.sMax) / 2,
+    transparent: true, opacity: lc.op, depthWrite: false, sizeAttenuation: true,
+  });
+  var pts = new THREE.Points(geom, mat);
+  _wscene.add(pts);
+  _wAtmoLayers.push({ pts, pos, speeds, drifts, phases, lc, type: 'rise' });
+}
+
+function _wAtmoBuildDrift(lc) {
+  var n = lc.n;
+  var pos = new Float32Array(n * 3), vel = new Float32Array(n * 3);
+  for (var i = 0; i < n; i++) {
+    var r = lc.range * (0.3 + Math.random() * 0.7);
+    var theta = Math.random() * Math.PI * 2;
+    var phi   = Math.acos(2 * Math.random() - 1);
+    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.5; // flatten Y a bit
+    pos[i*3+2] = r * Math.cos(phi);
+    vel[i*3]   = (Math.random() - 0.5) * lc.speed;
+    vel[i*3+1] = (Math.random() - 0.5) * lc.speed * 0.4;
+    vel[i*3+2] = (Math.random() - 0.5) * lc.speed;
+  }
+  var geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({
+    color: lc.col, size: lc.sMin + (lc.sMax - lc.sMin) * 0.5,
+    transparent: true, opacity: lc.op, depthWrite: false, sizeAttenuation: true,
+  });
+  var pts = new THREE.Points(geom, mat);
+  _wscene.add(pts);
+  _wAtmoLayers.push({ pts, pos, vel, lc, type: 'drift' });
+}
+
+function _wAtmoStop() {
+  _wAtmoLayers.forEach(function(l) {
+    if (_wscene) _wscene.remove(l.pts);
     l.pts.geometry.dispose();
     l.pts.material.dispose();
   });
-  _wSnowLayers = [];
+  _wAtmoLayers = [];
 }
 
-function _wTickSnow(dt) {
-  _wSnowLayers.forEach(function(l) {
+function _wAtmoTick(dt) {
+  _wAtmoLayers.forEach(function(l) {
     var pos = l.pos, n = pos.length / 3;
-    var cfg = l.cfg;
-    for (var i = 0; i < n; i++) {
-      // Fall
-      pos[i*3+1] -= l.speeds[i] * dt;
-      // Gentle lateral drift (sinusoidal per flake)
-      pos[i*3]   += Math.sin(l.phases[i] + pos[i*3+1] * 0.4) * l.drifts[i*2]   * dt * 0.5;
-      pos[i*3+2] += Math.cos(l.phases[i] + pos[i*3+1] * 0.3) * l.drifts[i*2+1] * dt * 0.5;
-      // Wrap: when flake falls below yBase, reset to top
-      if (pos[i*3+1] < cfg.yBase) {
-        pos[i*3+1] = cfg.yBase + cfg.rangeY;
-        pos[i*3]   = (Math.random() - 0.5) * cfg.rangeXZ * 2;
-        pos[i*3+2] = (Math.random() - 0.5) * cfg.rangeXZ * 2;
+    if (l.type === 'snow' || l.type === 'petals') {
+      for (var i = 0; i < n; i++) {
+        pos[i*3+1] -= l.speeds[i] * dt;
+        pos[i*3]   += Math.sin(l.phases[i] + pos[i*3+1] * 0.4) * l.drifts[i*2]   * dt * 0.5;
+        pos[i*3+2] += Math.cos(l.phases[i] + pos[i*3+1] * 0.3) * l.drifts[i*2+1] * dt * 0.5;
+        if (l.type === 'petals') pos[i*3] += Math.sin(l.phases[i] * 1.7 + pos[i*3+1] * 0.9) * dt * 0.25;
+        if (pos[i*3+1] < l.lc.yBase) {
+          pos[i*3+1] = l.lc.yBase + l.lc.rY;
+          pos[i*3]   = (Math.random() - 0.5) * l.lc.rXZ * 2;
+          pos[i*3+2] = (Math.random() - 0.5) * l.lc.rXZ * 2;
+        }
+      }
+    } else if (l.type === 'rise') {
+      for (var i = 0; i < n; i++) {
+        pos[i*3+1] += l.speeds[i] * dt;
+        pos[i*3]   += l.drifts[i*2]   * dt * 0.25;
+        pos[i*3+2] += l.drifts[i*2+1] * dt * 0.25;
+        if (pos[i*3+1] > l.lc.yBase + l.lc.rY) {
+          pos[i*3+1] = l.lc.yBase;
+          pos[i*3]   = (Math.random() - 0.5) * l.lc.rXZ * 2;
+          pos[i*3+2] = (Math.random() - 0.5) * l.lc.rXZ * 2;
+        }
+      }
+    } else if (l.type === 'drift' && l.vel) {
+      var vel = l.vel, range = l.lc.range;
+      for (var i = 0; i < n; i++) {
+        pos[i*3]   += vel[i*3]   * dt;
+        pos[i*3+1] += vel[i*3+1] * dt;
+        pos[i*3+2] += vel[i*3+2] * dt;
+        var dx = pos[i*3], dy = pos[i*3+1], dz = pos[i*3+2];
+        if (dx*dx + dy*dy + dz*dz > range * range) {
+          var sc = (range * 0.75) / Math.sqrt(dx*dx + dy*dy + dz*dz);
+          pos[i*3] *= sc; pos[i*3+1] *= sc; pos[i*3+2] *= sc;
+          vel[i*3]   = (Math.random() - 0.5) * l.lc.speed;
+          vel[i*3+1] = (Math.random() - 0.5) * l.lc.speed * 0.4;
+          vel[i*3+2] = (Math.random() - 0.5) * l.lc.speed;
+        }
       }
     }
     l.pts.geometry.attributes.position.needsUpdate = true;
   });
+}
+
+// ── Environmental Events (rare atmospheric effects per theme) ─────
+function _wEnvTick(dt) {
+  if (_wLowMotion) return;
+  _wEnvTimer -= dt;
+  if (_wEnvTimer > 0) return;
+  _wEnvTimer = 35 + Math.random() * 55; // next in 35–90s
+  var th = _wThemes[_wCurrentTheme];
+  if (!th || !th.rareEvent || !_wscene) return;
+  switch (th.rareEvent) {
+    case 'shooting_star': _wEvtShootingStar(0xffffff, 0.5); break;
+    case 'aurora':        _wEvtAurora(); break;
+    case 'petal_burst':   _wEvtParticlePulse(1.9, 2200); break;
+    case 'neon_flash':    _wEvtNeonFlash(); break;
+    case 'dust_devil':    _wEvtSpeedPulse(3.5, 2800); break;
+    case 'meteor':        _wEvtShootingStar(0x80ff40, 0.9); break;
+  }
+}
+
+function _wEvtShootingStar(col, sz) {
+  var geom = new THREE.BufferGeometry();
+  var pos = new Float32Array([
+    (Math.random() - 0.5) * 60,
+    18 + Math.random() * 12,
+    (Math.random() - 0.5) * 50
+  ]);
+  geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({ color: col, size: sz, transparent: true, opacity: 1, depthWrite: false });
+  var pts = new THREE.Points(geom, mat);
+  _wscene.add(pts);
+  var vx = (Math.random() > 0.5 ? 1 : -1) * (22 + Math.random() * 20);
+  var vy = -(7 + Math.random() * 9), vz = (Math.random() - 0.5) * 18;
+  var age = 0, dur = 1.8;
+  (function tick() {
+    age += 0.016;
+    pos[0] += vx * 0.016; pos[1] += vy * 0.016; pos[2] += vz * 0.016;
+    geom.attributes.position.needsUpdate = true;
+    mat.opacity = Math.max(0, 1 - (age / dur) * (age / dur));
+    if (age < dur) requestAnimationFrame(tick);
+    else { _wscene.remove(pts); geom.dispose(); mat.dispose(); }
+  })();
+}
+
+function _wEvtAurora() {
+  var light = new THREE.HemisphereLight(0x00ffaa, 0x002244, 0);
+  _wscene.add(light);
+  var age = 0, dur = 4.0;
+  (function tick() {
+    age += 0.016;
+    var t = age / dur;
+    var env = t < 0.25 ? t / 0.25 : t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
+    light.intensity = 0.75 * env;
+    if (age < dur) requestAnimationFrame(tick);
+    else { _wscene.remove(light); light.dispose(); }
+  })();
+}
+
+function _wEvtNeonFlash() {
+  var light = new THREE.PointLight(0x00ffcc, 0, 28);
+  light.position.set(0, 8, 0);
+  _wscene.add(light);
+  var age = 0, dur = 0.7;
+  (function tick() {
+    age += 0.016;
+    var t = age / dur;
+    light.intensity = 5 * (1 - t * t);
+    if (age < dur) requestAnimationFrame(tick);
+    else { _wscene.remove(light); light.dispose(); }
+  })();
+}
+
+function _wEvtParticlePulse(multiplier, durationMs) {
+  if (!_wAtmoLayers.length) return;
+  _wAtmoLayers.forEach(function(l) { l.pts.material.opacity = Math.min(l.lc.op * multiplier, 0.95); });
+  setTimeout(function() {
+    _wAtmoLayers.forEach(function(l) { l.pts.material.opacity = l.lc.op; });
+  }, durationMs);
+}
+
+function _wEvtSpeedPulse(multiplier, durationMs) {
+  _wAtmoLayers.forEach(function(l) {
+    if (!l.speeds) return;
+    for (var i = 0; i < l.speeds.length; i++) l.speeds[i] *= multiplier;
+  });
+  setTimeout(function() {
+    _wAtmoLayers.forEach(function(l) {
+      if (!l.speeds) return;
+      for (var i = 0; i < l.speeds.length; i++) l.speeds[i] /= multiplier;
+    });
+  }, durationMs);
 }
 
 // ── Cloud blob helper (mirrors mkCloud in world.html) ──────────────
@@ -2843,7 +3165,7 @@ function initWorldScene() {
   _wcontrols.autoRotateSpeed = 0.22;
 
   // Lighting — neutral daylight so grass reads true green
-  var hemi = new THREE.HemisphereLight(0xaaddcc, 0x5a3a10, 0.45); _wscene.add(hemi);
+  _wHemiLight = new THREE.HemisphereLight(0xaaddcc, 0x5a3a10, 0.45); _wscene.add(_wHemiLight);
   var sun  = new THREE.DirectionalLight(0xf0ffec, 2.4);
   sun.position.set(10, 18, 8);
   sun.castShadow = true;
@@ -3017,8 +3339,10 @@ function initWorldScene() {
       return true;
     });
 
-    // Snow (Ice Age theme)
-    if (_wSnowLayers.length) _wTickSnow(0.016);
+    // Atmosphere particles (all themes)
+    if (_wAtmoLayers.length) _wAtmoTick(0.016);
+    _wThemeTxTick(0.016);
+    _wEnvTick(0.016);
 
     _wUpdateLabels();
     _wrenderer.render(_wscene, _wcamera);
