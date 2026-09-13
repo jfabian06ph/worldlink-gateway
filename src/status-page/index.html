@@ -352,9 +352,10 @@ body {
 /* ── My World card ────────────────────────── */
 .world-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .world-name { font-size: 16px; font-weight: 700; color: var(--text-strong); }
-.info-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: var(--text-muted); }
-.info-label { min-width: 60px; }
-.info-val { color: var(--text); }
+.info-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px; font-size: 12px; color: var(--text-muted); }
+.info-label { min-width: 90px; flex-shrink: 0; }
+.info-val { color: var(--text-strong); }
+.info-section-title { font: 700 10px/1 -apple-system,sans-serif; text-transform: uppercase; letter-spacing: .07em; color: var(--text-dim); margin-bottom: 8px; }
 .copy-btn {
   background: transparent;
   border: none;
@@ -2872,7 +2873,14 @@ function renderSessionTimeline() {
   } else if (_sessionTab === 'memory') {
     var records = _state.brain || [];
     if (!records.length) {
-      el.innerHTML = '<div class="session-empty">No brain context yet.<br>Brain records shared with peers will appear here.</div>';
+      el.innerHTML = '<div class="session-empty" style="text-align:left;padding:20px 4px;">'
+        + '<div style="font:700 13px/1 -apple-system,sans-serif;color:var(--text-strong);margin-bottom:10px;">World Brain</div>'
+        + '<div style="font:400 12px/1.6 -apple-system,sans-serif;color:var(--text-muted);">'
+        + 'This tab shows <strong style="color:var(--text);">'+escHTML(peerName)+'\'s</strong> brain records that have been shared with your world.<br><br>'
+        + 'Brain records are their world\'s long-term memories — decisions, facts, learnings, and context that persist across sessions.<br><br>'
+        + 'To receive records, ask them to go to <strong style="color:var(--text);">Brain → Access</strong> and grant your world sharing permissions on their sources.'
+        + '</div>'
+        + '</div>';
       return;
     }
     var shared = records.filter(function(r){ return r.scope === 'shared' || !r.scope; });
@@ -2906,12 +2914,45 @@ function renderSessionTimeline() {
 
   // ── INFO ─────────────────────────────────────────────────────────
   } else if (_sessionTab === 'info') {
-    el.innerHTML = '<div style="padding:6px 0;">'
-      + '<div class="info-row"><span class="info-label">World&nbsp;ID</span><span class="info-val" style="font-family:monospace;font-size:11px;word-break:break-all">' + escHTML(peer.worldId||'—') + '</span></div>'
-      + '<div class="info-row"><span class="info-label">Host</span><span class="info-val">' + escHTML(peer.host||'—') + '</span></div>'
-      + '<div class="info-row"><span class="info-label">Status</span><span class="info-val">' + escHTML(peer.status||'—') + '</span></div>'
-      + '<div class="info-row"><span class="info-label">Last&nbsp;seen</span><span class="info-val">' + relTime(peer.lastSeen) + '</span></div>'
-      + (peer.capabilities && peer.capabilities.length ? '<div class="info-row"><span class="info-label">Caps</span><div class="caps-row">' + peer.capabilities.map(function(c){ return '<span class="cap-badge">' + escHTML(c) + '</span>'; }).join('') + '</div></div>' : '')
+    var peerTasks   = (_state.tasks||[]).filter(function(t){ return t.sourceWorld===peer.worldId||t.targetWorld===peer.worldId; });
+    var peerMsgs    = (_state.messages||[]).filter(function(m){ return m.fromWorld===peer.worldId; });
+    var outMsgs     = (_outbox[peer.worldId]||[]).length;
+    var tasksIn     = peerTasks.filter(function(t){ return t.sourceWorld===peer.worldId; }).length;
+    var tasksOut    = peerTasks.filter(function(t){ return t.targetWorld===peer.worldId; }).length;
+    var tasksDone   = peerTasks.filter(function(t){ return t.status==='completed'; }).length;
+    var tasksFailed = peerTasks.filter(function(t){ return t.status==='failed'; }).length;
+    var statusDot   = peer.status==='online' ? '#4ade80' : peer.status==='paused' ? '#f59e0b' : '#475569';
+    var hasAI       = peer.capabilities && peer.capabilities.indexOf('claude-task')>-1;
+    var hasHandoff  = peer.capabilities && peer.capabilities.indexOf('context-handoff')>-1;
+
+    function irow(label, val) {
+      return '<div class="info-row"><span class="info-label">'+label+'</span><span class="info-val">'+val+'</span></div>';
+    }
+    el.innerHTML = '<div style="padding:4px 0;">'
+      // Identity
+      + '<div class="info-section-title">Identity</div>'
+      + irow('World&nbsp;ID', '<span style="font-family:ui-monospace,monospace;font-size:10px;word-break:break-all;color:var(--text-muted)">'+escHTML(peer.worldId||'—')+'</span>')
+      + irow('Name',     escHTML(peer.worldName||peer.worldId||'—'))
+      + irow('Host',     '<span style="font-family:ui-monospace,monospace;font-size:11px;">'+escHTML(peer.host||'—')+'</span>')
+      // Connection
+      + '<div class="info-section-title" style="margin-top:14px;">Connection</div>'
+      + irow('Status',    '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:'+statusDot+';display:inline-block;"></span>'+escHTML(peer.status||'—')+'</span>')
+      + irow('Last&nbsp;seen', relTime(peer.lastSeen))
+      + irow('AI Tasks',  hasAI ? '<span style="color:#4ade80;">Supported</span>' : '<span style="color:var(--text-muted);">Not available</span>')
+      + irow('Handoff',   hasHandoff ? '<span style="color:#4ade80;">Supported</span>' : '<span style="color:var(--text-muted);">Not available</span>')
+      // Activity
+      + '<div class="info-section-title" style="margin-top:14px;">Activity this session</div>'
+      + irow('Messages&nbsp;in',  peerMsgs.length || '—')
+      + irow('Messages&nbsp;out', outMsgs || '—')
+      + irow('Tasks&nbsp;in',     tasksIn  ? tasksIn+' received'    : '—')
+      + irow('Tasks&nbsp;out',    tasksOut ? tasksOut+' dispatched'  : '—')
+      + (peerTasks.length ? irow('Outcomes', tasksDone+' completed, '+tasksFailed+' failed') : '')
+      // Capabilities
+      + (peer.capabilities && peer.capabilities.length
+          ? '<div class="info-section-title" style="margin-top:14px;">Capabilities</div><div style="padding:6px 0;display:flex;flex-wrap:wrap;gap:5px;">'
+            + peer.capabilities.map(function(c){ return '<span class="cap-badge">'+escHTML(c)+'</span>'; }).join('')
+            + '</div>'
+          : '')
       + '</div>';
   }
 }
