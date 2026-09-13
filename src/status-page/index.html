@@ -591,16 +591,28 @@ body {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 16px;
+  padding: 16px 20px;
   font-size: 13px;
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: -apple-system, sans-serif;
   color: var(--text);
   line-height: 1.7;
-  white-space: pre-wrap;
   word-break: break-word;
   max-height: 55vh;
   overflow-y: auto;
 }
+.artifact-content .md-h1 { font-size:16px; font-weight:700; margin:12px 0 6px; color:var(--text-strong); }
+.artifact-content .md-h2 { font-size:14px; font-weight:700; margin:12px 0 5px; color:var(--text-strong); border-bottom:1px solid var(--border); padding-bottom:4px; }
+.artifact-content .md-h3 { font-size:12px; font-weight:700; margin:10px 0 4px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+.artifact-content .md-p  { margin:5px 0; }
+.artifact-content .md-li { display:flex; gap:8px; margin:3px 0; align-items:baseline; }
+.artifact-content .md-li-dot { flex-shrink:0; color:var(--primary); font-size:10px; }
+.artifact-content .md-li-num { flex-shrink:0; color:var(--text-muted); font-size:11px; min-width:18px; }
+.artifact-content .md-code { font-family:ui-monospace,monospace; font-size:11px; background:rgba(0,0,0,.3); border-radius:3px; padding:1px 5px; color:#06b6d4; }
+.artifact-content .md-pre  { font-family:ui-monospace,monospace; font-size:11px; background:rgba(0,0,0,.35); border:1px solid var(--border); border-radius:6px; padding:10px 14px; margin:10px 0; overflow-x:auto; white-space:pre; color:#a5f3fc; line-height:1.5; }
+.artifact-content .md-hr   { border:none; border-top:1px solid var(--border); margin:12px 0; }
+.artifact-content .md-br   { display:block; height:7px; }
+.artifact-content .md-bold { font-weight:700; }
+.artifact-content .md-em   { font-style:italic; }
 .artifact-content::-webkit-scrollbar { width: 4px; }
 .artifact-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
@@ -891,11 +903,25 @@ body {
 .tl-theirs { align-items: flex-start; }
 .tl-bubble {
   max-width: 85%;
-  padding: 9px 13px;
+  padding: 10px 14px;
   border-radius: var(--r-lg);
-  font: 13px/1.55 -apple-system,sans-serif;
+  font: 13px/1.6 -apple-system,sans-serif;
   word-break: break-word;
 }
+.tl-bubble .md-h1 { font-size:15px; font-weight:700; margin:10px 0 5px; color:var(--text-strong); }
+.tl-bubble .md-h2 { font-size:13px; font-weight:700; margin:10px 0 4px; color:var(--text-strong); }
+.tl-bubble .md-h3 { font-size:12px; font-weight:700; margin:8px 0 3px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); padding-bottom:3px; }
+.tl-bubble .md-p  { margin:6px 0; }
+.tl-bubble .md-ul, .tl-bubble .md-ol { margin:4px 0 4px 4px; padding:0; list-style:none; }
+.tl-bubble .md-li { display:flex; gap:7px; margin:2px 0; align-items:baseline; }
+.tl-bubble .md-li-dot { flex-shrink:0; color:var(--primary); font-size:10px; }
+.tl-bubble .md-li-num { flex-shrink:0; color:var(--text-muted); font-size:11px; min-width:16px; }
+.tl-bubble .md-code { font-family:ui-monospace,monospace; font-size:11px; background:rgba(0,0,0,.3); border-radius:3px; padding:1px 5px; color:#06b6d4; }
+.tl-bubble .md-pre  { font-family:ui-monospace,monospace; font-size:11px; background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:6px; padding:10px 12px; margin:8px 0; overflow-x:auto; white-space:pre; color:#a5f3fc; line-height:1.5; }
+.tl-bubble .md-hr   { border:none; border-top:1px solid var(--border); margin:10px 0; }
+.tl-bubble .md-bold { font-weight:700; }
+.tl-bubble .md-em   { font-style:italic; }
+.tl-bubble .md-br   { display:block; height:6px; }
 .tl-mine .tl-bubble {
   background: rgba(6,188,212,0.08);
   border: 1px solid rgba(6,188,212,0.18);
@@ -2754,7 +2780,7 @@ function renderSessionTimeline() {
         wasLastMine = true;
         return '<div class="tl-entry tl-mine">'
           + '<div class="tl-sender tl-sender-mine">You</div>'
-          + '<div class="tl-bubble tl-bubble-mine">' + escHTML(entry.text) + '</div>'
+          + '<div class="tl-bubble tl-bubble-mine">' + _mdRender(entry.text) + '</div>'
           + '<div class="tl-time tl-time-right">' + fmtTs(entry._ts) + '</div>'
           + '</div>';
       }
@@ -2762,7 +2788,7 @@ function renderSessionTimeline() {
         wasLastMine = false;
         return '<div class="tl-entry tl-theirs">'
           + '<div class="tl-sender">' + escHTML(peerName) + '</div>'
-          + '<div class="tl-bubble">' + escHTML(entry.text) + '</div>'
+          + '<div class="tl-bubble">' + _mdRender(entry.text) + '</div>'
           + '<div class="tl-time">' + fmtTs(entry._ts) + '</div>'
           + '</div>';
       }
@@ -5116,7 +5142,7 @@ async function viewArtifact(artifactId, sourceWorldId) {
     const res = await fetch(`/worldlink/local/artifact/${artifactId}`);
     const data = await res.json();
     _artifactText = data?.content?.body || data?.content || JSON.stringify(data, null, 2);
-    document.getElementById('artifact-body').textContent = _artifactText;
+    document.getElementById('artifact-body').innerHTML = _mdRender(_artifactText);
   } catch(e) {
     document.getElementById('artifact-body').textContent = 'Error loading artifact: ' + e.message;
   }
@@ -5262,6 +5288,67 @@ function escHTML(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function escAttr(s) { return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
+
+function _mdRender(raw) {
+  var lines = String(raw||'').split('\n');
+  var out = [];
+  var i = 0;
+  while (i < lines.length) {
+    var line = lines[i];
+    // fenced code block
+    if (/^```/.test(line)) {
+      var lang = line.slice(3).trim();
+      var code = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) { code.push(escHTML(lines[i])); i++; }
+      out.push('<div class="md-pre">' + code.join('\n') + '</div>');
+      i++; continue;
+    }
+    // headings
+    var hm = line.match(/^(#{1,3})\s+(.*)/);
+    if (hm) {
+      var lvl = hm[1].length;
+      out.push('<div class="md-h' + lvl + '">' + _mdInline(hm[2]) + '</div>');
+      i++; continue;
+    }
+    // horizontal rule
+    if (/^---+$/.test(line.trim())) {
+      out.push('<div class="md-hr"></div>');
+      i++; continue;
+    }
+    // unordered list item
+    var ulm = line.match(/^[-*]\s+(.*)/);
+    if (ulm) {
+      out.push('<div class="md-li"><span class="md-li-dot">•</span><span>' + _mdInline(ulm[1]) + '</span></div>');
+      i++; continue;
+    }
+    // ordered list item
+    var olm = line.match(/^(\d+)\.\s+(.*)/);
+    if (olm) {
+      out.push('<div class="md-li"><span class="md-li-num">' + escHTML(olm[1]) + '.</span><span>' + _mdInline(olm[2]) + '</span></div>');
+      i++; continue;
+    }
+    // blank line → paragraph gap
+    if (line.trim() === '') {
+      out.push('<div class="md-br"></div>');
+      i++; continue;
+    }
+    // regular paragraph line
+    out.push('<div class="md-p">' + _mdInline(line) + '</div>');
+    i++;
+  }
+  return out.join('');
+}
+
+function _mdInline(s) {
+  s = escHTML(s);
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<span class="md-bold md-em">$1</span>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<span class="md-bold">$1</span>');
+  s = s.replace(/\*(.+?)\*/g, '<span class="md-em">$1</span>');
+  s = s.replace(/_(.+?)_/g, '<span class="md-em">$1</span>');
+  s = s.replace(/`([^`]+)`/g, '<code class="md-code">$1</code>');
+  return s;
+}
 
 // ── Message badge ─────────────────────────────────────────────────
 function updateMsgBadge() {
