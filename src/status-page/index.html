@@ -2840,7 +2840,7 @@ function renderSessionTimeline() {
     // Outbound tasks sent by us (client-side tracked)
     (_outboxTasks[peer.worldId] || []).forEach(function(o) {
       var already = timeline.find(function(e){ return e._type==='task' && e.task.prompt===o.prompt && Math.abs((e._ts||0)-o.ts)<5000; });
-      if (!already) timeline.push({ _type:'task-out', cap:o.capability, prompt:o.prompt, _ts:o.ts });
+      if (!already) timeline.push({ _type:'task-out', cap:o.capability, prompt:o.prompt, attachments:o.attachments||[], _ts:o.ts });
     });
 
     timeline.sort(function(a,b){ return a._ts - b._ts; });
@@ -2873,12 +2873,20 @@ function renderSessionTimeline() {
       }
       // Outbound task (client-side tracked, no server task object yet)
       if (entry._type === 'task-out') {
+        var taskAtts = entry.attachments || [];
+        var taskAttHtml = taskAtts.length ? '<div class="bubble-attachments">' + taskAtts.map(function(a) {
+          if (a.mimeType && a.mimeType.startsWith('image/')) {
+            return '<img class="bubble-img" src="data:' + escHTML(a.mimeType) + ';base64,' + a.data + '" alt="' + escHTML(a.filename||'image') + '" onclick="_imgZoom(this)">';
+          }
+          return '';
+        }).join('') + '</div>' : '';
         return '<div class="tl-system-event">'
           + '<span class="tl-sys-icon" style="color:#f59e0b;">→</span>'
           + '<div class="tl-sys-body">'
           + '<span class="tl-sys-cap">' + escHTML(entry.cap) + '</span>'
           + '<span class="tl-sys-status">sent</span>'
           + (entry.prompt ? '<div class="tl-sys-prompt">' + escHTML(entry.prompt) + '</div>' : '')
+          + taskAttHtml
           + '</div>'
           + '<div class="tl-time">' + fmtTs(entry._ts) + '</div>'
           + '</div>';
@@ -3009,9 +3017,9 @@ function _outboxPush(peerId, text, attachments, delivered) {
   if (!_outbox[peerId]) _outbox[peerId] = [];
   _outbox[peerId].push({ text: text || '', attachments: attachments || [], delivered: delivered !== false, ts: Date.now() });
 }
-function _outboxTaskPush(peerId, capability, prompt) {
+function _outboxTaskPush(peerId, capability, prompt, attachments) {
   if (!_outboxTasks[peerId]) _outboxTasks[peerId] = [];
-  _outboxTasks[peerId].push({ capability, prompt, ts: Date.now(), status: 'sent' });
+  _outboxTasks[peerId].push({ capability, prompt, attachments: attachments || [], ts: Date.now(), status: 'sent' });
 }
 
 // ── Composer ────────────────────────────────────────────────────────
@@ -3175,7 +3183,7 @@ async function sendComposerMsg() {
       var res2 = await fetch('/worldlink/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, capability: cap, prompt: text, sharedContext: { from: _state.worldName, timestamp: Date.now() } })
+        body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, capability: cap, prompt: text, attachments: attachments, sharedContext: { from: _state.worldName, timestamp: Date.now() } })
       });
       var data2 = await res2.json();
       if (data2.error) {
@@ -3184,7 +3192,7 @@ async function sendComposerMsg() {
         return;
       }
       _clearPeerError(_sessionPeer.worldId);
-      _outboxTaskPush(_sessionPeer.worldId, cap, text);
+      _outboxTaskPush(_sessionPeer.worldId, cap, text, attachments);
       _wSpawnPacket(_sessionPeer.worldId, 'out', 0xf59e0b, 'task');
       _wlGwToast('Task sent');
       await refreshAll();
