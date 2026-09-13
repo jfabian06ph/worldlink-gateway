@@ -33,6 +33,9 @@ function createGateway(opts = {}) {
   // In-memory set of paused worldIds (persisted in config.disabledPeers)
   const disabledPeers = new Set(Array.isArray(wlCfg.disabledPeers) ? wlCfg.disabledPeers : []);
 
+  // Offline mode — timestamp in ms; 0 = online
+  let localOfflineUntil = 0;
+
   // ── Auto-init: generate identity on first run (no terminal command needed) ──
   if (!wlId) {
     const { publicKey, privateKey } = identity.generateKeypair();
@@ -115,10 +118,11 @@ function createGateway(opts = {}) {
       body: { sessionToken: connectResp.sessionToken, challengeResponse, sourceWorldId: wlId.worldId },
     });
 
-    peers.set(manifest.worldId, { manifest, status: 'online', sessionToken: connectResp.sessionToken, host: base, lastSeen: Date.now() });
+    const peerStatus = manifest.status === 'offline' ? 'offline' : 'online';
+    peers.set(manifest.worldId, { manifest, status: peerStatus, sessionToken: connectResp.sessionToken, host: base, lastSeen: Date.now() });
     audit.write({ type: 'connection.established', targetWorld: manifest.worldId, timestamp: Math.floor(Date.now() / 1000) });
     broadcast({ type: 'connection.established', worldId: manifest.worldId });
-    console.log(`  [WorldLink] Connected to "${manifest.worldName}" (${manifest.worldId})`);
+    console.log(`  [WorldLink] Connected to "${manifest.worldName}" (${manifest.worldId}) — ${peerStatus}`);
     return { worldId: manifest.worldId, worldName: manifest.worldName, grantedCapabilities: connectResp.grantedCapabilities };
   }
 
@@ -214,7 +218,7 @@ function createGateway(opts = {}) {
         if (!wlId) { json(503, { error: 'Not initialized. Run: worldlink-gateway init' }); return; }
         json(200, {
           worldId: wlId.worldId, worldName: wlCfg.worldName,
-          clientType: 'lite', protocol: 'worldlink/1.0', status: 'online',
+          clientType: 'lite', protocol: 'worldlink/1.0', status: (localOfflineUntil > Date.now()) ? 'offline' : 'online',
           publicKey: wlId.publicKey,
           capabilities: (wlCfg.capabilities || [])
             .filter(c => c.visibility !== 'trusted-only')
@@ -285,13 +289,14 @@ function createGateway(opts = {}) {
         }
         // Only update status/host — do NOT overwrite sessionToken (that's our outbound key, set by initiateConnection)
         const existing = peers.get(sourceWorldId) || {};
-        peers.set(sourceWorldId, { ...existing, status: 'online', inboundToken: sessionToken, host: s.host || null, lastSeen: Date.now() });
+        // Preserve known 'offline' status — inbound connection doesn't mean the peer is available
+        const inferredStatus = existing.status === 'offline' ? 'offline' : 'online';
+        peers.set(sourceWorldId, { ...existing, status: inferredStatus, inboundToken: sessionToken, host: s.host || null, lastSeen: Date.now() });
         audit.write({ type: 'connection.established', sourceWorld: sourceWorldId, timestamp: Math.floor(Date.now() / 1000) });
         json(200, { confirmed: true, sessionToken });
-        // Auto-reverse-connect so we get a valid outbound sessionToken for messaging.
-        // Always reconnect — the peer just confirmed a fresh inbound session, meaning their
-        // sessions may have been wiped (e.g. restart), so our stored outbound token is likely stale.
-        if (s.host) {
+        // Reverse-connect only if we don't already have a valid outbound session token.
+        // Connecting unconditionally causes a cascade: A→B confirm triggers B→A which triggers A→B again.
+        if (s.host && !existing.sessionToken) {
           setTimeout(() => initiateConnection(s.host).catch(() => {}), 500);
         }
         return;
@@ -390,7 +395,8 @@ function createGateway(opts = {}) {
         for (const cfg of (wlCfg.trustedPeers || [])) {
           if (!peers.has(cfg.worldId)) list.push({ worldId: cfg.worldId, worldName: cfg.worldName || cfg.worldId, status: cfg.disabled ? 'disabled' : 'offline', host: cfg.host, capabilities: [], lastSeen: null, disabled: !!cfg.disabled });
         }
-        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), capabilitiesConfig: wlCfg.capabilities || [], aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list });
+        const localOffline = localOfflineUntil > Date.now();
+        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), capabilitiesConfig: wlCfg.capabilities || [], aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list, localOffline, localOfflineUntil: localOffline ? localOfflineUntil : null });
         return;
       }
 
@@ -570,6 +576,28 @@ function createGateway(opts = {}) {
         return;
       }
 
+      // GET /worldlink/local/status — read online/offline state
+      if (req.method === 'GET' && req.url === '/worldlink/local/status') {
+        const isOffline = localOfflineUntil > Date.now();
+        json(200, { offline: isOffline, offlineUntil: isOffline ? localOfflineUntil : null, remainingMs: isOffline ? localOfflineUntil - Date.now() : 0 });
+        return;
+      }
+
+      // POST /worldlink/local/set-status — go offline for a duration (or come back online)
+      if (req.method === 'POST' && req.url === '/worldlink/local/set-status') {
+        const b = await body();
+        const { offline, durationMs } = b;
+        if (offline) {
+          localOfflineUntil = Date.now() + (Number(durationMs) || 3_600_000);
+        } else {
+          localOfflineUntil = 0;
+        }
+        const isOff = localOfflineUntil > Date.now();
+        audit.write({ type: isOff ? 'local.offline' : 'local.online', offlineUntil: isOff ? localOfflineUntil : null, timestamp: Math.floor(Date.now() / 1000) });
+        json(200, { ok: true, offline: isOff, offlineUntil: isOff ? localOfflineUntil : null, remainingMs: isOff ? localOfflineUntil - Date.now() : 0 });
+        return;
+      }
+
       // GET /worldlink/local/my-url  — return best-guess public URL for sharing
       if (req.method === 'GET' && req.url === '/worldlink/local/my-url') {
         const ifaces = os.networkInterfaces();
@@ -659,6 +687,24 @@ function createGateway(opts = {}) {
         const id = req.url.split('/worldlink/brain/')[1];
         const ok = brain.remove(id);
         json(ok ? 200 : 404, ok ? { deleted: id } : { error: 'Record not found' });
+        return;
+      }
+
+      // POST /worldlink/brain/ask  — query own brain with a natural language question
+      if (req.method === 'POST' && req.url === '/worldlink/brain/ask') {
+        const b = await body();
+        const { query } = b;
+        if (!query) { json(400, { error: 'query is required' }); return; }
+        const records = brain.querySelf(query);
+        if (!records.length) { json(200, { answer: "I don't have any memories related to that yet. Add some through Brain → Harvest.", records: [] }); return; }
+        const ctx = records.map(r => `[${r.type}] ${r.scope}${r.project ? ' / ' + r.project : ''}: ${r.summary}`).join('\n');
+        const prompt = `You are a personal AI assistant answering a question using only the brain memories below. Be concise and direct.\n\nBRAIN MEMORIES:\n${ctx}\n\nQUESTION: ${query}\n\nAnswer based solely on the memories above. If the memories don't contain enough information, say so briefly.`;
+        try {
+          const answer = await execute.runTask({ taskId: 'brain-ask', capability: 'brain-chat', prompt, attachments: [] }, [], { type: 'claude' });
+          json(200, { answer, records });
+        } catch(e) {
+          json(500, { error: e.message });
+        }
         return;
       }
 
@@ -789,6 +835,25 @@ function createGateway(opts = {}) {
     const now = Date.now();
     for (const [id, a] of artifacts) if (now > a.expiresAt) artifacts.delete(id);
   }, 15 * 60 * 1000);
+
+  // ── Peer heartbeat — re-poll manifests every 30s ──────────────────
+  setInterval(async () => {
+    for (const [worldId, peer] of peers) {
+      if (!peer.host) continue;
+      try {
+        const res = await wlFetch(`${peer.host}/worldlink/manifest`);
+        if (res && res.worldId) {
+          const newStatus = res.status === 'offline' ? 'offline' : 'online';
+          peers.set(worldId, { ...peer, status: newStatus, manifest: res, lastSeen: Date.now() });
+        }
+      } catch (e) {
+        if (peer.status !== 'offline') {
+          peers.set(worldId, { ...peer, status: 'offline' });
+          console.log(`  [WorldLink] ${worldId} unreachable — marked offline`);
+        }
+      }
+    }
+  }, 8_000);
 
   // ── Auto-connect to configured trusted peers ───────────────────────
   async function autoConnect() {

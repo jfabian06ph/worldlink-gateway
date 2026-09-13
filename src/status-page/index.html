@@ -138,7 +138,8 @@ body {
   background: var(--surface-2);
   border-left-color: var(--cyan);
 }
-.nav-item .nav-icon { font-size: 14px; width: 16px; text-align: center; }
+.nav-item .nav-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.nav-item .nav-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .nav-badge {
   margin-left: auto;
   background: transparent;
@@ -258,6 +259,9 @@ body {
   gap: 6px;
 }
 .refresh-btn:hover { border-color: var(--border-light); color: var(--text); }
+.refresh-btn.loading { opacity: 0.6; pointer-events: none; }
+.refresh-btn.loading .refresh-icon { display: inline-block; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Content ──────────────────────────────── */
 .content {
@@ -449,15 +453,20 @@ body {
 .audit-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 5px 0;
+  gap: 12px;
+  padding: 9px 0;
   border-bottom: 1px solid var(--border);
   font-size: 12px;
 }
 .audit-row:last-child { border-bottom: none; }
-.audit-type { color: var(--text); min-width: 160px; flex-shrink: 0; font-weight: 500; }
-.audit-detail { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.audit-time { color: var(--text-muted); font-size: 10px; opacity: 0.6; flex-shrink: 0; }
+.audit-type {
+  font: 600 10px/1 -apple-system,sans-serif;
+  text-transform: uppercase; letter-spacing: .04em;
+  border: 1px solid; border-radius: var(--r-xs);
+  padding: 3px 7px; flex-shrink: 0;
+}
+.audit-detail { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: 11px; }
+.audit-time { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
 
 
 /* ── Filter tabs ──────────────────────────── */
@@ -784,8 +793,10 @@ body {
   border-radius: var(--r-sm);
   padding: 6px 11px 5px;
   white-space: nowrap;
-  transition: opacity .25s;
+  transition: opacity .25s, border-color .15s, transform .15s;
 }
+.world-label.peer-clickable { pointer-events: auto; cursor: pointer; }
+.world-label.peer-clickable:hover { border-color: var(--cyan); transform: translate(-50%, -100%) translateY(-2px); }
 .world-label.has-error { pointer-events: auto; border-color: var(--amber); cursor: pointer; }
 .wl-lbl-alerts { display: flex; gap: 4px; margin-top: 5px; justify-content: center; flex-wrap: wrap; }
 .wl-alert-pill {
@@ -1224,7 +1235,8 @@ body {
   border-radius: var(--r-md);
   font: 12px/1.45 -apple-system,sans-serif;
 }
-.tl-sys-icon { font-size: 13px; flex-shrink: 0; line-height: 1.5; }
+.tl-sys-icon { flex-shrink: 0; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.tl-sys-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .tl-sys-body { flex: 1; min-width: 0; }
 .tl-sys-cap { font-weight: 600; color: var(--text); margin-right: 6px; }
 .tl-sys-status { color: var(--text-muted); font-size: 11px; }
@@ -1561,10 +1573,10 @@ body {
 }
 .hv-cand-edit-btn:hover { color: var(--text); }
 .hv-dup-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font: 400 10px/1 -apple-system,sans-serif; color: var(--amber);
+  display: flex; align-items: flex-start; gap: 6px;
+  font: 400 11px/1.5 -apple-system,sans-serif; color: var(--amber);
   background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18);
-  border-radius: var(--r-xs); padding: 2px 6px; margin-top: 4px;
+  border-radius: var(--r-xs); padding: 7px 10px; margin-top: 8px;
 }
 .hv-edit-fields {
   margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
@@ -1582,8 +1594,8 @@ body {
 .hv-edit-field textarea { resize: vertical; min-height: 56px; }
 .hv-edit-actions { grid-column: 1/-1; display: flex; gap: 6px; justify-content: flex-end; margin-top: 2px; }
 .hv-access-bar {
-  padding: 12px 0 0; border-top: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+  padding: 14px 0 4px; border-top: 1px solid var(--border);
+  display: flex; flex-direction: row; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px;
 }
 .hv-access-label { font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-right: 4px; }
 .hv-access-opt { display: flex; align-items: center; gap: 5px; cursor: pointer; }
@@ -1637,31 +1649,31 @@ body {
   </div>
   <div class="sidebar-nav">
     <div class="nav-item active" data-page="overview" onclick="navigate('overview', this)">
-      <span class="nav-icon">◉</span> Overview
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/></svg></span> Overview
     </div>
     <div class="nav-item" data-page="connections" onclick="navigate('connections', this)">
-      <span class="nav-icon">⇌</span> Connections
-      <span class="nav-badge" id="conn-badge" style="display:none">!</span>
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><path d="M2 5h9M8 2l3 3-3 3M14 11H5M8 8l-3 3 3 3"/></svg></span> Connections
+      <span class="nav-badge" id="conn-badge" style="display:none"></span>
     </div>
     <div class="nav-item" data-page="peers" onclick="navigate('peers', this)">
-      <span class="nav-icon">⬡</span> Peers
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><polygon points="8,1.5 13.5,4.75 13.5,11.25 8,14.5 2.5,11.25 2.5,4.75"/></svg></span> Peers
     </div>
     <div class="nav-item" data-page="tasks" onclick="navigate('tasks', this)">
-      <span class="nav-icon">⚙</span> Tasks
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h10a1 1 0 001-1V4a1 1 0 00-1-1h-3M6 3a1 1 0 011-1h2a1 1 0 011 1M6 3h4M5.5 8.5l1.5 1.5 3-3"/></svg></span> Tasks
       <span class="nav-badge" id="task-badge" style="display:none">0</span>
     </div>
     <div class="nav-item" data-page="brain" onclick="navigate('brain', this)">
-      <span class="nav-icon">◎</span> Brain
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><path d="M5.5 3a2.5 2.5 0 00-1 4.8V9a1 1 0 001 1h3a1 1 0 001-1v-.5a2.5 2.5 0 00-1-4.8M5.5 3h3M7 10v3M5 13h4"/></svg></span> Brain
     </div>
     <div class="nav-item" data-page="messages" onclick="navigate('messages', this)">
-      <span class="nav-icon">✉</span> Messages
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/><path d="M1.5 5.5l6.5 4 6.5-4"/></svg></span> Messages
       <span class="nav-badge" id="msg-badge" style="display:none">0</span>
     </div>
     <div class="nav-item" data-page="audit" onclick="navigate('audit', this)">
-      <span class="nav-icon">☰</span> Audit
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg></span> Audit
     </div>
     <div class="nav-item" data-page="settings" onclick="navigate('settings', this)">
-      <span class="nav-icon">⊙</span> Settings
+      <span class="nav-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2"/><path d="M8 2v1.5M8 12.5V14M2 8h1.5M12.5 8H14M3.75 3.75l1.06 1.06M11.19 11.19l1.06 1.06M12.25 3.75l-1.06 1.06M4.81 11.19l-1.06 1.06"/></svg></span> Settings
     </div>
   </div>
   <div class="sidebar-footer">
@@ -1675,7 +1687,7 @@ body {
 <div class="main">
   <div class="topbar">
     <span class="topbar-title">WorldLink Gateway</span>
-    <span class="topbar-beta">BETA</span>
+    <span class="topbar-beta">LITE</span>
     <span class="topbar-worldid" id="topbar-worldid" onclick="copyWorldId()" title="Click to copy World ID">
       <span id="topbar-id-text">Loading…</span>
       <span class="copy-icon">⎘</span>
@@ -1685,7 +1697,7 @@ body {
       <div class="listen-dot"></div>
       <span id="listen-port">Listening on :…</span>
     </div>
-    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+    <button type="button" class="refresh-btn" id="refresh-btn" onclick="refreshAll()"><span class="refresh-icon">↻</span> Refresh</button>
   </div>
 
   <div class="content">
@@ -1875,7 +1887,7 @@ body {
       <!-- Sources tab -->
       <div id="brain-tab-sources" style="display:none">
         <div id="brain-sources-list">
-          <div class="empty-state"><div class="empty-icon">◈</div>No knowledge sources connected</div>
+          <div class="empty-state"><div class="empty-icon">⎇</div>No knowledge sources connected</div>
         </div>
         <div style="margin-top:14px;">
           <button class="btn" onclick="brainOpenDrawer('source')">+ Add Source</button>
@@ -1902,18 +1914,35 @@ body {
 
     <!-- Audit -->
     <div class="page" id="page-audit">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Audit Log</div>
+          <div class="section-sub">A record of all connection, task, and system events for this world.</div>
+        </div>
+      </div>
+      <div class="filter-tabs" id="audit-filter-tabs">
+        <button class="filter-tab active" onclick="filterAudit('all', this)">All</button>
+        <button class="filter-tab" onclick="filterAudit('connection', this)">Connection</button>
+        <button class="filter-tab" onclick="filterAudit('task', this)">Tasks</button>
+        <button class="filter-tab" onclick="filterAudit('error', this)">Errors</button>
+      </div>
       <div class="card">
-        <div class="card-title">Audit Log</div>
-        <div style="max-height:70vh;overflow-y:auto;" id="audit-full-list">
-          <div class="empty-state"><div class="empty-icon">☰</div>No events</div>
+        <div style="max-height:66vh;overflow-y:auto;" id="audit-full-list">
+          <div class="empty-state">No events</div>
         </div>
       </div>
     </div>
 
     <!-- Settings -->
     <div class="page" id="page-settings">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Settings</div>
+          <div class="section-sub">Configure your world name, capabilities, and AI backend.</div>
+        </div>
+      </div>
       <div class="card" style="max-width:520px;">
-        <div class="card-title">Settings</div>
+        <div class="card-title">World Identity</div>
         <div class="form-group">
           <label class="form-label">World Name</label>
           <input class="form-input" id="settings-name" placeholder="My World" />
@@ -1930,6 +1959,32 @@ body {
         </div>
         <button class="btn-primary" onclick="saveSettings()">Save Changes</button>
         <span id="settings-save-msg" style="font-size:12px;margin-left:10px;color:var(--green);"></span>
+      </div>
+
+      <div class="card" style="max-width:520px;margin-top:16px;">
+        <div class="card-title">World Availability</div>
+        <div style="font:400 12px/1.6 -apple-system,sans-serif;color:var(--text-muted);margin-bottom:16px;">
+          Go offline so peers see your world as unavailable. Tasks and messages won't be accepted while offline.
+        </div>
+        <div class="toggle-row" style="margin-bottom:12px;">
+          <span style="font-size:13px;color:var(--text-muted)">Go offline</span>
+          <label class="toggle">
+            <input type="checkbox" id="settings-offline-toggle" onchange="onOfflineToggleChange(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="settings-offline-duration" style="display:none;margin-bottom:12px;">
+          <label class="form-label">Duration</label>
+          <select class="form-select" id="settings-offline-dur" style="max-width:200px;" onchange="applyOfflineStatus()">
+            <option value="3600000">1 hour</option>
+            <option value="14400000">4 hours</option>
+            <option value="28800000">8 hours</option>
+            <option value="0">Until I turn back on</option>
+          </select>
+        </div>
+        <div id="settings-offline-countdown" style="display:none;font-size:12px;color:var(--amber);margin-bottom:12px;"></div>
+        <div id="settings-offline-btn" style="display:none;"></div>
+        <button class="btn" id="settings-online-btn" onclick="goOnline()" style="display:none;color:var(--green);border-color:var(--green);">Go Online Now</button>
       </div>
 
       <div class="card" style="max-width:520px;margin-top:16px;">
@@ -1986,6 +2041,38 @@ body {
 </div>
 
 <!-- Session drawer -->
+<!-- Brain Chat Drawer -->
+<!-- ── World Theme Context Menu ─────────────────────────────── -->
+<div id="world-theme-menu" style="display:none;position:fixed;z-index:400;background:#0d1b2b;border:1px solid #1D2A38;border-radius:10px;padding:6px;box-shadow:0 8px 32px rgba(0,0,0,0.6);min-width:180px;pointer-events:auto;">
+  <div style="font:600 10px/1 -apple-system,sans-serif;color:#4a5a6a;letter-spacing:.06em;padding:6px 8px 4px;text-transform:uppercase;">World Theme</div>
+  <div id="world-theme-list"></div>
+</div>
+
+<div id="brain-chat-drawer" style="position:fixed;inset:0;z-index:280;pointer-events:none;">
+  <div id="brain-chat-overlay" onclick="closeBrainChat()" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);opacity:0;transition:opacity .25s;pointer-events:none;"></div>
+  <div id="brain-chat-panel" style="position:absolute;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);">
+    <div style="display:flex;align-items:center;gap:14px;padding:20px 20px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg style="width:17px;height:17px;stroke:#f97316;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M5.5 3a2.5 2.5 0 00-1 4.8V9a1 1 0 001 1h3a1 1 0 001-1v-.5a2.5 2.5 0 00-1-4.8M5.5 3h3M7 10v3M5 13h4"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font:700 15px/1 -apple-system,sans-serif;color:var(--text-strong);">Brain Chat</div>
+        <div style="font:400 12px/1 -apple-system,sans-serif;color:#f97316;margin-top:5px;">Your personal memory</div>
+      </div>
+      <button onclick="closeBrainChat()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:6px;line-height:1;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background='none'">✕</button>
+    </div>
+    <div id="brain-chat-log" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font:400 12px/1.6 -apple-system,sans-serif;color:var(--text-muted);text-align:center;margin-top:32px;">Ask anything — I'll answer from your brain memories.</div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;background:var(--surface-2);">
+      <input id="brain-chat-input" class="form-input" placeholder="Ask your brain…" style="flex:1;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendBrainChat();}">
+      <button class="btn-primary" onclick="sendBrainChat()" style="background:#f97316;border-color:#f97316;flex-shrink:0;">
+        <svg style="width:14px;height:14px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="session-drawer">
   <div class="session-header">
     <button class="session-back" onclick="closeSession()">←</button>
@@ -2027,7 +2114,7 @@ body {
       <textarea id="composer-input" class="composer-input" placeholder="Type a message or task…" rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComposerMsg();}"
         oninput="this.dataset.autoFilled='';this.style.height='';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-      <button class="composer-attach-btn" id="composer-attach-btn" onclick="document.getElementById('composer-file').click()" title="Attach image">⊕</button>
+      <button class="composer-attach-btn" id="composer-attach-btn" onclick="document.getElementById('composer-file').click()" title="Attach image"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M13.5 8.5l-5.5 5.5a3.5 3.5 0 01-4.95-4.95l6-6a2 2 0 012.83 2.83l-6.01 6a.5.5 0 01-.7-.7l5.5-5.5"/></svg></button>
       <button class="composer-send-btn" onclick="sendComposerMsg()" title="Send">→</button>
     </div>
   </div>
@@ -2074,6 +2161,7 @@ let _msgTarget = null;
 
 // ── Navigation ────────────────────────────────────────────────────
 function navigate(page, el) {
+  if (page !== 'overview' && _sessionPeer) closeSession();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const pageEl = document.getElementById('page-' + page);
@@ -2181,7 +2269,11 @@ let _wMyGroup   = null, _wMyLabelEl = null;
 let _wArcs      = new Map(); // worldId → { line, geom, mat, curve }
 let _wPackets   = [];        // in-flight light packets
 let _wClouds    = [];        // all cloud groups for drift
+let _wSnowLayers = [];       // [{ pts, positions, speeds, drifts, range }] — Ice Age snow
 let _wFalls     = [];        // waterfall streams for opacity animation
+let _wStarfieldGrp = null;  // starfield group for parallax
+// Camera lerp state — smooth fly-to on world select
+var _wCamLerp = { active: false, fromPos: null, toTarget: null, progress: 0, onDone: null };
 
 // ── Material helpers (mirrors world.html) ─────────────────────────
 function _wlm(c) { return new THREE.MeshLambertMaterial({ color: c }); }
@@ -2209,7 +2301,200 @@ function _wMkStarfield(scene) {
   }
   const sg = new THREE.BufferGeometry();
   sg.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.28 })));
+  const grp = new THREE.Group();
+  grp.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.28 })));
+  scene.add(grp);
+  _wStarfieldGrp = grp;
+}
+
+// ── Desaturate a peer island group (traverse materials, reduce saturation) ──
+function _wDesaturateGroup(grp, amount) {
+  // amount: 0 = no change, 1 = fully grey
+  grp.traverse(function(o) {
+    if (!o.isMesh || !o.material) return;
+    var c = o.material.color;
+    if (!c) return;
+    var hsl = {}; c.getHSL(hsl);
+    c.setHSL(hsl.h, hsl.s * (1 - amount), hsl.l * (1 - amount * 0.08));
+    if (o.material.emissive) {
+      var ec = o.material.emissive;
+      var ehsl = {}; ec.getHSL(ehsl);
+      ec.setHSL(ehsl.h, ehsl.s * (1 - amount * 0.5), ehsl.l);
+    }
+  });
+}
+
+// ── World Themes ───────────────────────────────────────────────────
+var _wCurrentTheme = 'default';
+var _wThemes = {
+  default:   { label: '🌿 Default',       sky: 0x060d1a, fog: 0x060d1a, grass: 0x217a10, grassLip: 0x2eaa14, moss: 0x3acc1a, tree: 0x1a6b0a, treeLight: 0x288c14, cliff: 0x28211c, strata: 0x4a3d30, orb: null, sun: 0xf0ffec, sunI: 2.4 },
+  starwars:  { label: '⭐ Star Wars',      sky: 0x0d0820, fog: 0x0d0820, grass: 0xb8954a, grassLip: 0xd4aa5a, moss: 0xe0be70, tree: 0x7a5428, treeLight: 0xa07838, cliff: 0x5a4028, strata: 0x7a6040, orb: 0xffdf80, sun: 0xffe070, sunI: 2.8 },
+  dune:      { label: '🏜️ Dune',          sky: 0x1a0f06, fog: 0x1a0f06, grass: 0xc8922a, grassLip: 0xe0a83a, moss: 0xf0be50, tree: 0x8b5e18, treeLight: 0xb07828, cliff: 0x6a4018, strata: 0x8a6038, orb: 0xffa020, sun: 0xff8820, sunI: 3.0 },
+  iceage:    { label: '🧊 Ice Age',        sky: 0x060f1a, fog: 0x060f1a, grass: 0xb8d8e8, grassLip: 0xd0eaf8, moss: 0x98c4d8, tree: 0x6890a8, treeLight: 0x88aac0, cliff: 0x304858, strata: 0x486880, orb: 0x80d0ff, sun: 0xb0d8ff, sunI: 1.8 },
+  cherry:    { label: '🌸 Cherry Blossom', sky: 0x0d0812, fog: 0x0d0812, grass: 0x3aaa3a, grassLip: 0x50cc50, moss: 0x60dd60, tree: 0xf8a0c0, treeLight: 0xffc8d8, cliff: 0x28211c, strata: 0x4a3d30, orb: 0xff80b0, sun: 0xffc0d8, sunI: 2.2 },
+  cyberpunk: { label: '🌆 Cyberpunk',      sky: 0x050208, fog: 0x050208, grass: 0x0a2a18, grassLip: 0x0e4020, moss: 0x00ff55, tree: 0x00aa30, treeLight: 0x00ff44, cliff: 0x111128, strata: 0x1a1a40, orb: 0x00ffaa, sun: 0xff00aa, sunI: 1.6 },
+  jurassic:  { label: '🦖 Jurassic',       sky: 0x020d04, fog: 0x020d04, grass: 0x1a8010, grassLip: 0x2aaa18, moss: 0x40cc20, tree: 0x0e5808, treeLight: 0x1a8010, cliff: 0x1e3a18, strata: 0x2e5a28, orb: 0x80ff40, sun: 0xc8ff80, sunI: 2.0 },
+};
+
+function _wApplyTheme(themeKey) {
+  var th = _wThemes[themeKey];
+  if (!th || !_wscene || !_wMyGroup) return;
+  _wCurrentTheme = themeKey;
+
+  // Sky + fog
+  _wscene.background.set(th.sky);
+  if (_wscene.fog) { _wscene.fog.color.set(th.fog); }
+
+  // Sun light colour
+  _wscene.traverse(function(o) {
+    if (o.isDirectionalLight && o.intensity > 1) { o.color.set(th.sun); o.intensity = th.sunI; }
+  });
+
+  // Island terrain — direct material ref update (immune to color drift after prior theme swaps)
+  var mats = _wMyGroup.userData._themeMats;
+  if (mats) {
+    if (mats.grass)     mats.grass.color.set(th.grass);
+    if (mats.grassLip)  mats.grassLip.color.set(th.grassLip);
+    if (mats.moss)      mats.moss.color.set(th.moss);
+    if (mats.tree)      mats.tree.color.set(th.tree);
+    if (mats.treeLight) mats.treeLight.color.set(th.treeLight);
+    if (mats.cliff)     mats.cliff.color.set(th.cliff);
+    if (mats.strata)    mats.strata.color.set(th.strata);
+    if (mats.strata2)   mats.strata2.color.set(th.strata);
+  }
+
+  // Orb + glow colour override
+  if (th.orb) {
+    var orbMat  = _wMyGroup.userData._orbMat;
+    var glowMat = _wMyGroup.userData._glowMat;
+    if (orbMat)  { orbMat.color.set(th.orb);  orbMat.emissive.set(th.orb); }
+    if (glowMat) { glowMat.color.set(th.orb); glowMat.emissive.set(th.orb); }
+  }
+
+  // Snow — start for Ice Age, stop for all others
+  if (themeKey === 'iceage') { _wMkSnow(); }
+  else { _wDestroySnow(); }
+}
+
+function _wShowThemeMenu(x, y) {
+  var menu = document.getElementById('world-theme-menu');
+  var list = document.getElementById('world-theme-list');
+  if (!menu || !list) return;
+
+  list.innerHTML = Object.keys(_wThemes).map(function(key) {
+    var th = _wThemes[key];
+    var active = key === _wCurrentTheme;
+    return '<div onclick="event.stopPropagation();_wPickTheme(\'' + key + '\')" style="'
+      + 'display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;font:400 13px/1 -apple-system,sans-serif;'
+      + 'color:' + (active ? 'var(--cyan)' : 'var(--text)') + ';'
+      + 'background:' + (active ? 'var(--cyan-dim)' : 'transparent') + ';'
+      + 'transition:background .12s;" '
+      + 'onmouseover="if(!\'' + active + '\')this.style.background=\'var(--surface-hover)\'" '
+      + 'onmouseout="if(!\'' + active + '\')this.style.background=\'transparent\'">'
+      + escHTML(th.label)
+      + (active ? '<span style="margin-left:auto;font-size:10px;">✓</span>' : '')
+      + '</div>';
+  }).join('');
+
+  menu.style.display = 'block';
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var mw = 188, mh = menu.offsetHeight || 260;
+  menu.style.left = Math.min(x, vw - mw - 8) + 'px';
+  menu.style.top  = Math.min(y, vh - mh - 8) + 'px';
+
+  // Close on outside click
+  setTimeout(function() {
+    document.addEventListener('click', _wCloseThemeMenu, { once: true });
+  }, 0);
+}
+
+function _wPickTheme(key) {
+  _wApplyTheme(key);
+  _wCloseThemeMenu();
+  try { localStorage.setItem('wl-world-theme', key); } catch(e) {}
+}
+
+function _wCloseThemeMenu() {
+  var menu = document.getElementById('world-theme-menu');
+  if (menu) menu.style.display = 'none';
+}
+
+// ── Snow particle system (Ice Age theme only) ─────────────────────
+function _wMkSnow() {
+  if (!_wscene) return;
+  _wDestroySnow();
+
+  // Two layers: BG (distant, sparse, large flakes) + FG (close, dense, small)
+  var layers = [
+    { count: 320, rangeXZ: 38, rangeY: 30, yBase: -4,  sizeMin: 0.18, sizeMax: 0.42, speedMin: 1.2, speedMax: 2.2, driftAmp: 0.8,  opacity: 0.55, color: 0xd8eeff },
+    { count: 180, rangeXZ: 18, rangeY: 22, yBase: -2,  sizeMin: 0.08, sizeMax: 0.22, speedMin: 2.0, speedMax: 3.8, driftAmp: 1.4,  opacity: 0.80, color: 0xeef6ff },
+  ];
+
+  layers.forEach(function(cfg) {
+    var n = cfg.count;
+    var pos    = new Float32Array(n * 3);
+    var speeds = new Float32Array(n);
+    var drifts = new Float32Array(n * 2); // dx, dz per flake
+    var phases = new Float32Array(n);
+
+    for (var i = 0; i < n; i++) {
+      pos[i*3]   = (Math.random() - 0.5) * cfg.rangeXZ * 2;
+      pos[i*3+1] = cfg.yBase + Math.random() * cfg.rangeY;
+      pos[i*3+2] = (Math.random() - 0.5) * cfg.rangeXZ * 2;
+      speeds[i]  = cfg.speedMin + Math.random() * (cfg.speedMax - cfg.speedMin);
+      drifts[i*2]   = (Math.random() - 0.5) * cfg.driftAmp;
+      drifts[i*2+1] = (Math.random() - 0.5) * cfg.driftAmp;
+      phases[i]  = Math.random() * Math.PI * 2;
+    }
+
+    var geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+
+    // Randomise flake sizes per particle via size attribute
+    var sizes = new Float32Array(n);
+    for (var j = 0; j < n; j++) sizes[j] = cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin);
+    geom.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+    var mat = new THREE.PointsMaterial({
+      color: cfg.color, size: (cfg.sizeMin + cfg.sizeMax) / 2,
+      transparent: true, opacity: cfg.opacity,
+      depthWrite: false, sizeAttenuation: true,
+    });
+
+    var pts = new THREE.Points(geom, mat);
+    _wscene.add(pts);
+    _wSnowLayers.push({ pts, pos, speeds, drifts, phases, cfg });
+  });
+}
+
+function _wDestroySnow() {
+  _wSnowLayers.forEach(function(l) {
+    _wscene.remove(l.pts);
+    l.pts.geometry.dispose();
+    l.pts.material.dispose();
+  });
+  _wSnowLayers = [];
+}
+
+function _wTickSnow(dt) {
+  _wSnowLayers.forEach(function(l) {
+    var pos = l.pos, n = pos.length / 3;
+    var cfg = l.cfg;
+    for (var i = 0; i < n; i++) {
+      // Fall
+      pos[i*3+1] -= l.speeds[i] * dt;
+      // Gentle lateral drift (sinusoidal per flake)
+      pos[i*3]   += Math.sin(l.phases[i] + pos[i*3+1] * 0.4) * l.drifts[i*2]   * dt * 0.5;
+      pos[i*3+2] += Math.cos(l.phases[i] + pos[i*3+1] * 0.3) * l.drifts[i*2+1] * dt * 0.5;
+      // Wrap: when flake falls below yBase, reset to top
+      if (pos[i*3+1] < cfg.yBase) {
+        pos[i*3+1] = cfg.yBase + cfg.rangeY;
+        pos[i*3]   = (Math.random() - 0.5) * cfg.rangeXZ * 2;
+        pos[i*3+2] = (Math.random() - 0.5) * cfg.rangeXZ * 2;
+      }
+    }
+    l.pts.geometry.attributes.position.needsUpdate = true;
+  });
 }
 
 // ── Cloud blob helper (mirrors mkCloud in world.html) ──────────────
@@ -2232,23 +2517,17 @@ function _wMkIsland(seed, isLocal, status) {
   var r = function(n) { return _wrand(seed, n); };
 
   // ── Materials ──────────────────────────────────────────────────────
-  // Cliff body — deep dark earth, layered
-  var cliffM  = _wsm(0x28211c, { roughness: 0.98 });
-  // Mid-strata — slightly lighter warm rock band
-  var strataM = _wsm(0x4a3d30, { roughness: 1 });
-  // Lower strata — cool dark rock
+  var cliffM   = _wsm(0x28211c, { roughness: 0.98 });
+  var strataM  = _wsm(0x4a3d30, { roughness: 1 });
   var strata2M = _wsm(0x2e2a24, { roughness: 1 });
-  // Rock faces — two tone slate
-  var rock1M  = _wsm(0x4a5062, { roughness: 1 });
-  var rock2M  = _wsm(0x3a3d48, { roughness: 1 });
-  // Grass surface — Lambert for true-colour rendering (no PBR desaturation)
-  var grassM     = _wlm(0x1a9c0a);   // base cap — deep vivid green
-  var grassLipM  = _wlm(0x2ecc08);   // bright lip (Adrian World leaf exact)
-  var mossPatchM = _wlm(0x42e818);   // highlight — very bright lime
-  // Tree — Lambert, dark canopy with bright tier
-  var treeM      = _wlm(0x0e5c08);   // dark canopy
-  var treeLightM = _wlm(0x1eaa0c);   // lit tier
-  // Flower spots
+  var rock1M   = _wsm(0x4a5062, { roughness: 1 });
+  var rock2M   = _wsm(0x3a3d48, { roughness: 1 });
+  // Local world gets richer darker greens; peers get same palette at slightly lower saturation
+  var grassM     = isLocal ? _wlm(0x217a10) : _wlm(0x1a7a0a);
+  var grassLipM  = isLocal ? _wlm(0x2eaa14) : _wlm(0x24990e);
+  var mossPatchM = isLocal ? _wlm(0x3acc1a) : _wlm(0x30b814);
+  var treeM      = isLocal ? _wlm(0x1a6b0a) : _wlm(0x145808);
+  var treeLightM = isLocal ? _wlm(0x288c14) : _wlm(0x1e7a10);
   var flowerM = _wsm(0xd4a842, { emissive: new THREE.Color(0xd4a842), emissiveIntensity: 0.18, roughness: 0.7 });
 
   // ── Block cluster ──────────────────────────────────────────────────
@@ -2343,22 +2622,40 @@ function _wMkIsland(seed, isLocal, status) {
     fstem.position.set(fx, 0.03, fz2); grp.add(fstem);
   }
 
-  // ── Pine trees ─────────────────────────────────────────────────────
+  // ── Round canopy trees ─────────────────────────────────────────────
+  // Spread positions across different parts of the island, not random center-bias
+  var TREE_SPOTS = [
+    [-0.9, -0.7], [0.8, -0.8], [-0.7, 0.9], [0.85, 0.7], [-1.1, 0.1], [0.1, -1.0]
+  ];
   var nTrees = 2 + Math.floor(r(31) * 3);
-  for (var t = 0; t < nTrees; t++) {
-    var tx = (r(t*13+1)-0.5)*2.1, tz2 = (r(t*13+2)-0.5)*1.9;
-    var tScale = 0.85 + r(t*13+3) * 0.32;
-    // Trunk
-    var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.035*tScale, 0.048*tScale, 0.22*tScale, 5), strataM);
-    trunk.position.set(tx, 0.11*tScale, tz2);
+  for (var t = 0; t < nTrees && t < TREE_SPOTS.length; t++) {
+    // Use preset spot + small random nudge so they don't look gridded
+    var tx  = TREE_SPOTS[t][0] + (r(t*13+1) - 0.5) * 0.30;
+    var tz2 = TREE_SPOTS[t][1] + (r(t*13+2) - 0.5) * 0.30;
+    var tScale = 0.78 + r(t*13+3) * 0.36;  // 0.78 – 1.14
+
+    // Trunk height and radius
+    var trunkH = 0.28 * tScale;
+    var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.030*tScale, 0.044*tScale, trunkH, 6), strataM);
+    trunk.position.set(tx, trunkH * 0.5, tz2);   // center of trunk at half its height
     trunk.castShadow = true; grp.add(trunk);
-    // 3-tier canopy — alternating dark/lighter mats for depth
-    [[0.30,0.48,0.48],[0.21,0.80,0.36],[0.11,1.06,0.24]].forEach(function(tier, ti) {
-      var cm = ti === 1 ? treeLightM : treeM; // middle tier catches more light
-      var c = new THREE.Mesh(new THREE.ConeGeometry(tier[0]*tScale, tier[2]*tScale, 7), cm);
-      c.position.set(tx, (0.22 + tier[1])*tScale, tz2);
-      c.castShadow = true; c.receiveShadow = true; grp.add(c);
-    });
+
+    // Canopy — radius independent of tScale so it can be fixed, then scale separately
+    var cr = (0.22 + r(t*13+4) * 0.10) * tScale;
+    var canopy = new THREE.Mesh(new THREE.SphereGeometry(cr, 9, 7), treeM);
+    // Sit canopy bottom right at trunk top: y = trunkH + cr (center = trunkH + cr)
+    canopy.position.set(tx, trunkH + cr * 0.92, tz2);
+    canopy.castShadow = true; canopy.receiveShadow = true; grp.add(canopy);
+
+    // Lighter secondary cluster — sits on top of main canopy, offset slightly
+    var cr2 = cr * 0.52;
+    var cap = new THREE.Mesh(new THREE.SphereGeometry(cr2, 7, 5), treeLightM);
+    cap.position.set(
+      tx + (r(t*13+5) - 0.5) * cr * 0.35,
+      trunkH + cr * 0.92 + cr * 0.72,
+      tz2 + (r(t*13+6) - 0.5) * cr * 0.35
+    );
+    cap.castShadow = true; grp.add(cap);
   }
 
   // ── World Core ─────────────────────────────────────────────────────
@@ -2372,6 +2669,8 @@ function _wMkIsland(seed, isLocal, status) {
   var orbCol = new THREE.Color(orbHex);
 
   // Stone plinth base under the orb
+  var ORB_Y = 1.9; // raised to float clearly above the tallest building spires
+
   var plinthM = _wsm(0x2e2a24, { roughness: 0.95 });
   var plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.18, 8), plinthM);
   plinth.position.set(0, 0.09, 0); grp.add(plinth);
@@ -2381,26 +2680,26 @@ function _wMkIsland(seed, isLocal, status) {
   // Core orb — richer: emissive sphere + inner glow sphere
   var orbMat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.55, roughness: 0.22, metalness: 0.4 });
   var orb = new THREE.Mesh(new THREE.SphereGeometry(0.20, 14, 12), orbMat);
-  orb.position.set(0, 1.05, 0); grp.add(orb);
+  orb.position.set(0, ORB_Y, 0); grp.add(orb);
 
   // Inner glow (slightly smaller, higher emissive, transparent)
   var glowMat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.9, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false });
   var glow = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), glowMat);
-  glow.position.set(0, 1.05, 0); grp.add(glow);
+  glow.position.set(0, ORB_Y, 0); grp.add(glow);
 
   // Primary equatorial ring — flat
   var ringMat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.22, transparent: true, opacity: 0.52, roughness: 0.8, depthWrite: false });
   var ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.018, 6, 32), ringMat);
-  ring.rotation.x = Math.PI / 2; ring.position.set(0, 1.05, 0); grp.add(ring);
+  ring.rotation.x = Math.PI / 2; ring.position.set(0, ORB_Y, 0); grp.add(ring);
 
   // Secondary angled ring (identity marker)
   var ring2Mat = _wsm(orbHex, { emissive: orbCol, emissiveIntensity: 0.14, transparent: true, opacity: 0.30, roughness: 1, depthWrite: false });
   var ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.010, 5, 28), ring2Mat);
-  ring2.rotation.set(Math.PI*0.35, 0, Math.PI*0.2); ring2.position.set(0, 1.05, 0); grp.add(ring2);
+  ring2.rotation.set(Math.PI*0.35, 0, Math.PI*0.2); ring2.position.set(0, ORB_Y, 0); grp.add(ring2);
 
   // Point light from core
   var ptLight = new THREE.PointLight(orbHex, isLocal ? 1.0 : 0.65, 7);
-  ptLight.position.set(0, 1.05, 0); grp.add(ptLight);
+  ptLight.position.set(0, ORB_Y, 0); grp.add(ptLight);
 
   // ── Under-island cloud wisps ───────────────────────────────────────
   var cMat = _wsm(0xc2d8ef, { transparent: true, opacity: 0.38, roughness: 1, depthWrite: false });
@@ -2434,16 +2733,42 @@ function _wMkIsland(seed, isLocal, status) {
     // Register for opacity animation
     _wFalls.push({ mat: fMat1, phase: 0.0 });
     _wFalls.push({ mat: fMat2, phase: 1.2 });
+
+    // ── Glass dome ────────────────────────────────────────────────
+    var domeBaseM = _wsm(0x3a3028, { roughness: 0.9 });
+    var domeBase  = new THREE.Mesh(new THREE.CylinderGeometry(0.40, 0.44, 0.18, 10), domeBaseM);
+    domeBase.position.set(1.4, 0.09, -0.9); grp.add(domeBase);
+    var domeCapM  = _wsm(0x80d8f8, { transparent: true, opacity: 0.26, roughness: 0.05, metalness: 0.7, depthWrite: false });
+    var domeMesh  = new THREE.Mesh(new THREE.SphereGeometry(0.40, 14, 9, 0, Math.PI * 2, 0, Math.PI / 2), domeCapM);
+    domeMesh.position.set(1.4, 0.18, -0.9); grp.add(domeMesh);
+    var domeRingM = _wsm(0x5a8aaa, { roughness: 0.35, metalness: 0.85 });
+    var domeRing  = new THREE.Mesh(new THREE.TorusGeometry(0.40, 0.022, 6, 26), domeRingM);
+    domeRing.rotation.x = Math.PI / 2;
+    domeRing.position.set(1.4, 0.18, -0.9); grp.add(domeRing);
+    // Small interior light gives the dome a warm glow
+    var domeLight = new THREE.PointLight(0xffd580, 0.5, 1.8);
+    domeLight.position.set(1.4, 0.45, -0.9); grp.add(domeLight);
   }
 
-  // Cache refs for animation/status
-  grp.userData._orbMat  = orbMat;
-  grp.userData._glowMat = glowMat;
-  grp.userData._ringMat = ringMat;
+  // Cache refs for animation/status/theme
+  grp.userData._orbMat   = orbMat;
+  grp.userData._glowMat  = glowMat;
+  grp.userData._ringMat  = ringMat;
   grp.userData._ring2Mat = ring2Mat;
-  grp.userData._ring    = ring;
-  grp.userData._ring2   = ring2;
-  grp.userData._ptLight = ptLight;
+  grp.userData._ring     = ring;
+  grp.userData._ring2    = ring2;
+  grp.userData._ptLight  = ptLight;
+  // Theme-swappable material refs (role → material)
+  grp.userData._themeMats = {
+    grass:     grassM,
+    grassLip:  grassLipM,
+    moss:      mossPatchM,
+    tree:      treeM,
+    treeLight: treeLightM,
+    cliff:     cliffM,
+    strata:    strataM,
+    strata2:   strata2M,
+  };
 
   _wSetIslandStatus(grp, status || 'offline');
   return grp;
@@ -2568,8 +2893,38 @@ function initWorldScene() {
     var found = findIslandForMesh(hits[0].object);
     if (!found || found.worldId === '__local__') return;
     var peer = _state.peers.find(function(p){ return p.worldId === found.worldId; });
-    if (peer) openSession(peer);
+    if (!peer) return;
+    // Smooth camera ease toward selected world before opening session
+    var entry = _wislands.get(found.worldId);
+    if (entry && _wcontrols) {
+      var tgt = entry.group.position.clone();
+      tgt.y = 0;
+      _wCamLerp.fromTarget = _wcontrols.target.clone();
+      _wCamLerp.toTarget = tgt;
+      _wCamLerp.active = true;
+      _wCamLerp.progress = 0;
+      _wCamLerp.onDone = function() { openSession(peer); };
+      _wcontrols.autoRotate = false;
+    } else {
+      openSession(peer);
+    }
   });
+
+  // Right-click theme picker — local world only
+  _wrenderer.domElement.addEventListener('contextmenu', function(e) {
+    var r = _wrenderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - r.left) / r.width)  * 2 - 1;
+    mouse.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, _wcamera);
+    var hits = raycaster.intersectObjects(getIslandMeshes());
+    if (!hits.length) return;
+    var found = findIslandForMesh(hits[0].object);
+    if (!found || found.worldId !== '__local__') return;
+    e.preventDefault();
+    _wShowThemeMenu(e.clientX, e.clientY);
+  });
+
+  // Theme restore happens after first syncWorldScene (see _wMaybeRestoreTheme)
 
   // Resize observer
   if (window.ResizeObserver) {
@@ -2599,15 +2954,43 @@ function initWorldScene() {
       c.position.y = c.userData.baseY + Math.sin(T * c.userData.driftSpeed * 0.45) * 0.06;
     });
 
-    // World core — orb pulse + ring rotation
-    _wislands.forEach(function(v) {
+    // World core — orb pulse + ring rotation + independent island float
+    _wislands.forEach(function(v, wid) {
       var ud = v.group.userData;
       var base = ud._orbMat && ud._orbMat._baseEI != null ? ud._orbMat._baseEI : 0.55;
       if (ud._orbMat)  ud._orbMat.emissiveIntensity  = base * (0.76 + Math.sin(T * 1.55) * 0.24);
       if (ud._glowMat) ud._glowMat.emissiveIntensity = base * 1.6 * (0.70 + Math.sin(T * 1.55 + 0.5) * 0.30);
       if (ud._ring)    ud._ring.rotation.z  += 0.0035;
       if (ud._ring2)   ud._ring2.rotation.z += 0.0072;
+      // Independent float — each island bobs at its own phase & speed
+      if (ud._floatPhase != null) {
+        var amp = (wid === '__local__') ? 0.07 : 0.055;
+        v.group.position.y = ud._baseY + Math.sin(T * ud._floatSpeed + ud._floatPhase) * amp;
+      }
     });
+
+    // Starfield parallax — drift opposite to camera azimuth at 6% rate
+    if (_wStarfieldGrp && _wcamera) {
+      var camX = _wcamera.position.x, camZ = _wcamera.position.z;
+      _wStarfieldGrp.position.x = -camX * 0.06;
+      _wStarfieldGrp.position.z = -camZ * 0.06;
+      _wStarfieldGrp.position.y = -_wcamera.position.y * 0.04;
+    }
+
+    // Camera lerp — smooth fly-to when selecting a world (ease-out, ~0.7s)
+    if (_wCamLerp.active && _wcontrols && _wCamLerp.toTarget) {
+      _wCamLerp.progress = Math.min(_wCamLerp.progress + 0.035, 1);
+      var ease = 1 - Math.pow(1 - _wCamLerp.progress, 3);
+      _wcontrols.target.lerpVectors(
+        _wCamLerp.fromTarget || new THREE.Vector3(0,0,0),
+        _wCamLerp.toTarget, ease
+      );
+      _wcontrols.update();
+      if (_wCamLerp.progress >= 1) {
+        _wCamLerp.active = false;
+        if (_wCamLerp.onDone) { _wCamLerp.onDone(); _wCamLerp.onDone = null; }
+      }
+    }
 
     // Ambient heartbeat — one dim packet per arc every ~8s (staggered by worldId)
     _wArcs.forEach(function(arc, wid) {
@@ -2634,27 +3017,50 @@ function initWorldScene() {
       return true;
     });
 
+    // Snow (Ice Age theme)
+    if (_wSnowLayers.length) _wTickSnow(0.016);
+
     _wUpdateLabels();
     _wrenderer.render(_wscene, _wcamera);
   })();
 }
 
 // ── Sync scene with current peer state ────────────────────────────
-function syncWorldScene(myName, peers) {
+function syncWorldScene(myName, peers, myStatus) {
   if (!_wrenderer) return;
+  var localStatus = myStatus || 'online';
 
   // My world (created once)
   if (!_wMyGroup) {
-    _wMyGroup = _wMkIsland(_wseed(myName || 'myworld'), true, 'online');
+    _wMyGroup = _wMkIsland(_wseed(myName || 'myworld'), true, localStatus);
     _wMyGroup.position.set(0, 0, 3);
+    _wMyGroup.scale.set(1.58, 1.58, 1.58);
+    _wMyGroup.userData._baseY = 0;
+    _wMyGroup.userData._floatPhase = 0;
+    _wMyGroup.userData._floatSpeed = 0.42;
     _wscene.add(_wMyGroup);
-    _wMyLabelEl = _wMkLabel(myName || 'My World', 'online', true);
+    _wMyLabelEl = _wMkLabel(myName || 'My World', localStatus, true);
     _wislands.set('__local__', { group: _wMyGroup, labelEl: _wMyLabelEl });
     var onlinePeers = peers.filter(function(p){ return p.status === 'online'; }).length;
     _wDismissSplash(myName, onlinePeers);
+    // Restore saved theme after island is built
+    try {
+      var _savedTheme = localStorage.getItem('wl-world-theme');
+      if (_savedTheme && _wThemes[_savedTheme]) setTimeout(function(){ _wApplyTheme(_savedTheme); }, 50);
+    } catch(e) {}
   } else {
-    var nm = _wMyLabelEl && _wMyLabelEl.querySelector('.wl-lbl-name');
-    if (nm) nm.firstChild.textContent = (myName || 'My World');
+    // Update local island glow + label status text every cycle (offline reflects immediately)
+    _wSetIslandStatus(_wMyGroup, localStatus);
+    if (_wMyLabelEl) {
+      var _cmap = { online:'#06b6d4',active:'#22d3ee',pending:'#f59e0b',error:'#ef4444',offline:'#52525b' };
+      var _col = _cmap[localStatus] || _cmap.offline;
+      var _dotEl = _wMyLabelEl.querySelector('.wl-lbl-dot');
+      var _txtEl = _wMyLabelEl.querySelector('.wl-lbl-stxt');
+      if (_dotEl) { _dotEl.style.background = _col; _dotEl.style.boxShadow = localStatus !== 'offline' ? '0 0 5px ' + _col : ''; }
+      if (_txtEl) _txtEl.textContent = localStatus;
+      var _nmEl = _wMyLabelEl.querySelector('.wl-lbl-name span');
+      if (_nmEl) _nmEl.textContent = myName || 'My World';
+    }
   }
 
   // Remove islands for stale peers
@@ -2676,6 +3082,13 @@ function syncWorldScene(myName, peers) {
       var grp = _wMkIsland(_wseed(wid), false, peer.status);
       var pos = _wPeerPos(wid, i, peers.length);
       grp.position.copy(pos);
+      // Desaturate peer islands slightly
+      _wDesaturateGroup(grp, 0.28);
+      // Assign independent float parameters
+      var fSeed = _wseed(wid);
+      grp.userData._baseY = pos.y;
+      grp.userData._floatPhase = (fSeed % 628) / 100; // 0–2π spread
+      grp.userData._floatSpeed = 0.30 + (_wrand(fSeed, 7) * 0.22);
       _wscene.add(grp);
       var labelEl = _wMkLabel(peer.worldName || peer.worldId, peer.status, false, wid);
       entry = { group: grp, labelEl: labelEl };
@@ -2765,7 +3178,16 @@ function _wMkLabel(name, status, isLocal, worldId) {
   el.className = 'world-label';
   if (worldId) el.dataset.worldId = worldId;
   el.innerHTML = _wLabelHTML(name, status, isLocal, worldId);
-  if (!isLocal && worldId) el.onclick = function() { if (_peerErrors[worldId]) _peerAuthFix(worldId); };
+  if (isLocal) {
+    el.style.pointerEvents = 'auto'; // needed so the Ask Brain button inside is hittable
+  } else if (worldId) {
+    el.classList.add('peer-clickable');
+    el.onclick = function() {
+      if (_peerErrors[worldId]) { _peerAuthFix(worldId); return; }
+      var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
+      if (peer) openSession(peer);
+    };
+  }
   layer.appendChild(el);
   return el;
 }
@@ -2777,8 +3199,10 @@ function _wLabelHTML(name, status, isLocal, worldId) {
   var warn = (!isLocal && worldId && _peerErrors[worldId]) ? '<span class="wl-lbl-warn">!</span>' : '';
   var alertsHtml = '';
   if (!isLocal && worldId) {
-    var unreadMsgs = (_state.messages || []).filter(function(m){ return m.fromWorld === worldId && !m.read; }).length;
-    var unseenTasks = (_state.tasks || []).filter(function(t){ return t.sourceWorld === worldId && !_seenTaskIds.has(t.taskId); }).length;
+    var _lsRead = _lsReadIds ? _lsReadIds() : new Set();
+    var _lsSeen = _lsSeenIds ? _lsSeenIds() : new Set();
+    var unreadMsgs = (_state.messages || []).filter(function(m){ return m.fromWorld === worldId && !m.read && !_lsRead.has(m.id); }).length;
+    var unseenTasks = (_state.tasks || []).filter(function(t){ return t.sourceWorld === worldId && !_lsSeen.has(t.taskId); }).length;
     if (unreadMsgs || unseenTasks) {
       alertsHtml = '<div class="wl-lbl-alerts">';
       if (unreadMsgs) alertsHtml += '<span class="wl-alert-pill wl-alert-msg">' + unreadMsgs + (unreadMsgs > 1 ? ' messages' : ' message') + '</span>';
@@ -2786,20 +3210,29 @@ function _wLabelHTML(name, status, isLocal, worldId) {
       alertsHtml += '</div>';
     }
   }
+  var brainBtn = isLocal
+    ? '<div style="margin-top:7px;"><button onclick="event.stopPropagation();openBrainChat()" style="pointer-events:auto;font:600 10px/1 -apple-system,sans-serif;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;border-radius:10px;padding:3px 9px;cursor:pointer;letter-spacing:.03em;">Ask Brain</button></div>'
+    : '';
   return '<div class="wl-lbl-name"><span>' + escHTML(name) + '</span>' + you + warn + '</div>'
        + '<div class="wl-lbl-status">'
        + '<span class="wl-lbl-dot" style="background:' + dot + glow + '"></span>'
        + '<span class="wl-lbl-stxt">' + escHTML(status || 'offline') + '</span>'
        + '</div>'
-       + alertsHtml;
+       + alertsHtml + brainBtn;
 }
 function _wUpdateLabel(el, name, status, worldId) {
   if (!el) return;
   var isLocal = !!el.querySelector('.wl-lbl-you');
   if (worldId) el.dataset.worldId = worldId;
+  var isLocal = !!el.dataset.local;
   el.classList.toggle('has-error', !isLocal && !!worldId && !!_peerErrors[worldId]);
+  el.classList.toggle('peer-clickable', !isLocal && !!worldId);
   el.innerHTML = _wLabelHTML(name, status, isLocal, worldId);
-  el.onclick = (!isLocal && worldId && _peerErrors[worldId]) ? function() { _peerAuthFix(worldId); } : null;
+  el.onclick = (!isLocal && worldId) ? function() {
+    if (_peerErrors[worldId]) { _peerAuthFix(worldId); return; }
+    var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
+    if (peer) openSession(peer);
+  } : null;
 }
 function _wUpdateLabels() {
   if (!_wrenderer) return;
@@ -2883,6 +3316,14 @@ function openSession(peer) {
     // Seed default prompt for the first capability
     if (caps.length) _gwCapChanged(caps[0]);
   }
+  // Mark messages from this peer as read + mark their tasks as seen — persisted to localStorage
+  var wid = peer.worldId;
+  _state.messages.forEach(function(m){ if (m.fromWorld === wid) { m.read = true; _lsPersistRead(m.id); } });
+  _markTasksSeen(wid);
+  updateMsgBadge();
+  updateTaskBadge();
+  _updateWorldLabelAlerts(); // clear the badge pills on the 3D label immediately
+
   // Reset tabs
   document.querySelectorAll('.session-tab').forEach(function(el){ el.classList.toggle('active', el.dataset.tab === 'session'); });
   renderSessionHeader();
@@ -2898,6 +3339,65 @@ function closeSession() {
   if (_wcontrols) _wcontrols.autoRotate = true;
   // Restore arc opacity
   _wArcs.forEach(function(arc) { arc.mat.opacity = 0.22; arc.mat.color.set(0x06b6d4); });
+}
+
+// ── Brain Chat ────────────────────────────────────────────────────
+function openBrainChat() {
+  var panel = document.getElementById('brain-chat-panel');
+  var overlay = document.getElementById('brain-chat-overlay');
+  var drawer = document.getElementById('brain-chat-drawer');
+  if (!panel) return;
+  drawer.style.pointerEvents = 'auto';
+  panel.style.transform = 'translateX(0)';
+  overlay.style.opacity = '1';
+  overlay.style.pointerEvents = 'auto';
+  setTimeout(function(){ var inp = document.getElementById('brain-chat-input'); if(inp) inp.focus(); }, 280);
+}
+function closeBrainChat() {
+  var panel = document.getElementById('brain-chat-panel');
+  var overlay = document.getElementById('brain-chat-overlay');
+  var drawer = document.getElementById('brain-chat-drawer');
+  if (!panel) return;
+  panel.style.transform = 'translateX(100%)';
+  overlay.style.opacity = '0';
+  overlay.style.pointerEvents = 'none';
+  setTimeout(function(){ drawer.style.pointerEvents = 'none'; }, 280);
+}
+async function sendBrainChat() {
+  var inp = document.getElementById('brain-chat-input');
+  var log = document.getElementById('brain-chat-log');
+  if (!inp || !log) return;
+  var q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  // User bubble
+  var userBubble = document.createElement('div');
+  userBubble.style.cssText = 'align-self:flex-end;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.25);border-radius:12px 12px 3px 12px;padding:8px 12px;font:400 13px/1.5 -apple-system,sans-serif;color:var(--text);max-width:85%;';
+  userBubble.textContent = q;
+  log.appendChild(userBubble);
+  // Thinking bubble
+  var thinkEl = document.createElement('div');
+  thinkEl.style.cssText = 'align-self:flex-start;background:var(--surface-2);border:1px solid var(--border);border-radius:3px 12px 12px 12px;padding:8px 12px;font:400 12px/1.5 -apple-system,sans-serif;color:var(--text-muted);';
+  thinkEl.textContent = 'Searching brain…';
+  log.appendChild(thinkEl);
+  log.scrollTop = log.scrollHeight;
+  try {
+    var res = await fetch('/worldlink/brain/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q }) });
+    var data = await res.json();
+    thinkEl.style.color = 'var(--text)';
+    thinkEl.style.borderColor = 'var(--border)';
+    thinkEl.textContent = data.answer || (data.error || 'No answer.');
+    if (data.records && data.records.length) {
+      var src = document.createElement('div');
+      src.style.cssText = 'margin-top:6px;font:400 10px/1.4 -apple-system,sans-serif;color:var(--text-dim);border-top:1px solid var(--border);padding-top:5px;';
+      src.textContent = 'From ' + data.records.length + ' memor' + (data.records.length === 1 ? 'y' : 'ies');
+      thinkEl.appendChild(src);
+    }
+  } catch(e) {
+    thinkEl.textContent = 'Error: ' + e.message;
+    thinkEl.style.color = 'var(--red)';
+  }
+  log.scrollTop = log.scrollHeight;
 }
 
 function switchSessionTab(tab) {
@@ -2959,8 +3459,8 @@ function renderSessionTimeline() {
       if (entry._type === 'msg-out') {
         wasLastMine = true;
         var deliveryMark = entry.delivered === false
-          ? '<span style="color:var(--red);font-size:10px;margin-left:4px;" title="Not delivered">✗</span>'
-          : '<span style="color:#4ade80;font-size:10px;margin-left:4px;" title="Delivered">✓</span>';
+          ? '<span style="color:var(--red);display:inline-flex;align-items:center;margin-left:4px;" title="Not delivered"><svg style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13"/></svg></span>'
+          : '<span style="color:#4ade80;display:inline-flex;align-items:center;margin-left:4px;" title="Delivered"><svg style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M2.5 8.5l4 4 7-8"/></svg></span>';
         return '<div class="tl-entry tl-mine">'
           + '<div class="tl-sender tl-sender-mine">You</div>'
           + '<div class="tl-bubble tl-bubble-mine">' + _renderBubbleContent(entry) + '</div>'
@@ -2985,7 +3485,7 @@ function renderSessionTimeline() {
           return '';
         }).join('') + '</div>' : '';
         return '<div class="tl-system-event">'
-          + '<span class="tl-sys-icon" style="color:#f59e0b;">→</span>'
+          + '<span class="tl-sys-icon" style="color:#f59e0b;"><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>'
           + '<div class="tl-sys-body">'
           + '<span class="tl-sys-cap">' + escHTML(entry.cap) + '</span>'
           + '<span class="tl-sys-status">sent</span>'
@@ -2999,7 +3499,13 @@ function renderSessionTimeline() {
       var t = entry.task;
       if (!t) return '';
       var isOut = (t.sourceWorld !== peer.worldId); // we dispatched it
-      var icon  = t.status === 'completed' ? '✓' : t.status === 'running' ? '⚙' : t.status === 'error' ? '✗' : '◌';
+      var _iconSvg = {
+        completed: '<svg viewBox="0 0 16 16"><path d="M3 8.5l3.5 3.5 6.5-7"/></svg>',
+        running:   '<svg viewBox="0 0 16 16"><path d="M8 2v4l2.5 2.5"/><circle cx="8" cy="8" r="6"/></svg>',
+        error:     '<svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13"/></svg>',
+        pending:   '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3h3"/></svg>'
+      };
+      var icon  = _iconSvg[t.status] || _iconSvg.pending;
       var iconColor = t.status === 'completed' ? '#22c55e' : t.status === 'running' ? '#f59e0b' : t.status === 'error' ? '#ef4444' : '#475569';
       var elapsed = '';
       if (t.status === 'completed' && t.completedAt && t.createdAt) {
@@ -3008,9 +3514,15 @@ function renderSessionTimeline() {
       var approvalBtns = (t.status === 'pending-approval')
         ? '<div class="tl-task-approvals"><button class="btn btn-green" onclick="approveTask(\'' + t.taskId + '\')">Approve</button><button class="btn btn-red" onclick="denyTask(\'' + t.taskId + '\')">Deny</button></div>'
         : '';
+      var _capIconSvg = {
+        'claude-task':    '<svg style="width:13px;height:13px;stroke:#06b6d4;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M9.5 2.5l4 4-7 7H2.5v-4l7-7z"/><path d="M12 5l-1.5-1.5"/></svg>',
+        'message':        '<svg style="width:13px;height:13px;stroke:#06b6d4;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="9" rx="1.5"/><path d="M1.5 5.5l6.5 3.5 6.5-3.5"/></svg>',
+        'context-handoff':'<svg style="width:13px;height:13px;stroke:#06b6d4;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M10 2h4v4M14 2l-6 6M6 4H3a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1v-3"/></svg>'
+      };
+      var capIcon = _capIconSvg[t.capability] || '<svg style="width:13px;height:13px;stroke:#06b6d4;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>';
       var artifactBtn = t.artifactId
         ? '<div class="tl-artifact-inline" onclick="viewArtifact(\'' + t.artifactId + '\',\'' + (t.sourceWorld||'') + '\')">'
-          + '<span style="color:#06b6d4;">▣</span> ' + escHTML(t.capability) + '<span class="tl-artifact-open">Open artifact →</span>'
+          + capIcon + ' ' + escHTML(t.capability) + '<span class="tl-artifact-open">Open artifact →</span>'
           + '</div>'
         : '';
       return '<div class="tl-system-event">'
@@ -3466,13 +3978,12 @@ async function renderConnections() {
     }).join('');
   }
 
-  // Notification badge — new peer since last visit
+  // Connections badge — show count of online peers
   var badge = document.getElementById('conn-badge');
-  if (badge && _state.audit) {
-    var recent = _state.audit.filter(function(e){
-      return e.type === 'connection.established' && (Date.now()/1000 - (e.timestamp||0)) < 300;
-    });
-    badge.style.display = recent.length ? '' : 'none';
+  if (badge) {
+    var onlineCount = (_state.peers || []).filter(function(p){ return p.status === 'online' || p.status === 'active'; }).length;
+    if (onlineCount > 0) { badge.textContent = onlineCount; badge.style.display = ''; }
+    else { badge.style.display = 'none'; }
   }
 }
 
@@ -4387,6 +4898,123 @@ var _brainSearchQ    = '';
 // HARVEST — two-step workflow
 // ═══════════════════════════════════════════════════════════════
 
+var _hvSlackSourceId = null;
+
+function _hvHarvestFromSource(sourceId) {
+  _hvSlackSourceId = sourceId;
+  brainOpenDrawer('harvest-slack');
+}
+
+function _hvSlackPrompt(channel, workspace) {
+  var ch = channel ? '#' + channel.replace(/^#/, '') : '#your-channel';
+  var ws = workspace || 'your workspace';
+  return 'You have Slack MCP tools available. Please:\n\n' +
+    '1. Use slack_search_channels (or slack_read_channel) to find and read ' + ch + ' in ' + ws + '\n' +
+    '2. Read as many recent messages as possible (aim for the last 90 days)\n' +
+    '3. Extract durable knowledge worth storing in a World Brain memory system\n\n' +
+    'Return ONLY a JSON array — no explanation, no markdown, just the raw JSON:\n' +
+    '[\n' +
+    '  {\n' +
+    '    "type": "decision|learning|fact|constraint|convention|goal",\n' +
+    '    "summary": "one clear sentence of durable knowledge",\n' +
+    '    "project": "project name if relevant (e.g. Magikarp, OCB), else empty string",\n' +
+    '    "area": "team, component, or topic area, else empty string",\n' +
+    '    "importance": "low|normal|high|critical"\n' +
+    '  }\n' +
+    ']\n\n' +
+    'Include:\n' +
+    '- Decisions the team made (architecture, product, process, tooling)\n' +
+    '- Lessons learned that weren\'t obvious before\n' +
+    '- Key technical facts established\n' +
+    '- Constraints or blockers identified\n' +
+    '- Team conventions and working agreements\n' +
+    '- Goals and milestones discussed\n' +
+    '- Pod status, current focus, and what\'s in progress\n\n' +
+    'Exclude:\n' +
+    '- Greetings, emoji reactions, casual banter\n' +
+    '- Routine standups with no new information ("all good today")\n' +
+    '- One-off questions already resolved in the thread\n' +
+    '- Duplicate or near-duplicate information\n\n' +
+    'Focus on knowledge that would help a new team member understand what this pod was working on, what decisions were made, and the current state.';
+}
+
+function _hvSlackDrawerHTML(src) {
+  var ch = src ? src.channel || '' : '';
+  var ws = src ? src.workspace || '' : '';
+  var prompt = _hvSlackPrompt(ch, ws);
+  var label = src ? (src.name || ('#' + ch)) : 'Slack Channel';
+  return '<div class="hv-desc">Run this prompt in a Claude session that has Slack access (like this one or Adrian). Claude will read the channel and return memories as JSON — paste it below.</div>'+
+    '<div class="hv-section-label">Channel</div>'+
+    '<div class="hv-session-card">'+
+      '<div class="hv-session-name">'+escHTML(label)+'</div>'+
+      (ws ? '<div class="hv-session-meta">'+escHTML(ws)+(ch?' · #'+escHTML(ch):'')+'</div>' : '')+
+    '</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px;">'+
+      '<span class="hv-section-label" style="margin:0">Extraction Prompt</span>'+
+      '<button class="bs-copy-btn" id="hv-slack-copy-btn" onclick="_hvSlackCopyPrompt()">Copy prompt</button>'+
+    '</div>'+
+    '<div class="bs-prompt-wrap" style="max-height:140px;overflow-y:auto;">'+
+      '<div class="bs-prompt-text" id="hv-slack-prompt-text">'+escHTML(prompt)+'</div>'+
+    '</div>'+
+    '<div style="margin-top:14px;">'+
+      '<div class="bs-paste-label">'+
+        '<span>Paste Claude\'s Response</span>'+
+        '<span class="bs-paste-hint">JSON array from Claude</span>'+
+      '</div>'+
+      '<textarea class="form-input" id="hv-slack-paste" style="min-height:110px;resize:vertical;font-family:monospace;font-size:11px;" placeholder=\'[\n  {\n    "type": "decision",\n    "summary": "Pod adopted feature-flag-first for all OCB changes",\n    "project": "OCB",\n    "area": "Engineering process",\n    "importance": "high"\n  }\n]\'></textarea>'+
+      '<div id="hv-slack-paste-err" style="font:400 11px/1.4 -apple-system,sans-serif;color:#f87171;margin-top:5px;min-height:16px;"></div>'+
+    '</div>';
+}
+
+function _hvSlackCopyPrompt() {
+  var src = _hvSlackSourceId ? _bSources.find(function(s){ return s.id === _hvSlackSourceId; }) : null;
+  var text = _hvSlackPrompt(src && src.channel, src && src.workspace);
+  var btn = document.getElementById('hv-slack-copy-btn');
+  function done() { if (btn) { btn.textContent = 'Copied ✓'; setTimeout(function(){ btn.textContent = 'Copy prompt'; }, 1800); } }
+  if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done).catch(function(){ var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }); }
+  else { var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }
+}
+
+function _hvProcessSlack() {
+  var raw = (document.getElementById('hv-slack-paste')||{}).value || '';
+  var errEl = document.getElementById('hv-slack-paste-err');
+  raw = raw.trim();
+  if (!raw) { if (errEl) errEl.textContent = 'Paste Claude\'s JSON response first.'; return; }
+  // Validate JSON before passing as string to _hvParseSessionJSON
+  try {
+    var match = raw.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON array found — make sure Claude returned a [ … ] array');
+    var test = JSON.parse(match[0]);
+    if (!Array.isArray(test)) throw new Error('Expected a JSON array');
+  } catch(e) {
+    if (errEl) errEl.textContent = 'Could not parse JSON: ' + e.message;
+    return;
+  }
+  if (errEl) errEl.textContent = '';
+  // _hvParseSessionJSON expects the raw string and returns the candidates array
+  _hvCandidates = _hvParseSessionJSON(raw);
+  var body = document.getElementById('brain-drawer-body');
+  var footer = document.getElementById('brain-drawer-footer');
+  var title = document.getElementById('brain-drawer-title');
+  if (title) title.textContent = 'Harvest Review';
+  if (body) body.innerHTML = _hvRenderStep2();
+  if (footer) footer.innerHTML =
+    '<button class="btn" onclick="_hvGoSlackBack()">← Back</button>'+
+    '<button class="btn-primary" onclick="_hvCommitHarvest()">Add '+_hvCandidates.filter(function(c){return c.selected;}).length+' to Brain →</button>';
+}
+
+function _hvGoSlackBack() {
+  var src = _hvSlackSourceId ? _bSources.find(function(s){ return s.id === _hvSlackSourceId; }) : null;
+  var body = document.getElementById('brain-drawer-body');
+  var footer = document.getElementById('brain-drawer-footer');
+  var title = document.getElementById('brain-drawer-title');
+  if (title) title.textContent = 'Harvest from Slack';
+  if (body) body.innerHTML = _hvSlackDrawerHTML(src);
+  if (footer) footer.innerHTML =
+    '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+    '<button class="btn-primary" onclick="_hvProcessSlack()">Process →</button>';
+}
+
 // ── Heuristics ─────────────────────────────────────────────────
 function _hvInferType(text) {
   var t = text.toLowerCase();
@@ -4554,12 +5182,12 @@ function _hvRenderStep2() {
 
   var typeColors = { decision:'#06b6d4', fact:'#818cf8', learning:'#f59e0b', constraint:'#f87171', convention:'#4ade80' };
 
-  var rows = _hvCandidates.map(function(c, i) {
+  var rowArr = _hvCandidates.map(function(c, i) {
     var col = typeColors[c.type] || '#64748b';
     var metaParts = [c.project, c.area].filter(Boolean).join(' · ');
     var impLabels = { low:'Low', normal:'Normal', high:'High', critical:'Critical' };
     var impLabel = impLabels[c.importanceLabel] || 'Normal';
-    var dupBadge = c.duplicateOf ? '<div class="hv-dup-badge">⚠ Possible duplicate: "'+escHTML((c.duplicateSummary||'').slice(0,60))+(c.duplicateSummary&&c.duplicateSummary.length>60?'…':'')+'"</div>' : '';
+    var dupBadge = c.duplicateOf ? '<div class="hv-dup-badge"><span style="flex-shrink:0">⚠</span><span>Possible duplicate: "'+escHTML((c.duplicateSummary||'').slice(0,60))+(c.duplicateSummary&&c.duplicateSummary.length>60?'…':'')+'"</span></div>' : '';
 
     var editFields = '';
     if (c.editing) {
@@ -4602,8 +5230,27 @@ function _hvRenderStep2() {
       '</div>'+
       editFields+
     '</div>';
-  }).join('');
+  }); // keep as array — do NOT .join() here
 
+  var cleanRows = rowArr.filter(function(_, i){ return !_hvCandidates[i].duplicateOf; }).join('');
+  var dups      = _hvCandidates.filter(function(c){ return !!c.duplicateOf; });
+
+  var dupSection = '';
+  if (dups.length) {
+    var dupRows = rowArr.filter(function(_, i){ return !!_hvCandidates[i].duplicateOf; }).join('');
+    dupSection =
+      '<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">'+
+        '<div style="font:600 10px/1 -apple-system,sans-serif;color:var(--amber);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">'+
+          '⚠ Possible duplicates — '+dups.length+' skipped'+
+        '</div>'+
+        '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-dim);margin-bottom:12px;">'+
+          'These closely match existing memories and were deselected. Check the box to save anyway.'+
+        '</div>'+
+        '<div class="hv-candidates">'+dupRows+'</div>'+
+      '</div>';
+  }
+
+  var clean = _hvCandidates.filter(function(c){ return !c.duplicateOf; });
   var accessBar = '<div class="hv-access-bar">'+
     '<span class="hv-access-label">Access</span>'+
     '<label class="hv-access-opt"><input type="radio" name="hv-access" value="private" '+(_hvBatchAccess==='private'?'checked':'')+' onchange="_hvBatchAccess=\'private\'"> <span>Private</span></label>'+
@@ -4613,12 +5260,13 @@ function _hvRenderStep2() {
 
   return '<div class="hv-summary-bar">'+
     '<div>'+
-      '<div class="hv-found-label">'+_hvCandidates.length+' candidate memor'+(+_hvCandidates.length===1?'y':'ies')+' found</div>'+
+      '<div class="hv-found-label">'+clean.length+' new memor'+(clean.length===1?'y':'ies')+' found'+(dups.length?' · '+dups.length+' duplicate'+(dups.length===1?'':'s')+' skipped':'')+' </div>'+
       '<div class="hv-sel-count" id="hv-sel-count">'+_hvSelCount()+' of '+_hvCandidates.length+' selected</div>'+
     '</div>'+
     '<button class="hv-sel-all" onclick="_hvToggleAll()">Select all</button>'+
   '</div>'+
-  '<div class="hv-candidates">'+rows+'</div>'+
+  '<div class="hv-candidates">'+cleanRows+'</div>'+
+  dupSection+
   accessBar;
 }
 
@@ -4729,7 +5377,7 @@ function _hvParseSessionJSON(raw) {
     var dup = _hvDuplicateCheck(item.summary || '');
     return {
       id: 'hvc-' + i,
-      selected: true,
+      selected: !dup, // auto-deselect duplicates
       editing: false,
       summary: (item.summary || '').trim(),
       type: item.type || 'fact',
@@ -4896,17 +5544,23 @@ function _brainDrawerMemoryHTML() {
 var _BS_EXTRACT_PROMPT = 'Analyze this session and extract durable knowledge worth storing in World Brain.\n\nReturn ONLY a JSON array:\n[\n  {\n    "type": "decision|learning|fact|constraint|convention",\n    "summary": "one clear sentence of durable knowledge",\n    "project": "project name if known, otherwise empty string",\n    "area": "component or area if known, otherwise empty string",\n    "importance": "low|normal|high|critical"\n  }\n]\n\nInclude:\n- Architectural and product decisions made\n- Things learned that were not obvious before\n- Technical facts established (ports, file paths, APIs, patterns)\n- Constraints identified (must / must not)\n- Conventions and standards established\n\nExclude:\n- Greetings or conversational filler\n- Temporary debugging or status messages\n- Routine shell commands and outputs\n- Speculative ideas that were not accepted\n- Information that was already known at session start';
 
 function _brainDrawerSourceHTML() {
-  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
     '<div class="form-group" style="margin:0"><label class="form-label">Type</label>'+
       '<select class="form-select" id="bs-type" onchange="brainSourceTypeChanged(this.value)">'+
         '<option value="repository">GitHub Repository</option>'+
         '<option value="folder">Local Folder</option>'+
         '<option value="file">File / Document</option>'+
         '<option value="api-spec">API Spec</option>'+
+        '<option value="slack">Slack Channel</option>'+
+        '<option value="figma">Figma File</option>'+
         '<option value="claude-session">Claude Session</option>'+
       '</select></div>'+
     '<div class="form-group" style="margin:0"><label class="form-label">Name</label>'+
-      '<input class="form-input" id="bs-name" placeholder="e.g. project-adrian"></div>'+
+      '<input class="form-input" id="bs-name" placeholder="e.g. pod-ios-magikarp"></div>'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:14px;">'+
+    '<label class="form-label">Description <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>'+
+    '<input class="form-input" id="bs-desc" placeholder="What is this source and why does it matter?">'+
   '</div>'+
   '<div id="bs-type-fields">'+_bsStdFields()+'</div>';
 }
@@ -4944,8 +5598,9 @@ function _bsStdFields() {
       '</label>'+
     '</div>'+
   '</div>'+
-  '<div class="brain-source-notice">'+
-    'ℹ Share knowledge, not source access. Peers can receive permitted Brain context derived from this source. This does not grant access to the underlying repository or files.'+
+  '<div class="brain-source-notice" style="display:flex;gap:8px;align-items:flex-start;">'+
+    '<span style="flex-shrink:0;font:600 10px/1 -apple-system,sans-serif;color:#06b6d4;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.25);border-radius:4px;padding:2px 5px;margin-top:1px;">INFO</span>'+
+    '<span>Share knowledge, not source access. Peers receive permitted Brain context derived from this source — not the raw files.</span>'+
   '</div>';
 }
 
@@ -4978,6 +5633,40 @@ function _bsClaudeSessionFields() {
   '</div>';
 }
 
+function _bsSlackFields() {
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Workspace</label>'+
+      '<input class="form-input" id="bs-slack-workspace" placeholder="e.g. ordermentum"></div>'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Channel</label>'+
+      '<input class="form-input" id="bs-slack-channel" placeholder="e.g. pod-ios-magikarp"></div>'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:14px;">'+
+    '<label class="form-label">Archive period <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>'+
+    '<input class="form-input" id="bs-slack-period" placeholder="e.g. Jan 2025 – Sep 2026">'+
+    '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-dim);margin-top:5px;">Register the channel, then use ⚡ Harvest to import its history as brain memories.</div>'+
+  '</div>'+
+  '<div class="brain-source-notice" style="display:flex;gap:8px;align-items:flex-start;">'+
+    '<span style="flex-shrink:0;font:600 10px/1 -apple-system,sans-serif;color:#06b6d4;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.25);border-radius:4px;padding:2px 5px;margin-top:1px;">INFO</span>'+
+    '<span>Share knowledge, not source access. Peers receive permitted Brain context derived from this source — not the raw messages.</span>'+
+  '</div>';
+}
+
+function _bsFigmaFields() {
+  return '<div class="form-group" style="margin-bottom:12px;">'+
+    '<label class="form-label">Figma File URL</label>'+
+    '<input class="form-input" id="bs-path" placeholder="https://figma.com/file/...">'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:14px;">'+
+    '<label class="form-label">Pages to include <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>'+
+    '<input class="form-input" id="bs-figma-pages" placeholder="e.g. Components, Flows, Archive">'+
+    '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-dim);margin-top:5px;">Comma-separated page names, or blank for all pages.</div>'+
+  '</div>'+
+  '<div class="brain-source-notice" style="display:flex;gap:8px;align-items:flex-start;">'+
+    '<span style="flex-shrink:0;font:600 10px/1 -apple-system,sans-serif;color:#06b6d4;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.25);border-radius:4px;padding:2px 5px;margin-top:1px;">INFO</span>'+
+    '<span>Share knowledge, not source access. Peers receive permitted Brain context derived from this source — not the raw design files.</span>'+
+  '</div>';
+}
+
 function brainSourceTypeChanged(val) {
   var fieldsEl = document.getElementById('bs-type-fields');
   var footer   = document.getElementById('brain-drawer-footer');
@@ -4987,6 +5676,16 @@ function brainSourceTypeChanged(val) {
     if (footer) footer.innerHTML =
       '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
       '<button class="btn-primary" onclick="brainAddSource()">Process Session →</button>';
+  } else if (val === 'slack') {
+    fieldsEl.innerHTML = _bsSlackFields();
+    if (footer) footer.innerHTML =
+      '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+      '<button class="btn-primary" onclick="brainAddSource()">Add Source →</button>';
+  } else if (val === 'figma') {
+    fieldsEl.innerHTML = _bsFigmaFields();
+    if (footer) footer.innerHTML =
+      '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+      '<button class="btn-primary" onclick="brainAddSource()">Add Source →</button>';
   } else {
     fieldsEl.innerHTML = _bsStdFields();
     if (footer) footer.innerHTML =
@@ -5038,10 +5737,19 @@ function brainOpenDrawer(mode) {
     _hvStep = 1;
     _hvCandidates = [];
     _hvBatchAccess = 'private';
+    _hvSlackSourceId = null;
     title.textContent = 'Harvest Session';
     body.innerHTML = _hvRenderStep1();
     footer.innerHTML = '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
                        '<button class="btn-primary" onclick="_hvGoAnalyze()">Analyze Session →</button>';
+  } else if (mode === 'harvest-slack') {
+    _hvCandidates = [];
+    _hvBatchAccess = 'private';
+    var slackSrc = _hvSlackSourceId ? _bSources.find(function(s){ return s.id === _hvSlackSourceId; }) : null;
+    title.textContent = 'Harvest from Slack';
+    body.innerHTML = _hvSlackDrawerHTML(slackSrc);
+    footer.innerHTML = '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+                       '<button class="btn-primary" onclick="_hvProcessSlack()">Process →</button>';
   } else if (mode === 'source') {
     title.textContent = 'Add Source';
     body.innerHTML = _brainDrawerSourceHTML();
@@ -5183,28 +5891,43 @@ async function brainAddMemory() {
 function brainAddSource() {
   var type = (document.getElementById('bs-type')||{}).value || 'repository';
   var name = (document.getElementById('bs-name')||{}).value.trim();
+  var desc = (document.getElementById('bs-desc')||{}).value.trim();
 
   if (type === 'claude-session') {
     return _hvProcessClaudeSession(name);
   }
 
-  var path = (document.getElementById('bs-path')||{}).value.trim();
-  if (!name || !path) return;
-  var syncVal = (document.querySelector('input[name="bs-sync"]:checked')||{}).value || 'manual';
-  var includePaths = ((document.getElementById('bs-include')||{}).value||'').split('\n').map(function(s){return s.trim();}).filter(Boolean);
-  var excludePaths = ((document.getElementById('bs-exclude')||{}).value||'').split('\n').map(function(s){return s.trim();}).filter(Boolean);
-  var src = {
-    id: 'src-'+Date.now(),
-    type: type,
-    name: name || path.split('/').pop() || path,
-    path: path,
-    branch: (document.getElementById('bs-branch')||{}).value.trim() || 'main',
-    includePaths: includePaths,
-    excludePaths: excludePaths,
-    syncMode: syncVal,
-    indexed: false, lastIndexed: null,
-    commit: null, memCount: 0, sharedWith: []
-  };
+  var src = { id: 'src-'+Date.now(), type: type, name: name, description: desc, indexed: false, lastIndexed: null, memCount: 0, sharedWith: [] };
+
+  if (type === 'slack') {
+    var workspace = (document.getElementById('bs-slack-workspace')||{}).value.trim();
+    var channel   = (document.getElementById('bs-slack-channel')||{}).value.trim().replace(/^#/,'');
+    var period    = (document.getElementById('bs-slack-period')||{}).value.trim();
+    if (!name && channel) src.name = '#' + channel;
+    if (!src.name) return;
+    src.workspace = workspace;
+    src.channel   = channel;
+    src.archivePeriod = period;
+    src.path = workspace ? workspace + '/#' + channel : '#' + channel;
+  } else if (type === 'figma') {
+    var figmaUrl = (document.getElementById('bs-path')||{}).value.trim();
+    var pages    = (document.getElementById('bs-figma-pages')||{}).value.trim();
+    if (!src.name || !figmaUrl) return;
+    src.path = figmaUrl;
+    src.pages = pages ? pages.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
+  } else {
+    var path = (document.getElementById('bs-path')||{}).value.trim();
+    if (!name || !path) return;
+    var syncVal = (document.querySelector('input[name="bs-sync"]:checked')||{}).value || 'manual';
+    src.name = name || path.split('/').pop() || path;
+    src.path = path;
+    src.branch = (document.getElementById('bs-branch')||{}).value.trim() || 'main';
+    src.includePaths = ((document.getElementById('bs-include')||{}).value||'').split('\n').map(function(s){return s.trim();}).filter(Boolean);
+    src.excludePaths = ((document.getElementById('bs-exclude')||{}).value||'').split('\n').map(function(s){return s.trim();}).filter(Boolean);
+    src.syncMode = syncVal;
+    src.commit = null;
+  }
+
   _bSources.push(src);
   fetch('/worldlink/local/sources', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: _bSources }) }).catch(function(){});
   brainCloseDrawer();
@@ -5425,10 +6148,10 @@ function renderBrainSources() {
   var el = document.getElementById('brain-sources-list');
   if (!el) return;
   if (!_bSources.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◈</div>No knowledge sources connected</div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">⎇</div>No knowledge sources connected</div>';
     return;
   }
-  var ico = { repository:'◈', folder:'◫', file:'◻', 'api-spec':'≋' };
+  var ico = { repository:'⎇', folder:'◫', file:'◻', 'api-spec':'≋', slack:'#', figma:'◈', 'claude-session':'⚡' };
   el.innerHTML = _bSources.map(function(s) {
     var sharedCount = (s.sharedWith||[]).length;
     var sharedPeerNames = (s.sharedWith||[]).map(function(wid) {
@@ -5441,11 +6164,13 @@ function renderBrainSources() {
     var indexedBadge = s.indexed
       ? '<span style="font:500 11px/1 -apple-system,sans-serif;color:#4ade80;">● Indexed</span>'
       : '<span style="font:500 11px/1 -apple-system,sans-serif;color:var(--text-dim);">Not indexed</span>';
+    var descLine = s.description ? '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-dim);margin-top:2px;">'+escHTML(s.description)+'</div>' : '';
     return '<div class="brain-source-card" onclick="brainShowSourceDetail(\''+escAttr(s.id)+'\')">'+
-      '<div style="font-size:18px;color:var(--text-muted);flex-shrink:0;">'+(ico[s.type]||'◈')+'</div>'+
+      '<div style="font-size:18px;color:var(--text-muted);flex-shrink:0;font-family:monospace;">'+(ico[s.type]||'◈')+'</div>'+
       '<div style="flex:1;min-width:0;">'+
         '<div class="brain-source-name">'+escHTML(s.name)+'</div>'+
-        '<div class="brain-source-path">'+escHTML(s.path)+'</div>'+
+        '<div class="brain-source-path">'+escHTML(s.path||'')+'</div>'+
+        descLine+
         '<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;">'+indexedBadge+shareBadge+'</div>'+
       '</div>'+
       '<span style="font-size:14px;color:var(--text-dim);">›</span>'+
@@ -5461,7 +6186,7 @@ function brainShowSourceDetail(id) {
   var footer = document.getElementById('brain-drawer-footer');
   if (!body) return;
 
-  var ico = { repository:'◈', folder:'◫', file:'◻', 'api-spec':'≋' };
+  var ico = { repository:'⎇', folder:'◫', file:'◻', 'api-spec':'≋', slack:'#', figma:'◈', 'claude-session':'⚡' };
   var peers = (_state.peers||[]).filter(function(p){ return p.status==='online'; });
   var peerChecks = peers.length ? peers.map(function(p) {
     var checked = (s.sharedWith||[]).indexOf(p.worldId) > -1;
@@ -5476,10 +6201,11 @@ function brainShowSourceDetail(id) {
   if (title) title.textContent = 'Source Detail';
   body.innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'+
-      '<span style="font-size:22px;color:var(--text-muted)">'+(ico[s.type]||'◈')+'</span>'+
+      '<span style="font-size:22px;color:var(--text-muted);font-family:monospace">'+(ico[s.type]||'◈')+'</span>'+
       '<div>'+
         '<div style="font:700 14px/1 -apple-system,sans-serif;color:var(--text-strong)">'+escHTML(s.name)+'</div>'+
-        '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-muted);margin-top:3px;word-break:break-all">'+escHTML(s.path)+'</div>'+
+        '<div style="font:400 11px/1.4 -apple-system,sans-serif;color:var(--text-muted);margin-top:3px;word-break:break-all">'+escHTML(s.path||'')+'</div>'+
+        (s.description ? '<div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-dim);margin-top:5px;">'+escHTML(s.description)+'</div>' : '')+
       '</div>'+
     '</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:16px;">'+
@@ -5491,13 +6217,18 @@ function brainShowSourceDetail(id) {
     '<div class="form-group" style="margin-bottom:0">'+
       '<label class="form-label">Share knowledge with</label>'+
       '<div class="brain-peer-checks" id="bds-peer-checks">'+peerChecks+'</div>'+
-      '<div style="font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-dim);margin-top:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs)">'+
-        'ℹ Share knowledge, not source access. Peers receive permitted Brain context derived from this source.'+
+      '<div style="display:flex;gap:8px;align-items:flex-start;font:400 11px/1.5 -apple-system,sans-serif;color:var(--text-dim);margin-top:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs)">'+
+        '<span style="flex-shrink:0;font:600 10px/1 -apple-system,sans-serif;color:#06b6d4;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.25);border-radius:4px;padding:2px 5px;margin-top:1px;">INFO</span>'+
+        '<span>Share knowledge, not source access. Peers receive permitted Brain context derived from this source — not the raw files.</span>'+
       '</div>'+
     '</div>';
 
+  var harvestBtn = s.type === 'slack'
+    ? '<button class="btn" onclick="_hvHarvestFromSource(\''+escAttr(id)+'\')">⚡ Harvest</button>'
+    : '';
   if (footer) footer.innerHTML =
     '<button class="btn" style="color:#f87171;border-color:#f87171;margin-right:auto" onclick="brainDeleteSource(\''+escAttr(id)+'\')">Delete</button>'+
+    harvestBtn+
     '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
     '<button class="btn-primary" onclick="brainSaveSource(\''+escAttr(id)+'\')">Save</button>';
 
@@ -5545,12 +6276,18 @@ function renderBrainAccess() {
     var sharedMems = (_state.brain||[]).filter(function(r){ return r.sharedWith && r.sharedWith.indexOf(p.worldId)>-1; }).length;
     return '<div class="brain-access-card">'+
       '<div class="brain-access-peer-row">'+
-        '<div style="width:36px;height:36px;border-radius:10px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);display:flex;align-items:center;justify-content:center;font:700 14px/1 -apple-system,sans-serif;color:#06b6d4;flex-shrink:0;">'+escHTML((p.name||'?').charAt(0).toUpperCase())+'</div>'+
-        '<div><div class="brain-access-peer-name" style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:'+dot+';flex-shrink:0;display:inline-block;"></span>'+escHTML(p.name||p.worldId)+'</div>'+
+        '<div style="width:36px;height:36px;border-radius:10px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);display:flex;align-items:center;justify-content:center;font:700 14px/1 -apple-system,sans-serif;color:#06b6d4;flex-shrink:0;">'+escHTML((p.worldName||p.name||'?').charAt(0).toUpperCase())+'</div>'+
+        '<div><div class="brain-access-peer-name" style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:'+dot+';flex-shrink:0;display:inline-block;"></span>'+escHTML(p.worldName||p.name||p.worldId)+'</div>'+
         '<div class="brain-access-peer-sub">'+escHTML(p.status)+' · '+sharedMems+' memor'+(sharedMems===1?'y':'ies')+' shared · '+sourcesAllowed+' source'+(sourcesAllowed===1?'':'s')+' allowed</div></div>'+
       '</div>'+
-      '<div class="brain-access-perm"><label class="brain-access-perm"><input type="checkbox" '+(sharedMems>0?'checked':'')+' disabled> Receives shared memory context</label></div>'+
-      '<div class="brain-access-perm"><label class="brain-access-perm"><input type="checkbox" '+(sourcesAllowed>0?'checked':'')+' disabled> Receives knowledge derived from sources</label></div>'+
+      '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">'+
+        (sharedMems>0
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 11px/1 -apple-system,sans-serif;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:20px;padding:3px 10px;">◉ Memory context</span>'
+          : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 11px/1 -apple-system,sans-serif;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;">○ No memories shared</span>')+
+        (sourcesAllowed>0
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 11px/1 -apple-system,sans-serif;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:20px;padding:3px 10px;">◉ Source knowledge</span>'
+          : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 11px/1 -apple-system,sans-serif;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;">○ No sources shared</span>')+
+      '</div>'+
     '</div>';
   }).join('');
 }
@@ -5626,18 +6363,41 @@ async function deleteConversation(worldId) {
 }
 
 // ── Render Audit full page ────────────────────────────────────────
+var _auditFilter = 'all';
+function filterAudit(filter, btn) {
+  _auditFilter = filter;
+  document.querySelectorAll('#audit-filter-tabs .filter-tab').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderAuditFull();
+}
 function renderAuditFull() {
-  const el = document.getElementById('audit-full-list');
-  const evts = [..._state.audit].reverse();
-  if (!evts.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">☰</div>No events</div>';
-    return;
+  var el = document.getElementById('audit-full-list');
+  var evts = [..._state.audit].reverse();
+  if (_auditFilter !== 'all') {
+    evts = evts.filter(function(e){
+      if (_auditFilter === 'connection') return e.type && e.type.startsWith('connection');
+      if (_auditFilter === 'task')       return e.type && e.type.startsWith('task');
+      if (_auditFilter === 'error')      return e.type && (e.type.includes('error') || e.type.includes('denied') || e.type.includes('fail'));
+      return true;
+    });
   }
-  el.innerHTML = evts.map(e => `<div class="audit-row">
-    <span class="audit-type">${escHTML(e.type)}</span>
-    <span class="audit-detail">${escHTML(e.taskId || e.sourceWorld || e.targetWorld || e.worldId || e.fromWorld || '')}</span>
-    <span class="audit-time">${fmtTs(e._ts || e.timestamp)}</span>
-  </div>`).join('');
+  if (!evts.length) { el.innerHTML = '<div class="empty-state">No events</div>'; return; }
+  var typeColor = function(t) {
+    if (!t) return 'var(--text-dim)';
+    if (t.startsWith('connection')) return '#06b6d4';
+    if (t.startsWith('task')) return '#f59e0b';
+    if (t.includes('error') || t.includes('denied') || t.includes('fail')) return '#ef4444';
+    return 'var(--text-muted)';
+  };
+  el.innerHTML = evts.map(function(e) {
+    var col = typeColor(e.type);
+    var detail = e.taskId || e.sourceWorld || e.targetWorld || e.worldId || e.fromWorld || '';
+    return '<div class="audit-row">'
+      + '<span class="audit-type" style="color:' + col + ';border-color:' + col + '22;">' + escHTML(e.type || '') + '</span>'
+      + (detail ? '<span class="audit-detail">' + escHTML(detail) + '</span>' : '')
+      + '<span class="audit-time">' + fmtTs(e._ts || e.timestamp) + '</span>'
+      + '</div>';
+  }).join('');
 }
 
 // ── Render Settings ───────────────────────────────────────────────
@@ -5645,6 +6405,7 @@ var _CAP_LABELS = { message:'Message Exchange', 'claude-task':'AI Task Execution
 
 function renderSettings() {
   document.getElementById('settings-name').value = _state.worldName || '';
+  renderOfflineStatus();
   var capsEl = document.getElementById('settings-caps');
   var caps = _state.capabilitiesConfig || [];
   if (caps.length) {
@@ -5686,6 +6447,109 @@ function onAiBackendTypeChange(type) {
   var openaiEl = document.getElementById('ai-backend-openai');
   if (ollamaEl) ollamaEl.style.display = type === 'ollama' ? '' : 'none';
   if (openaiEl) openaiEl.style.display = type === 'openai' ? '' : 'none';
+}
+
+// ── Offline toggle ────────────────────────────────────────────────
+var _offlineUntil = 0;
+var _offlineCountdownTimer = null;
+
+// _offlineEditing: true while the user is actively setting the toggle, preventing
+// the 5-second refreshAll loop from overwriting the UI before the API responds.
+var _offlineEditing = false;
+
+async function renderOfflineStatus() {
+  if (_offlineEditing) return; // don't stomp user interaction
+  try {
+    var res = await fetch('/worldlink/local/status');
+    if (!res.ok) return;
+    var data = await res.json();
+    _offlineUntil = data.offlineUntil || 0;
+    _applyOfflineUI(_offlineUntil > Date.now());
+  } catch(e) {}
+}
+
+function _applyOfflineUI(isOffline) {
+  var tog = document.getElementById('settings-offline-toggle');
+  var durEl = document.getElementById('settings-offline-duration');
+  var countEl = document.getElementById('settings-offline-countdown');
+  var applyBtn = document.getElementById('settings-offline-btn');
+  var onlineBtn = document.getElementById('settings-online-btn');
+  if (!tog) return;
+  if (isOffline) {
+    tog.checked = true;
+    if (durEl) durEl.style.display = '';
+    if (applyBtn) applyBtn.style.display = 'none';
+    if (onlineBtn) onlineBtn.style.display = '';
+    if (countEl) {
+      countEl.style.display = '';
+      _startOfflineCountdown(countEl);
+    }
+  } else {
+    tog.checked = false;
+    if (durEl) durEl.style.display = 'none';
+    if (countEl) { countEl.style.display = 'none'; _stopOfflineCountdown(); }
+    if (applyBtn) applyBtn.style.display = 'none';
+    if (onlineBtn) onlineBtn.style.display = 'none';
+  }
+}
+
+async function onOfflineToggleChange(checked) {
+  _offlineEditing = true;
+  if (checked) {
+    // Go offline immediately with selected duration (default 1h)
+    await applyOfflineStatus();
+  } else {
+    await goOnline();
+  }
+  _offlineEditing = false;
+}
+
+async function applyOfflineStatus() {
+  var durSel = document.getElementById('settings-offline-dur');
+  var durationMs = durSel ? parseInt(durSel.value) : 3600000;
+  try {
+    var res = await fetch('/worldlink/local/set-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offline: true, durationMs: durationMs || 0 }),
+    });
+    var data = await res.json();
+    _offlineUntil = data.offlineUntil || 0;
+    _applyOfflineUI(true);
+  } catch(e) {}
+}
+
+async function goOnline() {
+  try {
+    await fetch('/worldlink/local/set-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offline: false }),
+    });
+    _offlineUntil = 0;
+    _applyOfflineUI(false);
+  } catch(e) {}
+}
+
+function _startOfflineCountdown(el) {
+  _stopOfflineCountdown();
+  function tick() {
+    var rem = _offlineUntil - Date.now();
+    if (!_offlineUntil || rem <= 0) {
+      el.textContent = 'Will go online shortly…';
+      return;
+    }
+    var h = Math.floor(rem / 3600000);
+    var m = Math.floor((rem % 3600000) / 60000);
+    var s = Math.floor((rem % 60000) / 1000);
+    el.textContent = 'Offline for ' + (h ? h + 'h ' : '') + (m ? m + 'm ' : '') + s + 's';
+  }
+  tick();
+  _offlineCountdownTimer = setInterval(tick, 1000);
+}
+
+function _stopOfflineCountdown() {
+  if (_offlineCountdownTimer) { clearInterval(_offlineCountdownTimer); _offlineCountdownTimer = null; }
 }
 
 async function saveAiBackend() {
@@ -5981,11 +6845,29 @@ function updateMsgBadge() {
 }
 
 // ── Task badge + seen tracking ────────────────────────────────────
-var _seenTaskIds = new Set();
+// ── Persistent read/seen state (survives refresh) ─────────────────
+var _LS_READ = 'wl-read-msg-ids';
+var _LS_SEEN = 'wl-seen-task-ids';
+
+function _lsReadIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(_LS_READ) || '[]')); } catch { return new Set(); }
+}
+function _lsSeenIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(_LS_SEEN) || '[]')); } catch { return new Set(); }
+}
+function _lsPersistRead(id) {
+  try { var s = _lsReadIds(); s.add(id); localStorage.setItem(_LS_READ, JSON.stringify([...s])); } catch {}
+}
+function _lsPersistSeen(id) {
+  try { var s = _lsSeenIds(); s.add(id); localStorage.setItem(_LS_SEEN, JSON.stringify([...s])); } catch {}
+}
+
+var _seenTaskIds = _lsSeenIds();
 
 function updateTaskBadge() {
+  var seen = _lsSeenIds();
   var unseen = _state.tasks.filter(function(t) {
-    return t.sourceWorld && !_seenTaskIds.has(t.taskId);
+    return t.sourceWorld && !seen.has(t.taskId);
   }).length;
   var badge = document.getElementById('task-badge');
   if (!badge) return;
@@ -5995,7 +6877,7 @@ function updateTaskBadge() {
 
 function _markTasksSeen(worldId) {
   _state.tasks.forEach(function(t) {
-    if (!worldId || t.sourceWorld === worldId) _seenTaskIds.add(t.taskId);
+    if (!worldId || t.sourceWorld === worldId) { _seenTaskIds.add(t.taskId); _lsPersistSeen(t.taskId); }
   });
   updateTaskBadge();
   _updateWorldLabelAlerts();
@@ -6057,7 +6939,12 @@ async function loadBrain() {
 }
 
 async function refreshAll() {
+  var _refreshBtn = document.getElementById('refresh-btn');
+  if (_refreshBtn) _refreshBtn.classList.add('loading');
   try {
+    // Remember which page the user is on so we can restore it after re-rendering
+    const _activePage = document.querySelector('.nav-item.active')?.dataset?.page || 'overview';
+
     // Snapshot prev state for change detection
     const prevMsgs  = _state.messages.slice();
     const prevTasks = _state.tasks.slice();
@@ -6080,9 +6967,9 @@ async function refreshAll() {
     _state.brain = brainRes.records || [];
     _bSources = sourcesRes.sources || _bSources;
 
-    // Merge messages — preserve read status
+    // Merge messages — restore read status from localStorage (survives refresh)
     const newMsgs = msgsRes.messages || [];
-    const readIds = new Set(_state.messages.filter(m => m.read).map(m => m.id));
+    const readIds = _lsReadIds();
     _state.messages = newMsgs.map(m => ({ ...m, read: readIds.has(m.id) }));
 
     // Update world ID + name from peers endpoint (includes own identity)
@@ -6108,8 +6995,8 @@ async function refreshAll() {
     _wCheckNewMessages(prevMsgs, _state.messages);
     _wCheckTaskChanges(prevTasks, _state.tasks);
 
-    // Sync Three.js world scene
-    syncWorldScene(_state.worldName, _state.peers);
+    // Sync Three.js world scene — pass local offline flag so island/label reflect it immediately
+    syncWorldScene(_state.worldName, _state.peers, peersRes.localOffline ? 'offline' : 'online');
 
     // Refresh session drawer if open
     if (_sessionPeer) {
@@ -6134,8 +7021,22 @@ async function refreshAll() {
     _updateWorldLabelAlerts();
     const _upEl = document.getElementById('my-uptime'); if (_upEl) _upEl.textContent = uptime();
 
+    // Restore active page — render functions must not change the visible page
+    if (_activePage) {
+      document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+      document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+      var _restorePageEl = document.getElementById('page-' + _activePage);
+      if (_restorePageEl) _restorePageEl.classList.add('active');
+      var _restoreNavEl = document.querySelector('.nav-item[data-page="' + _activePage + '"]');
+      if (_restoreNavEl) _restoreNavEl.classList.add('active');
+      var _restoreContent = document.querySelector('.content');
+      if (_restoreContent) _restoreContent.classList.toggle('content-spatial', _activePage === 'overview');
+    }
+
   } catch(e) {
     console.error('Refresh failed:', e);
+  } finally {
+    if (_refreshBtn) _refreshBtn.classList.remove('loading');
   }
 }
 
