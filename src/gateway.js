@@ -692,15 +692,15 @@ function createGateway(opts = {}) {
       // POST /worldlink/local/send-message  — no auth, local status page → outbound DM
       if (req.method === 'POST' && req.url === '/worldlink/local/send-message') {
         const b = await body();
-        const { targetWorldId, text } = b;
-        if (!targetWorldId || !text) { json(400, { error: 'targetWorldId and text required' }); return; }
+        const { targetWorldId, text, attachments } = b;
+        if (!targetWorldId || (!text && !(attachments && attachments.length))) { json(400, { error: 'targetWorldId and text or attachments required' }); return; }
         const peer = peers.get(targetWorldId);
         if (!peer?.sessionToken || !peer.host) { json(404, { error: `Not connected to: ${targetWorldId}` }); return; }
         try {
           let activePeer = peer;
           let resp = await wlFetch(`${activePeer.host}/worldlink/message`, {
             method: 'POST', token: activePeer.sessionToken,
-            body: { text, fromWorld: wlId?.worldId },
+            body: { text: text || '', fromWorld: wlId?.worldId, attachments: attachments || [] },
           });
           // Auto-reconnect on expired/invalid session and retry once
           if (resp.error && /invalid|expired|session/i.test(resp.error)) {
@@ -711,7 +711,7 @@ function createGateway(opts = {}) {
               if (activePeer?.sessionToken) {
                 resp = await wlFetch(`${activePeer.host}/worldlink/message`, {
                   method: 'POST', token: activePeer.sessionToken,
-                  body: { text, fromWorld: wlId?.worldId },
+                  body: { text: text || '', fromWorld: wlId?.worldId, attachments: attachments || [] },
                 });
               }
             } catch (reconnErr) {
