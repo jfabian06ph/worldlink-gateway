@@ -233,16 +233,27 @@ function createGateway(opts = {}) {
         if (timestamp && Math.abs(Date.now() - timestamp * 1000) > 300_000) { json(400, { error: 'Request expired' }); return; }
         if (signature && !identity.verify(b, signature, sourcePublicKey)) { json(401, { error: 'Invalid signature' }); return; }
 
+        // Resolve localhost sourceHost to the actual remote IP so cross-machine reverse-connect works
+        let resolvedHost = sourceHost || null;
+        if (resolvedHost && /localhost|127\.0\.0\.1/.test(resolvedHost)) {
+          const remoteIp = (req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
+          if (remoteIp && remoteIp !== '127.0.0.1' && remoteIp !== '::1') {
+            const portMatch = resolvedHost.match(/:(\d+)(?:\/.*)?$/);
+            resolvedHost = `http://${remoteIp}${portMatch ? ':' + portMatch[1] : ''}`;
+            console.log(`  [WorldLink] Resolved sourceHost: ${sourceHost} → ${resolvedHost}`);
+          }
+        }
+
         if (disabledPeers.has(sourceWorldId)) { json(403, { error: 'Connection paused by host' }); return; }
         const trusted   = (wlCfg.trustedPeers || []).find(p => p.worldId === sourceWorldId);
         const available = (wlCfg.capabilities || []).filter(c => !requestedCapabilities.length || requestedCapabilities.includes(c.id));
         if (!available.length && !trusted) { json(403, { error: 'No matching capabilities for this world' }); return; }
 
         const sessionToken = `wl_${crypto.randomBytes(24).toString('hex')}`;
-        const expiresAt    = Math.floor(Date.now() / 1000) + 3600;
+        const expiresAt    = Math.floor(Date.now() / 1000) + 86400; // 24 hours
         const challenge    = crypto.randomBytes(32).toString('hex');
         sessions.set(sessionToken, {
-          worldId: sourceWorldId, publicKey: sourcePublicKey, host: sourceHost || null,
+          worldId: sourceWorldId, publicKey: sourcePublicKey, host: resolvedHost,
           grantedCapabilities: available.map(c => c.id),
           trusted: !!trusted, expiresAt, challenge, confirmed: !!trusted,
         });
@@ -274,8 +285,10 @@ function createGateway(opts = {}) {
         peers.set(sourceWorldId, { ...existing, status: 'online', inboundToken: sessionToken, host: s.host || null, lastSeen: Date.now() });
         audit.write({ type: 'connection.established', sourceWorld: sourceWorldId, timestamp: Math.floor(Date.now() / 1000) });
         json(200, { confirmed: true, sessionToken });
-        // Auto-reverse-connect so we get a valid outbound sessionToken for messaging (only if we don't have one yet)
-        if (s.host && !peers.get(sourceWorldId)?.sessionToken) {
+        // Auto-reverse-connect so we get a valid outbound sessionToken for messaging.
+        // Always reconnect — the peer just confirmed a fresh inbound session, meaning their
+        // sessions may have been wiped (e.g. restart), so our stored outbound token is likely stale.
+        if (s.host) {
           setTimeout(() => initiateConnection(s.host).catch(() => {}), 500);
         }
         return;
@@ -399,15 +412,30 @@ function createGateway(opts = {}) {
       if (req.method === 'POST' && req.url === '/worldlink/request') {
         const b = await body();
         const { targetWorldId, capability, prompt, sharedContext, attachments, conversationId } = b;
-        const peer = peers.get(targetWorldId);
+        let peer = peers.get(targetWorldId);
         if (!peer?.sessionToken) { json(404, { error: `Not connected to: ${targetWorldId}` }); return; }
         const cfg = (wlCfg.trustedPeers || []).find(p => p.worldId === targetWorldId);
         if (!cfg?.host && !peer.host) { json(404, { error: 'No host for this peer' }); return; }
         try {
-          const result = await wlFetch(`${peer.host || cfg.host}/worldlink/task`, {
+          let result = await wlFetch(`${peer.host || cfg.host}/worldlink/task`, {
             method: 'POST', token: peer.sessionToken,
             body: { capability, task: { prompt, sharedContext, attachments, conversationId } },
           });
+          // Auto-reconnect on expired/invalid session and retry once
+          if (result.error && /invalid|expired|session/i.test(result.error)) {
+            console.log(`  [WorldLink] Session expired for ${targetWorldId}, reconnecting...`);
+            try {
+              await initiateConnection(peer.host || cfg.host);
+              peer = peers.get(targetWorldId);
+              if (peer?.sessionToken) {
+                result = await wlFetch(`${peer.host || cfg.host}/worldlink/task`, {
+                  method: 'POST', token: peer.sessionToken,
+                  body: { capability, task: { prompt, sharedContext, attachments, conversationId } },
+                });
+              }
+            } catch (reconnErr) { console.error(`  [WorldLink] Auto-reconnect failed:`, reconnErr.message); }
+          }
+          if (result.error) { json(502, { error: `Peer rejected task: ${result.error}` }); return; }
           audit.write({ type: 'task.sent', targetWorld: targetWorldId, capability, taskId: result.taskId, timestamp: Math.floor(Date.now() / 1000) });
           json(200, result);
         } catch (e) { json(502, { error: `Could not reach ${targetWorldId}: ${e.message}` }); }
@@ -452,6 +480,22 @@ function createGateway(opts = {}) {
         try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
         const cfg = (wlCfg.trustedPeers || []).find(p => p.worldId === worldId);
         json(200, { ok: true, host: existing?.host || cfg?.host });
+        return;
+      }
+
+      // POST /worldlink/local/peer/:worldId/reconnect — refresh session token without UI steps
+      if (req.method === 'POST' && /^\/worldlink\/local\/peer\/[^/]+\/reconnect$/.test(req.url)) {
+        const worldId = decodeURIComponent(req.url.slice('/worldlink/local/peer/'.length, -'/reconnect'.length));
+        const peer = peers.get(worldId);
+        const cfg  = (wlCfg.trustedPeers || []).find(p => p.worldId === worldId);
+        const host = peer?.host || cfg?.host;
+        if (!host) { json(404, { error: 'No host known for this peer — connect manually first' }); return; }
+        try {
+          disabledPeers.delete(worldId); // ensure not paused
+          await initiateConnection(host);
+          audit.write({ type: 'connection.reconnected', targetWorld: worldId, timestamp: Math.floor(Date.now() / 1000) });
+          json(200, { ok: true, worldId });
+        } catch (e) { json(502, { error: `Reconnect failed: ${e.message}` }); }
         return;
       }
 
@@ -614,6 +658,18 @@ function createGateway(opts = {}) {
         return;
       }
 
+      if (req.method === 'POST' && req.url === '/worldlink/local/messages/clear') {
+        const b = await body();
+        if (b.worldId) {
+          const before = messages.length;
+          messages.splice(0, messages.length, ...messages.filter(m => m.fromWorld !== b.worldId));
+        } else {
+          messages.length = 0;
+        }
+        json(200, { ok: true });
+        return;
+      }
+
       // POST /worldlink/local/send-message  — no auth, local status page → outbound DM
       if (req.method === 'POST' && req.url === '/worldlink/local/send-message') {
         const b = await body();
@@ -622,10 +678,27 @@ function createGateway(opts = {}) {
         const peer = peers.get(targetWorldId);
         if (!peer?.sessionToken || !peer.host) { json(404, { error: `Not connected to: ${targetWorldId}` }); return; }
         try {
-          const resp = await wlFetch(`${peer.host}/worldlink/message`, {
-            method: 'POST', token: peer.sessionToken,
+          let activePeer = peer;
+          let resp = await wlFetch(`${activePeer.host}/worldlink/message`, {
+            method: 'POST', token: activePeer.sessionToken,
             body: { text, fromWorld: wlId?.worldId },
           });
+          // Auto-reconnect on expired/invalid session and retry once
+          if (resp.error && /invalid|expired|session/i.test(resp.error)) {
+            console.log(`  [WorldLink] Session expired for ${targetWorldId}, reconnecting...`);
+            try {
+              await initiateConnection(activePeer.host);
+              activePeer = peers.get(targetWorldId);
+              if (activePeer?.sessionToken) {
+                resp = await wlFetch(`${activePeer.host}/worldlink/message`, {
+                  method: 'POST', token: activePeer.sessionToken,
+                  body: { text, fromWorld: wlId?.worldId },
+                });
+              }
+            } catch (reconnErr) {
+              console.error(`  [WorldLink] Auto-reconnect failed for ${targetWorldId}:`, reconnErr.message);
+            }
+          }
           if (resp.error) {
             console.error(`  [WorldLink] Message rejected by ${targetWorldId}:`, resp.error);
             json(502, { error: `Peer rejected message: ${resp.error}` });
@@ -648,6 +721,22 @@ function createGateway(opts = {}) {
       }
 
       // GET /worldlink/local/brain  — no auth, local status page
+      if (req.method === 'GET' && req.url === '/worldlink/local/sources') {
+        const srcFile = path.join(dataDir, '.worldlink-sources.json');
+        try { json(200, { sources: JSON.parse(fs.readFileSync(srcFile, 'utf8')) }); }
+        catch { json(200, { sources: [] }); }
+        return;
+      }
+
+      if (req.method === 'POST' && req.url === '/worldlink/local/sources') {
+        const b = await body();
+        if (!Array.isArray(b.sources)) { json(400, { error: 'sources array required' }); return; }
+        const srcFile = path.join(dataDir, '.worldlink-sources.json');
+        try { fs.writeFileSync(srcFile, JSON.stringify(b.sources, null, 2)); json(200, { ok: true }); }
+        catch (e) { json(500, { error: e.message }); }
+        return;
+      }
+
       if (req.method === 'GET' && req.url === '/worldlink/local/brain') {
         const u = new URL(req.url, 'http://localhost');
         const scope = u.searchParams.get('scope') || undefined;

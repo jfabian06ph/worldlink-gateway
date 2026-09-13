@@ -7,33 +7,51 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #050b18;
-  --bg2: #07101f;
-  --surface: rgba(10,20,36,0.72);
-  --surface-2: rgba(14,26,44,0.85);
-  --surface-solid: #0d1929;
-  --border: rgba(26,58,92,0.6);
-  --border-light: rgba(30,68,112,0.7);
-  --text: #cbd5e1;
-  --text-muted: #475569;
-  --text-strong: #f1f5f9;
-  --cyan: #06b6d4;
-  --cyan-dim: #0e4a5c;
-  --cyan-glow: rgba(6,182,212,0.1);
-  --green: #4ade80;
-  --green-dim: #14532d;
-  --amber: #f59e0b;
-  --amber-dim: #451a03;
-  --red: #f87171;
-  --red-dim: #450a0a;
-  --sidebar-w: 200px;
+  /* Backgrounds */
+  --bg:              #07111D;
+  --bg2:             #060f1a;
+  /* Surfaces — solid, no rgba */
+  --surface:         #0A1624;
+  --surface-2:       #0D1B2B;
+  --surface-solid:   #0D1B2B;
+  --surface-hover:   #0f2035;
+  /* Borders */
+  --border:          #1D2A38;
+  --border-light:    #25506A;
+  --border-active:   #25506A;
+  /* Text */
+  --text:            #9AA9B8;
+  --text-muted:      #667788;
+  --text-dim:        #4a5a6a;
+  --text-strong:     #F3F6F9;
+  /* WorldLink cyan — interaction / active / identity */
+  --cyan:            #06BCD4;
+  --cyan-dim:        #0d3d4d;
+  --cyan-glow:       rgba(6,188,212,0.08);
+  /* Semantic */
+  --green:           #4ade80;
+  --green-dim:       #14532d;
+  --amber:           #f59e0b;
+  --amber-dim:       #451a03;
+  --red:             #f87171;
+  --red-dim:         #450a0a;
+  --indigo:          #818cf8;
+  --indigo-dim:      #1e1b4b;
+  /* Layout */
+  --sidebar-w:       200px;
+  /* Radius scale */
+  --r-xs:  2px;
+  --r-sm:  4px;
+  --r-md:  6px;
+  --r-lg:  8px;
+  --r-pill: 999px;
 }
 html, body { height: 100%; }
 body {
   background:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(6,182,212,0.035) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 40% at 80% 110%, rgba(99,102,241,0.025) 0%, transparent 65%),
-    #050b18;
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(6,188,212,0.015) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 80% 110%, rgba(99,102,241,0.010) 0%, transparent 65%),
+    #07111D;
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-size: 14px;
@@ -45,24 +63,13 @@ body {
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
-  background: rgba(7,14,27,0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
   position: relative;
-}
-.sidebar::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; bottom: 0;
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, rgba(6,182,212,0.4) 30%, rgba(6,182,212,0.15) 70%, transparent);
-  pointer-events: none;
-  z-index: 1;
 }
 .sidebar-header {
   padding: 20px 16px 16px;
@@ -74,17 +81,17 @@ body {
   gap: 10px;
 }
 .sidebar-orb {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 36%, #22d3ee 0%, #0891b2 55%, #164e63 100%);
-  box-shadow: 0 0 10px rgba(6,182,212,0.4), 0 0 20px rgba(6,182,212,0.12);
+  box-shadow: 0 0 6px rgba(6,188,212,0.25);
   flex-shrink: 0;
-  animation: sidebar-orb-pulse 3s ease-in-out infinite;
+  animation: sidebar-orb-pulse 4s ease-in-out infinite;
 }
 @keyframes sidebar-orb-pulse {
-  0%,100% { box-shadow: 0 0 8px rgba(6,182,212,.35), 0 0 16px rgba(6,182,212,.1); }
-  50%      { box-shadow: 0 0 16px rgba(6,182,212,.6), 0 0 32px rgba(6,182,212,.2); }
+  0%,100% { box-shadow: 0 0 5px rgba(6,188,212,.20); }
+  50%      { box-shadow: 0 0 10px rgba(6,188,212,.38), 0 0 18px rgba(6,188,212,.10); }
 }
 .sidebar-title {
   font-size: 13px;
@@ -95,7 +102,7 @@ body {
 }
 .sidebar-badge {
   display: inline-block;
-  background: rgba(6,182,212,0.1);
+  background: var(--cyan-glow);
   color: var(--cyan);
   font-size: 9px;
   font-weight: 700;
@@ -103,7 +110,7 @@ body {
   padding: 1px 5px;
   border-radius: 3px;
   margin-top: 4px;
-  border: 1px solid rgba(6,182,212,0.2);
+  border: 1px solid var(--cyan-dim);
 }
 .sidebar-nav {
   flex: 1;
@@ -125,23 +132,23 @@ body {
   margin: 1px 8px 1px 0;
   user-select: none;
 }
-.nav-item:hover { color: var(--text); background: rgba(6,182,212,0.05); border-left-color: rgba(6,182,212,0.2); }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); border-left-color: var(--border-active); }
 .nav-item.active {
-  color: var(--cyan);
-  background: var(--cyan-glow);
+  color: var(--text-strong);
+  background: var(--surface-2);
   border-left-color: var(--cyan);
-  box-shadow: inset 0 0 20px rgba(6,182,212,0.03);
 }
 .nav-item .nav-icon { font-size: 14px; width: 16px; text-align: center; }
 .nav-badge {
   margin-left: auto;
-  background: var(--cyan);
-  color: #000;
+  background: transparent;
+  color: var(--text-dim);
   font-size: 10px;
-  font-weight: 700;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
+  font-weight: 500;
+  min-width: 16px;
+  height: 16px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,20 +160,19 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
-  background: rgba(0,0,0,0.2);
+  background: var(--bg2);
 }
 .online-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 6px var(--green);
   flex-shrink: 0;
-  animation: pulse-dot 2s infinite;
+  opacity: 0.9;
 }
 @keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 4px var(--green); }
-  50% { box-shadow: 0 0 10px var(--green), 0 0 20px rgba(74,222,128,0.15); }
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 .footer-label { font-size: 11px; color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .footer-version { font-size: 10px; color: var(--text-muted); opacity: 0.5; }
@@ -187,21 +193,19 @@ body {
   padding: 0 24px;
   height: 52px;
   border-bottom: 1px solid var(--border);
-  background: rgba(5,11,24,0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--surface);
   flex-shrink: 0;
 }
 .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-strong); }
 .topbar-beta {
-  background: rgba(6,182,212,0.15);
+  background: var(--cyan-glow);
   color: var(--cyan);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 2px 7px;
-  border-radius: 4px;
-  border: 1px solid rgba(6,182,212,0.3);
+  border-radius: var(--r-xs);
+  border: 1px solid var(--cyan-dim);
 }
 .topbar-worldid {
   font-size: 12px;
@@ -210,15 +214,15 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   padding: 3px 8px;
-  border-radius: 5px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--border);
   transition: border-color 0.15s;
 }
-.topbar-worldid:hover { border-color: rgba(6,182,212,0.3); }
+.topbar-worldid:hover { border-color: var(--border-light); }
 .topbar-worldid:hover .copy-icon { color: var(--cyan); }
-.copy-icon { font-size: 11px; color: var(--text-muted); transition: color 0.15s; }
+.copy-icon { font-size: 16px; color: var(--text-muted); transition: color 0.15s; }
 .topbar-spacer { flex: 1; }
 .listen-badge {
   display: flex;
@@ -240,27 +244,27 @@ body {
   animation: pulse-dot 2s infinite;
 }
 .refresh-btn {
-  background: rgba(255,255,255,0.04);
+  background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
   padding: 5px 12px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   font-size: 12px;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.refresh-btn:hover { border-color: rgba(6,182,212,0.3); color: var(--cyan); background: rgba(6,182,212,0.05); }
+.refresh-btn:hover { border-color: var(--border-light); color: var(--text); }
 
 /* ── Content ──────────────────────────────── */
 .content {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
-  background: radial-gradient(ellipse 100% 50% at 50% -5%, rgba(6,182,212,0.02) 0%, transparent 60%);
+  background: var(--bg);
 }
 .content::-webkit-scrollbar { width: 5px; }
 .content::-webkit-scrollbar-track { background: transparent; }
@@ -271,22 +275,10 @@ body {
 
 /* ── Cards ────────────────────────────────── */
 .card {
-  background: rgba(10,20,36,0.7);
-  border: 1px solid rgba(26,58,92,0.6);
-  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   padding: 20px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  position: relative;
-  overflow: hidden;
-}
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 10%; right: 10%;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(6,182,212,0.12), transparent);
-  pointer-events: none;
 }
 .card-title {
   font-size: 12px;
@@ -341,7 +333,7 @@ body {
   border-radius: 4px;
   border: 1px solid var(--border-light);
   color: var(--cyan);
-  background: rgba(6,182,212,0.06);
+  background: var(--cyan-glow);
 }
 
 /* ── Status dot ───────────────────────────── */
@@ -351,7 +343,7 @@ body {
   border-radius: 50%;
   flex-shrink: 0;
 }
-.status-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-dot 2s infinite; }
+.status-dot.online  { background: var(--green); animation: pulse-dot 2.5s ease-in-out infinite; }
 .status-dot.offline { background: var(--text-muted); }
 .status-dot.running { background: var(--cyan); animation: pulse-dot 1s infinite; }
 .status-dot.pending-approval { background: var(--amber); animation: blink 1s infinite; }
@@ -382,7 +374,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(26,58,92,0.4);
+  border-bottom: 1px solid var(--border);
 }
 .peer-item:last-child { border-bottom: none; }
 .peer-avatar {
@@ -402,21 +394,21 @@ body {
 .peer-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .peer-actions { display: flex; align-items: center; gap: 6px; }
 .icon-btn {
-  background: rgba(255,255,255,0.04);
+  background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s;
   font-family: inherit;
 }
-.icon-btn:hover { border-color: rgba(6,182,212,0.4); color: var(--cyan); background: rgba(6,182,212,0.06); }
+.icon-btn:hover { border-color: var(--border-light); color: var(--text); }
 
 /* ── Task list ────────────────────────────── */
 .task-item {
@@ -424,30 +416,30 @@ body {
   align-items: flex-start;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(26,58,92,0.4);
+  border-bottom: 1px solid var(--border);
 }
 .task-item:last-child { border-bottom: none; }
 .task-meta { flex: 1; min-width: 0; }
-.task-cap { font-size: 11px; font-weight: 600; color: var(--cyan); margin-bottom: 3px; }
+.task-cap { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.04em; text-transform: uppercase; }
 .task-prompt { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.task-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; opacity: 0.7; }
+.task-time { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 .task-actions { display: flex; gap: 5px; flex-shrink: 0; }
 .btn {
-  background: rgba(255,255,255,0.04);
+  background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
-  padding: 3px 10px;
-  border-radius: 5px;
-  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
-.btn:hover { border-color: rgba(6,182,212,0.35); color: var(--cyan); background: rgba(6,182,212,0.05); }
-.btn-green { border-color: rgba(74,222,128,0.3); color: var(--green); background: rgba(74,222,128,0.06); }
-.btn-green:hover { background: rgba(74,222,128,0.12); }
-.btn-red { border-color: rgba(248,113,113,0.3); color: var(--red); background: rgba(248,113,113,0.06); }
-.btn-red:hover { background: rgba(248,113,113,0.12); }
+.btn:hover { border-color: var(--border-light); color: var(--text); }
+.btn-green { border-color: rgba(74,222,128,0.25); color: var(--green); }
+.btn-green:hover { border-color: rgba(74,222,128,0.5); }
+.btn-red { border-color: rgba(248,113,113,0.25); color: var(--red); }
+.btn-red:hover { border-color: rgba(248,113,113,0.5); }
 
 /* ── Audit log ────────────────────────────── */
 .audit-scroll { max-height: 200px; overflow-y: auto; }
@@ -458,11 +450,11 @@ body {
   align-items: center;
   gap: 10px;
   padding: 5px 0;
-  border-bottom: 1px solid rgba(26,58,92,0.4);
+  border-bottom: 1px solid var(--border);
   font-size: 12px;
 }
 .audit-row:last-child { border-bottom: none; }
-.audit-type { color: var(--cyan); min-width: 160px; flex-shrink: 0; font-weight: 500; }
+.audit-type { color: var(--text); min-width: 160px; flex-shrink: 0; font-weight: 500; }
 .audit-detail { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .audit-time { color: var(--text-muted); font-size: 10px; opacity: 0.6; flex-shrink: 0; }
 
@@ -470,43 +462,59 @@ body {
 /* ── Filter tabs ──────────────────────────── */
 .filter-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
 .filter-tab {
-  background: var(--surface-2);
+  background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
-  padding: 4px 12px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
   font-size: 12px;
   cursor: pointer;
   font-family: inherit;
   font-weight: 500;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
 .filter-tab:hover { border-color: var(--border-light); color: var(--text); }
-.filter-tab.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-glow); }
+.filter-tab.active { border-color: var(--border-active); color: var(--text-strong); background: var(--surface-2); }
 
 /* ── Messages ─────────────────────────────── */
-.message-item { padding: 10px 0; border-bottom: 1px solid rgba(26,58,92,0.4); }
+.message-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
 .message-item:last-child { border-bottom: none; }
 .message-from { font-size: 12px; font-weight: 600; color: var(--text-strong); margin-bottom: 3px; }
 .message-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 .message-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+/* Conversation list (Messages page) */
+.dm-convo-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.1s; position: relative; }
+.dm-convo-row:last-child { border-bottom: none; }
+.dm-convo-row:hover { background: var(--surface-hover); }
+.dm-convo-row:hover .dm-delete-btn { opacity: 1; }
+.dm-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 600 14px/1 -apple-system,sans-serif; color: #fff; flex-shrink: 0; }
+.dm-convo-body { flex: 1; min-width: 0; }
+.dm-convo-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 3px; }
+.dm-convo-name { font: 600 14px/1 -apple-system,sans-serif; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-convo-time { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); flex-shrink: 0; margin-left: 8px; }
+.dm-convo-preview { font: 400 13px/1.4 -apple-system,sans-serif; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-unread-badge { background: var(--cyan); color: #000; font: 700 10px/1 -apple-system,sans-serif; border-radius: 10px; padding: 3px 6px; flex-shrink: 0; }
+.dm-delete-btn { opacity: 0; background: none; border: none; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 4px 6px; border-radius: var(--r-sm); flex-shrink: 0; transition: opacity 0.15s, color 0.15s; }
+.dm-delete-btn:hover { color: var(--red); }
+.dm-chevron { font-size: 18px; color: var(--text-muted); flex-shrink: 0; line-height: 1; margin-left: 2px; }
 
 /* ── Settings form ────────────────────────── */
 .form-group { margin-bottom: 16px; }
 .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; letter-spacing: 0.04em; text-transform: uppercase; }
 .form-input {
   width: 100%;
-  background: rgba(255,255,255,0.03);
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px 12px;
-  border-radius: 7px;
+  color: var(--text-strong);
+  padding: 7px 11px;
+  border-radius: var(--r-sm);
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s;
 }
-.form-input:focus { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.03); }
+.form-input:focus { border-color: var(--border-active); }
 .form-textarea { min-height: 80px; resize: vertical; }
 .toggle-row { display: flex; align-items: center; justify-content: space-between; }
 .toggle {
@@ -538,18 +546,17 @@ body {
 .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
 .btn-primary {
   background: var(--cyan);
-  color: #000;
+  color: #021218;
   border: none;
-  padding: 8px 20px;
-  border-radius: 7px;
+  padding: 8px 16px;
+  border-radius: var(--r-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: opacity 0.15s, box-shadow 0.15s;
-  box-shadow: 0 0 20px rgba(6,182,212,0.2);
+  transition: opacity 0.15s;
 }
-.btn-primary:hover { opacity: 0.9; box-shadow: 0 0 28px rgba(6,182,212,0.35); }
+.btn-primary:hover { opacity: 0.85; }
 
 /* ── Modals ───────────────────────────────── */
 .modal-backdrop {
@@ -566,24 +573,22 @@ body {
 }
 .modal-backdrop.open { display: flex; }
 .modal {
-  background: rgba(10,20,36,0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
   padding: 24px;
   max-width: 560px;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(6,182,212,0.06);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
 }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .modal-title { font-size: 15px; font-weight: 700; color: var(--text-strong); }
 .modal-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px; }
 .modal-close:hover { color: var(--text); }
 .artifact-content {
-  background: rgba(5,11,24,0.8);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
@@ -601,18 +606,18 @@ body {
 
 .form-select {
   width: 100%;
-  background: rgba(255,255,255,0.03);
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px 12px;
-  border-radius: 7px;
+  color: var(--text-strong);
+  padding: 7px 11px;
+  border-radius: var(--r-sm);
   font-size: 13px;
   font-family: inherit;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s;
 }
-.form-select:focus { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.03); }
+.form-select:focus { border-color: var(--border-active); }
 .form-range { width: 100%; accent-color: var(--cyan); }
 .form-range-row { display: flex; align-items: center; gap: 10px; }
 .range-val { font-size: 12px; color: var(--text-muted); min-width: 30px; text-align: right; }
@@ -687,14 +692,14 @@ body {
 }
 .wl-splash-world {
   font: 600 18px/1 -apple-system,sans-serif;
-  color: #f1f5f9;
+  color: var(--text-strong);
   letter-spacing: .01em;
   min-height: 22px;
   transition: opacity .3s;
 }
 .wl-splash-sub {
   font: 400 12px/1 -apple-system,sans-serif;
-  color: #475569;
+  color: var(--text-muted);
   letter-spacing: .06em;
   text-transform: uppercase;
 }
@@ -703,14 +708,14 @@ body {
 }
 .wl-splash-dots span {
   width: 4px; height: 4px; border-radius: 50%;
-  background: #1e3a5c;
+  background: var(--border-light);
   animation: wl-dot-bounce .9s ease-in-out infinite;
 }
 .wl-splash-dots span:nth-child(2) { animation-delay: .15s; }
 .wl-splash-dots span:nth-child(3) { animation-delay: .30s; }
 @keyframes wl-dot-bounce {
-  0%,80%,100% { background: #1e3a5c; transform: scale(1); }
-  40%          { background: #06b6d4; transform: scale(1.5); }
+  0%,80%,100% { background: var(--border-light); transform: scale(1); }
+  40%          { background: var(--cyan); transform: scale(1.5); }
 }
 
 #world-hint {
@@ -718,12 +723,12 @@ body {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(13,25,41,0.82);
-  border: 1px solid rgba(6,182,212,0.18);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 7px 18px;
   font: 500 12px/1 -apple-system,sans-serif;
-  color: #64748b;
+  color: var(--text-muted);
   pointer-events: none;
   white-space: nowrap;
   transition: opacity .4s;
@@ -733,12 +738,12 @@ body {
   position: absolute;
   bottom: 24px;
   right: 24px;
-  background: rgba(13,25,41,0.75);
-  border: 1px solid rgba(6,182,212,0.15);
-  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
   padding: 5px 12px;
   font: 500 11px/1 -apple-system,sans-serif;
-  color: #64748b;
+  color: var(--text-muted);
   pointer-events: none;
   z-index: 3;
 }
@@ -753,23 +758,42 @@ body {
 .world-label {
   position: absolute;
   pointer-events: none;
-  background: rgba(6,13,26,0.82);
-  border: 1px solid rgba(6,182,212,0.2);
-  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
   padding: 6px 11px 5px;
   white-space: nowrap;
   transition: opacity .25s;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+}
+.world-label.has-error { pointer-events: auto; border-color: var(--amber); cursor: pointer; }
+.wl-lbl-warn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--amber); color: #000;
+  font: 700 9px/1 -apple-system,sans-serif;
+  margin-left: 5px; flex-shrink: 0; vertical-align: middle;
+}
+.session-auth-warn {
+  margin: 0 16px 10px;
+  background: var(--amber-dim); border: 1px solid var(--amber);
+  border-radius: var(--r-sm); padding: 10px 12px;
+  font: 500 12px/1.5 -apple-system,sans-serif; color: var(--amber);
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.session-auth-warn-body { flex: 1; min-width: 0; }
+.session-auth-warn-fix {
+  margin-top: 6px; background: var(--amber); color: #000;
+  border: none; border-radius: var(--r-xs); padding: 4px 10px;
+  font: 600 11px/1 -apple-system,sans-serif; cursor: pointer;
 }
 .wl-lbl-name {
   font: 600 12px/1 -apple-system,sans-serif;
-  color: #e2e8f0;
+  color: var(--text-strong);
   margin-bottom: 4px;
 }
 .wl-lbl-you {
   font: 500 9px/1 -apple-system,sans-serif;
-  color: #f97316;
+  color: var(--amber);
   letter-spacing: .07em;
   text-transform: uppercase;
   margin-left: 5px;
@@ -777,7 +801,7 @@ body {
 }
 .wl-lbl-status { display: flex; align-items: center; gap: 5px; }
 .wl-lbl-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.wl-lbl-stxt { font: 400 10px/1 -apple-system,sans-serif; color: #64748b; text-transform: capitalize; }
+.wl-lbl-stxt { font: 400 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: capitalize; }
 
 /* ── Session drawer ───────────────────────────────────────────────── */
 #session-drawer {
@@ -786,16 +810,14 @@ body {
   width: 38%;
   min-width: 340px;
   max-width: 500px;
-  background: rgba(7,14,27,0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-left: 1px solid rgba(6,182,212,0.06);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   z-index: 50;
   transform: translateX(102%);
   transition: transform .28s cubic-bezier(.4,0,.2,1);
-  box-shadow: -12px 0 48px rgba(0,0,0,.5), -1px 0 0 rgba(6,182,212,0.06);
+  box-shadow: -16px 0 40px rgba(0,0,0,0.4);
 }
 #session-drawer.open { transform: translateX(0); }
 .session-header {
@@ -803,56 +825,56 @@ body {
   align-items: center;
   gap: 10px;
   padding: 16px 18px;
-  border-bottom: 1px solid rgba(26,58,92,0.6);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  background: rgba(0,0,0,0.2);
+  background: var(--surface-2);
 }
 .session-back {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(26,58,92,0.6);
-  color: #64748b;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   width: 30px; height: 30px;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   font-size: 16px;
   display: flex; align-items: center; justify-content: center;
-  transition: all .15s;
+  transition: border-color .15s, color .15s;
   flex-shrink: 0;
   font-family: inherit;
   line-height: 1;
 }
-.session-back:hover { border-color: var(--cyan); color: var(--cyan); }
+.session-back:hover { border-color: var(--border-light); color: var(--text); }
 .session-title-group { flex: 1; min-width: 0; }
-.session-name { font: 700 15px/1.2 -apple-system,sans-serif; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.session-name { font: 700 15px/1.2 -apple-system,sans-serif; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .session-status-row { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
-.session-status-txt { font: 400 11px/1 -apple-system,sans-serif; color: #64748b; text-transform: capitalize; }
+.session-status-txt { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: capitalize; }
 .session-close-btn {
-  background: transparent; border: none; color: #64748b;
+  background: transparent; border: none; color: var(--text-muted);
   cursor: pointer; font-size: 16px; line-height: 1; padding: 4px;
   flex-shrink: 0; transition: color .15s; font-family: inherit;
 }
-.session-close-btn:hover { color: #f1f5f9; }
+.session-close-btn:hover { color: var(--text-strong); }
 .session-tabs {
   display: flex;
-  border-bottom: 1px solid rgba(26,58,92,0.6);
+  border-bottom: 1px solid var(--border);
   padding: 0 14px;
   flex-shrink: 0;
-  background: rgba(0,0,0,0.1);
+  background: var(--surface);
 }
 .session-tab {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #64748b;
+  color: var(--text-muted);
   font: 500 12px/1 -apple-system,sans-serif;
   padding: 10px 12px;
   cursor: pointer;
   font-family: inherit;
-  transition: all .15s;
+  transition: color .15s, border-color .15s;
   margin-bottom: -1px;
 }
-.session-tab:hover { color: #e2e8f0; }
-.session-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.session-tab:hover { color: var(--text-strong); }
+.session-tab.active { color: var(--text-strong); border-bottom-color: var(--cyan); }
 .session-timeline {
   flex: 1;
   overflow-y: auto;
@@ -862,135 +884,132 @@ body {
   gap: 8px;
 }
 .session-timeline::-webkit-scrollbar { width: 4px; }
-.session-timeline::-webkit-scrollbar-thumb { background: #1a3a5c; border-radius: 2px; }
-.session-empty { color: #64748b; font: 13px/1.6 -apple-system,sans-serif; text-align: center; padding: 40px 0; }
+.session-timeline::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.session-empty { color: var(--text-muted); font: 13px/1.6 -apple-system,sans-serif; text-align: center; padding: 40px 0; }
 .tl-entry { display: flex; flex-direction: column; }
 .tl-mine { align-items: flex-end; }
 .tl-theirs { align-items: flex-start; }
 .tl-bubble {
   max-width: 85%;
   padding: 9px 13px;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   font: 13px/1.55 -apple-system,sans-serif;
   word-break: break-word;
 }
 .tl-mine .tl-bubble {
-  background: rgba(6,182,212,0.1);
-  border: 1px solid rgba(6,182,212,0.2);
-  color: #e2e8f0;
-  border-bottom-right-radius: 4px;
+  background: rgba(6,188,212,0.08);
+  border: 1px solid rgba(6,188,212,0.18);
+  color: var(--text-strong);
+  border-bottom-right-radius: var(--r-xs);
 }
 .tl-theirs .tl-bubble {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(26,58,92,0.7);
-  color: #e2e8f0;
-  border-bottom-left-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-strong);
+  border-bottom-left-radius: var(--r-xs);
 }
-.tl-time { font: 10px/1 -apple-system,sans-serif; color: #64748b; margin-top: 4px; padding: 0 4px; }
+.tl-time { font: 10px/1 -apple-system,sans-serif; color: var(--text-dim); margin-top: 4px; padding: 0 4px; }
 .tl-task { align-items: stretch; }
 .tl-task-card {
-  background: rgba(14,26,44,0.7);
-  border: 1px solid rgba(26,58,92,0.6);
-  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   padding: 11px 13px;
 }
 .tl-task-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
-.tl-task-prompt { font: 12px/1.5 -apple-system,sans-serif; color: #64748b; }
+.tl-task-prompt { font: 12px/1.5 -apple-system,sans-serif; color: var(--text-muted); }
 .tl-artifact {
   display: flex; align-items: center; gap: 10px;
   padding: 12px;
-  background: rgba(14,26,44,0.7);
-  border: 1px solid rgba(26,58,92,0.6);
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: border-color .15s;
 }
 .tl-artifact:hover { border-color: var(--cyan); }
 .tl-artifact-icon { font-size: 18px; flex-shrink: 0; }
 .tl-artifact-meta { flex: 1; min-width: 0; }
-.tl-artifact-name { font: 600 13px/1 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tl-artifact-time { font: 11px/1 -apple-system,sans-serif; color: #64748b; }
-.tl-artifact-arrow { color: #64748b; font-size: 14px; }
+.tl-artifact-name { font: 600 13px/1 -apple-system,sans-serif; color: var(--text-strong); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-artifact-time { font: 11px/1 -apple-system,sans-serif; color: var(--text-muted); }
+.tl-artifact-arrow { color: var(--text-muted); font-size: 14px; }
 
 /* ── Session composer ─────────────────────────────────────────────── */
 .session-composer {
   padding: 10px 16px 14px;
-  border-top: 1px solid rgba(26,58,92,0.6);
+  border-top: 1px solid var(--border);
   flex-shrink: 0;
-  background: rgba(0,0,0,0.15);
+  background: var(--surface-2);
 }
 .composer-cap-row { display: none; margin-bottom: 8px; align-items: center; gap: 8px; }
 .composer-cap-row.visible { display: flex; }
 .composer-row { display: flex; align-items: flex-end; gap: 8px; position: relative; }
 .composer-type-btn {
-  background: rgba(14,26,44,0.7);
-  border: 1px solid rgba(26,58,92,0.6);
-  color: #64748b;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   font: 500 11px/1 -apple-system,sans-serif;
   padding: 9px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: all .15s;
+  transition: border-color .15s, color .15s;
   font-family: inherit;
 }
-.composer-type-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.composer-type-btn:hover { border-color: var(--border-light); color: var(--text); }
 .composer-type-menu {
   position: absolute;
   bottom: 100%;
   left: 0;
   margin-bottom: 6px;
-  background: rgba(10,20,36,0.96);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(26,58,92,0.6);
-  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   overflow: hidden;
   z-index: 60;
   min-width: 130px;
-  box-shadow: 0 4px 20px rgba(0,0,0,.6);
+  box-shadow: 0 4px 20px rgba(0,0,0,.5);
   display: none;
 }
 .composer-type-menu.open { display: block; }
 .composer-type-item {
   padding: 9px 14px;
   font: 500 12px/1 -apple-system,sans-serif;
-  color: #e2e8f0;
+  color: var(--text-strong);
   cursor: pointer;
   transition: background .1s;
 }
-.composer-type-item:hover { background: rgba(14,26,44,0.8); }
+.composer-type-item:hover { background: var(--surface-hover); }
 .composer-input {
   flex: 1;
-  background: rgba(14,26,44,0.7);
-  border: 1px solid rgba(26,58,92,0.7);
-  color: #e2e8f0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-strong);
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   font: 13px/1.5 -apple-system,sans-serif;
   outline: none;
   resize: none;
   min-height: 36px;
   max-height: 120px;
-  transition: border-color .15s, background .15s;
+  transition: border-color .15s;
   font-family: inherit;
   overflow-y: auto;
 }
-.composer-input:focus { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.03); }
-.composer-input::placeholder { color: #1e3a5c; }
+.composer-input:focus { border-color: var(--border-active); }
+.composer-input::placeholder { color: var(--text-dim); }
 .composer-send-btn {
   background: var(--cyan);
   border: none;
-  color: #000;
+  color: #021218;
   font: 700 15px/1 -apple-system,sans-serif;
   width: 36px; height: 36px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  transition: opacity .15s, box-shadow .15s;
-  box-shadow: 0 0 16px rgba(6,182,212,0.25);
+  transition: opacity .15s;
 }
 .composer-send-btn:hover { opacity: 0.85; }
 @keyframes wl-pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
@@ -998,87 +1017,84 @@ body {
 /* ── Connections page ───────────────────────────────────────────── */
 .conn-identity-card {
   display: flex; align-items: center; gap: 14px;
-  background: rgba(10,20,36,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(26,58,92,0.6); border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-md);
   padding: 16px 18px; margin-bottom: 10px;
 }
 .conn-identity-orb {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
   background: radial-gradient(circle at 38% 36%, #f97316 0%, #c2410c 55%, #7c2d12 100%);
-  box-shadow: 0 0 12px rgba(249,115,22,.35);
 }
 .conn-identity-body { flex: 1; min-width: 0; }
-.conn-identity-label { font: 500 10px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 5px; }
-.conn-identity-name { font: 700 16px/1.2 -apple-system,sans-serif; color: #f1f5f9; }
-.conn-identity-id { font: 400 11px/1 -apple-system,sans-serif; color: #475569; font-family: monospace; margin-top: 3px; }
-.conn-edit-name-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(26,58,92,0.6); color: #475569; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
-.conn-edit-name-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.conn-identity-label { font: 500 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing:.07em; margin-bottom: 5px; }
+.conn-identity-name { font: 700 16px/1.2 -apple-system,sans-serif; color: var(--text-strong); }
+.conn-identity-id { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); font-family: monospace; margin-top: 3px; }
+.conn-edit-name-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); width: 32px; height: 32px; border-radius: var(--r-sm); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: border-color .15s, color .15s; flex-shrink: 0; }
+.conn-edit-name-btn:hover { border-color: var(--border-light); color: var(--text); }
 .conn-name-editor { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-.conn-share-row { background: rgba(6,182,212,0.04); border: 1px solid rgba(6,182,212,0.12); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
-.conn-share-label { font: 500 11px/1 -apple-system,sans-serif; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing:.05em; }
+.conn-share-row { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 16px; margin-bottom: 20px; }
+.conn-share-label { font: 500 11px/1 -apple-system,sans-serif; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing:.05em; }
 .conn-share-url-row { display: flex; align-items: center; gap: 8px; }
-.conn-share-url { font: 500 13px/1 monospace; color: #06b6d4; word-break: break-all; flex: 1; }
-/* .conn-copy-btn overridden below — see glassmorphism overrides */
-.conn-section-title { font: 600 11px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 10px; display:flex; align-items:baseline; gap:8px; }
-.conn-cap-subtitle { font: 400 11px/1 -apple-system,sans-serif; color: #334155; text-transform: none; letter-spacing: 0; }
-.conn-caps-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.conn-share-url { font: 500 13px/1 monospace; color: var(--cyan); word-break: break-all; flex: 1; }
+.conn-section-title { font: 600 11px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing:.07em; margin-bottom: 10px; display:flex; align-items:baseline; gap:8px; }
+.conn-cap-subtitle { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-dim); text-transform: none; letter-spacing: 0; }
+.conn-caps-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .conn-cap-row {
   display: flex; align-items: flex-start; gap: 14px;
-  background: rgba(10,20,36,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(26,58,92,0.6); border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-md);
   padding: 14px 16px; transition: border-color .2s;
 }
-.conn-cap-row.enabled { border-color: rgba(6,182,212,0.2); background: rgba(6,182,212,0.03); }
+.conn-cap-row.enabled { border-color: var(--border-active); }
 .conn-cap-body { flex: 1; min-width: 0; }
-.conn-cap-label { font: 600 13px/1.2 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 4px; }
-.conn-cap-desc { font: 400 12px/1.4 -apple-system,sans-serif; color: #475569; }
-.conn-cap-badge { display:inline-block; font: 500 10px/1 -apple-system,sans-serif; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-.conn-cap-badge.approval { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+.conn-cap-label { font: 600 13px/1.2 -apple-system,sans-serif; color: var(--text-strong); margin-bottom: 4px; }
+.conn-cap-desc { font: 400 12px/1.4 -apple-system,sans-serif; color: var(--text-muted); }
+.conn-cap-badge { display:inline-block; font: 500 10px/1 -apple-system,sans-serif; padding: 2px 6px; border-radius: var(--r-sm); margin-left: 6px; vertical-align: middle; }
+.conn-cap-badge.approval { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
 .conn-cap-warning {
   display: flex; align-items: flex-start; gap: 8px;
-  background: #1a1200; border: 1px solid #3d2e00; border-radius: 8px;
+  background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: var(--r-md);
   padding: 10px 14px; margin-bottom: 16px;
-  font: 400 12px/1.5 -apple-system,sans-serif; color: #94804a;
+  font: 400 12px/1.5 -apple-system,sans-serif; color: var(--amber);
 }
 .conn-cap-warning-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 .conn-peer-card {
   display: flex; align-items: center; gap: 12px;
-  background: rgba(10,20,36,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(26,58,92,0.6); border-radius: 10px;
-  padding: 14px 16px; margin-bottom: 8px; transition: border-color .2s;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 12px 16px; margin-bottom: 6px; transition: border-color .2s;
 }
-.conn-peer-card:hover { border-color: rgba(6,182,212,0.2); }
-.conn-peer-orb { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
+.conn-peer-card:hover { border-color: var(--border-light); }
 .conn-peer-body { flex: 1; min-width: 0; }
-.conn-peer-name { font: 600 14px/1.2 -apple-system,sans-serif; color: #e2e8f0; margin-bottom: 3px; }
-.conn-peer-meta { font: 11px/1 -apple-system,sans-serif; color: #475569; }
+.conn-peer-name { font: 600 13px/1.2 -apple-system,sans-serif; color: var(--text-strong); margin-bottom: 3px; }
+.conn-peer-meta { font: 11px/1 -apple-system,sans-serif; color: var(--text-muted); }
 /* Toggle switch */
 .conn-toggle-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.conn-toggle-label { font: 500 11px/1 -apple-system,sans-serif; color: #475569; }
+.conn-toggle-label { font: 500 11px/1 -apple-system,sans-serif; color: var(--text-muted); }
 .conn-toggle {
   width: 42px; height: 24px; border-radius: 12px;
-  background: #1a2d42; border: none; cursor: pointer; position: relative;
-  transition: background .2s; flex-shrink: 0; outline: none;
+  background: var(--surface-2); border: 1px solid var(--border); cursor: pointer; position: relative;
+  transition: background .2s, border-color .2s; flex-shrink: 0; outline: none;
 }
-.conn-toggle.on { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.35); }
+.conn-toggle.on { background: rgba(6,188,212,0.12); border-color: rgba(6,188,212,0.35); }
 .conn-toggle::after {
   content: ''; position: absolute; top: 3px; left: 3px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: #475569; transition: left .2s, background .2s;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text-dim); transition: left .2s, background .2s;
 }
-.conn-toggle.on::after { left: 21px; background: #06b6d4; box-shadow: 0 0 6px rgba(6,182,212,0.4); }
-.conn-disconnect-btn { background: rgba(255,255,255,0.04); border: 1px solid #2d1a1a; color: #64748b; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
-.conn-disconnect-btn:hover { border-color: #ef4444; color: #ef4444; }
+.conn-toggle.on::after { left: 21px; background: var(--cyan); }
+.conn-disconnect-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); width: 28px; height: 28px; border-radius: var(--r-sm); cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: border-color .15s, color .15s; flex-shrink: 0; }
+.conn-disconnect-btn:hover { border-color: var(--red); color: var(--red); }
 .conn-form { display: flex; gap: 8px; margin-bottom: 8px; }
-.conn-form-hint { font: 12px/1.4 -apple-system,sans-serif; color: #475569; min-height: 18px; }
+.conn-form-hint { font: 12px/1.4 -apple-system,sans-serif; color: var(--text-muted); min-height: 18px; }
 
 /* ── Unified session timeline ───────────────────────────────────── */
-.tl-sender { font: 600 10px/1 -apple-system,sans-serif; color: #475569; margin-bottom: 4px; letter-spacing:.04em; text-transform: uppercase; }
-.tl-sender-mine { text-align: right; color: #0e7490; }
+.tl-sender { font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted); margin-bottom: 4px; letter-spacing:.04em; text-transform: uppercase; }
+.tl-sender-mine { text-align: right; color: var(--cyan); }
 .tl-bubble-mine {
-  background: rgba(6,182,212,0.13);
-  border: 1px solid rgba(6,182,212,0.28);
-  color: #e2e8f0;
+  background: var(--cyan-glow);
+  border: 1px solid var(--cyan-dim);
+  color: var(--text-strong);
   border-bottom-right-radius: 4px;
 }
 .tl-time-right { text-align: right; }
@@ -1086,40 +1102,40 @@ body {
 .tl-system-event {
   display: flex; align-items: flex-start; gap: 9px;
   padding: 8px 10px;
-  background: rgba(255,255,255,0.025);
-  border: 1px solid #1a2d42;
-  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   font: 12px/1.45 -apple-system,sans-serif;
 }
 .tl-sys-icon { font-size: 13px; flex-shrink: 0; line-height: 1.5; }
 .tl-sys-body { flex: 1; min-width: 0; }
-.tl-sys-cap { font-weight: 600; color: #94a3b8; margin-right: 6px; }
-.tl-sys-status { color: #475569; font-size: 11px; }
-.tl-sys-prompt { color: #64748b; font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-sys-cap { font-weight: 600; color: var(--text); margin-right: 6px; }
+.tl-sys-status { color: var(--text-muted); font-size: 11px; }
+.tl-sys-prompt { color: var(--text-muted); font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tl-task-approvals { display: flex; gap: 6px; margin-top: 7px; }
 .tl-artifact-inline {
   margin-top: 6px; padding: 6px 10px;
-  background: rgba(6,182,212,0.07);
-  border: 1px solid rgba(6,182,212,0.18);
-  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
   font: 500 11px/1 -apple-system,sans-serif;
-  color: #94a3b8; cursor: pointer;
+  color: var(--text-muted); cursor: pointer;
   display: flex; align-items: center; gap: 6px;
 }
-.tl-artifact-inline:hover { border-color: rgba(6,182,212,0.45); color: #e2e8f0; }
-.tl-artifact-open { margin-left: auto; color: #06b6d4; font-size: 10px; }
+.tl-artifact-inline:hover { border-color: var(--border-light); color: var(--text); }
+.tl-artifact-open { margin-left: auto; color: var(--text-muted); font-size: 10px; }
 
 /* ── Memory tab ─────────────────────────────────────────────────── */
-.mem-section-label { font: 600 10px/1 -apple-system,sans-serif; color: #475569; text-transform: uppercase; letter-spacing:.07em; margin-bottom: 8px; }
+.mem-section-label { font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing:.07em; margin-bottom: 8px; }
 .mem-record {
-  padding: 9px 11px; margin-bottom: 7px;
-  background: rgba(14,26,44,0.7); border: 1px solid rgba(26,58,92,0.6); border-radius: 8px;
+  padding: 9px 11px; margin-bottom: 6px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md);
 }
 .mem-record-local { opacity: 0.6; }
 .mem-record-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-.mem-type { font: 600 10px/1 -apple-system,sans-serif; color: #06b6d4; text-transform: uppercase; letter-spacing:.06em; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 4px; padding: 2px 6px; }
-.mem-time { font: 10px/1 -apple-system,sans-serif; color: #475569; margin-left: auto; }
-.mem-summary { font: 12px/1.5 -apple-system,sans-serif; color: #94a3b8; }
+.mem-type { font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing:.06em; border: 1px solid var(--border); border-radius: var(--r-xs); padding: 2px 6px; }
+.mem-time { font: 10px/1 -apple-system,sans-serif; color: var(--text-muted); margin-left: auto; }
+.mem-summary { font: 12px/1.5 -apple-system,sans-serif; color: var(--text); }
 
 /* ── Section header (page title + subtitle) ── */
 .section-header { margin-bottom: 24px; }
@@ -1138,49 +1154,64 @@ body {
 
 /* ── Copy / edit buttons — bigger ── */
 .conn-copy-btn {
-  background: rgba(6,182,212,0.08);
-  border: 1px solid rgba(6,182,212,0.25);
-  color: #06b6d4;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   line-height: 1;
-  transition: all .15s;
+  transition: border-color .15s, color .15s;
   flex-shrink: 0;
 }
-.conn-copy-btn:hover { background: rgba(6,182,212,0.15); border-color: rgba(6,182,212,0.45); }
+.conn-copy-btn:hover { border-color: var(--border-light); color: var(--text); }
 .conn-copy-btn svg { width: 20px; height: 20px; stroke: currentColor; }
 .conn-edit-name-btn {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(26,58,92,0.6);
-  color: #64748b;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   width: 36px; height: 36px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   font-size: 18px;
   display: flex; align-items: center; justify-content: center;
-  transition: all .15s;
+  transition: border-color .15s, color .15s;
   flex-shrink: 0;
 }
-.conn-edit-name-btn:hover { border-color: rgba(6,182,212,0.45); color: var(--cyan); }
+.conn-edit-name-btn:hover { border-color: var(--border-light); color: var(--text); }
 
 /* ── Brain Redesign ──────────────────────────────── */
 .brain-orbital-wrap {
-  width: 100%; height: 260px; border-radius: 16px; overflow: hidden;
+  width: 100%; height: 260px; border-radius: 10px; overflow: hidden;
   position: relative; margin-bottom: 16px; flex-shrink: 0;
-  background: radial-gradient(ellipse 70% 80% at 50% 55%, rgba(6,182,212,0.06) 0%, transparent 70%), #020914;
+  background: radial-gradient(ellipse 70% 80% at 50% 55%, rgba(6,188,212,0.05) 0%, transparent 70%), #020914;
 }
 #brain-orbital-canvas { width: 100%; height: 100%; display: block; }
 .brain-orbital-info { position: absolute; bottom: 16px; left: 20px; pointer-events: none; }
-.brain-orbital-title { font: 700 16px/1 -apple-system,sans-serif; color: #f1f5f9; letter-spacing: -.02em; }
-.brain-orbital-sub { font: 400 12px/1 -apple-system,sans-serif; color: #475569; margin-top: 5px; }
+.brain-orbital-title { font: 700 16px/1 -apple-system,sans-serif; color: var(--text-strong); letter-spacing: -.02em; }
+.brain-orbital-sub { font: 400 12px/1 -apple-system,sans-serif; color: var(--text-muted); margin-top: 5px; }
+.bo-hud { display: flex; align-items: center; gap: 0; }
+.bo-hud-title { font: 700 18px/1 -apple-system,sans-serif; color: var(--text-strong); letter-spacing: -.02em; padding-right: 16px; }
+.bo-hud-sep { width: 1px; height: 28px; background: var(--border); margin-right: 16px; flex-shrink: 0; }
+.bo-hud-stat { display: flex; flex-direction: column; align-items: flex-start; padding-right: 18px; }
+.bo-hud-num { font: 600 16px/1 -apple-system,sans-serif; color: var(--text-strong); }
+.bo-hud-lbl { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); margin-top: 5px; }
+.bo-hud-sub { display: flex; align-items: center; gap: 6px; margin-top: 9px; font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); }
+.bo-hud-dot { color: var(--green); font-size: 7px; }
+.bo-node-label {
+  position: absolute; transform: translate(-50%, 0);
+  font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted);
+  white-space: nowrap; pointer-events: none;
+  text-shadow: 0 1px 5px rgba(2,9,20,0.95), 0 0 8px rgba(2,9,20,0.8);
+  transition: opacity .1s;
+}
 
 .brain-action-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 
 .brain-composer {
-  background: var(--surface-2); backdrop-filter: blur(16px);
-  border: 1px solid var(--border-light); border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--r-md);
   padding: 20px; margin-bottom: 16px;
 }
 .brain-composer-title { font: 700 12px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 16px; }
@@ -1189,8 +1220,8 @@ body {
 .bc-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 
 .imp-pills { display: flex; gap: 5px; flex-wrap: wrap; }
-.imp-pill { padding: 5px 10px; border-radius: 20px; font: 600 11px/1 -apple-system,sans-serif; cursor: pointer; border: 1px solid; transition: all .12s; }
-.imp-pill[data-v="low"]      { color: #64748b; border-color: rgba(100,116,139,.3); background: rgba(100,116,139,.07); }
+.imp-pill { padding: 4px 10px; border-radius: var(--r-sm); font: 600 11px/1 -apple-system,sans-serif; cursor: pointer; border: 1px solid; transition: all .12s; }
+.imp-pill[data-v="low"]      { color: var(--text-muted); border-color: rgba(100,116,139,.3); background: rgba(100,116,139,.07); }
 .imp-pill[data-v="normal"]   { color: #60a5fa; border-color: rgba(96,165,250,.3);  background: rgba(96,165,250,.07); }
 .imp-pill[data-v="high"]     { color: #f59e0b; border-color: rgba(245,158,11,.3);  background: rgba(245,158,11,.07); }
 .imp-pill[data-v="critical"] { color: #f87171; border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.07); }
@@ -1205,11 +1236,12 @@ body {
 .peer-share-name { font: 500 12px/1 -apple-system,sans-serif; color: var(--text); }
 .peer-share-sub  { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); }
 
-.brain-tabs { display: flex; gap: 2px; margin-bottom: 16px; background: rgba(255,255,255,.03); border-radius: 10px; padding: 3px; }
-.brain-tab-btn { flex: 1; padding: 7px 10px; border: none; background: transparent; border-radius: 8px; font: 600 12px/1 -apple-system,sans-serif; color: var(--text-muted); cursor: pointer; transition: all .15s; }
-.brain-tab-btn.active { background: var(--surface-2); color: var(--text-strong); }
+.brain-tabs { display: flex; gap: 0; margin-bottom: 16px; background: transparent; border-bottom: 1px solid var(--border); padding: 0; }
+.brain-tab-btn { flex: none; padding: 8px 16px 9px; border: none; background: transparent; border-bottom: 2px solid transparent; margin-bottom: -1px; font: 500 13px/1 -apple-system,sans-serif; color: var(--text-muted); cursor: pointer; transition: color .15s, border-color .15s; font-family: inherit; }
+.brain-tab-btn:hover { color: var(--text-strong); }
+.brain-tab-btn.active { color: var(--text-strong); border-bottom-color: var(--cyan); background: transparent; }
 
-.brain-mem-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; transition: border-color .15s; }
+.brain-mem-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 8px; transition: border-color .15s; }
 .brain-mem-card:hover { border-color: var(--border-light); }
 .brain-mem-row { display: flex; gap: 10px; align-items: flex-start; }
 .brain-mem-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
@@ -1218,17 +1250,17 @@ body {
 .brain-mem-ctx { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); margin-bottom: 7px; }
 .brain-mem-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
 .brain-mem-tag { padding: 2px 8px; border-radius: 12px; font: 500 10px/1.4 -apple-system,sans-serif; border: 1px solid; }
-.brain-mem-tag-type { background: rgba(6,182,212,.1); color: #06b6d4; border-color: rgba(6,182,212,.2); }
-.brain-mem-tag-imp[data-v="low"]      { background: rgba(100,116,139,.1); color: #64748b; border-color: rgba(100,116,139,.25); }
+.brain-mem-tag-type { background: var(--cyan-glow); color: var(--cyan); border-color: var(--cyan-dim); }
+.brain-mem-tag-imp[data-v="low"]      { background: rgba(100,116,139,.1); color: var(--text-muted); border-color: rgba(100,116,139,.25); }
 .brain-mem-tag-imp[data-v="normal"]   { background: rgba(96,165,250,.1);  color: #60a5fa; border-color: rgba(96,165,250,.25); }
 .brain-mem-tag-imp[data-v="high"]     { background: rgba(245,158,11,.1);  color: #f59e0b; border-color: rgba(245,158,11,.25); }
 .brain-mem-tag-imp[data-v="critical"] { background: rgba(248,113,113,.1); color: #f87171; border-color: rgba(248,113,113,.25); }
-.brain-mem-shared { font: 400 10px/1 -apple-system,sans-serif; color: #22d3ee; }
-.brain-mem-provenance { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(26,58,92,.35); display: flex; gap: 14px; flex-wrap: wrap; font: 400 10px/1 -apple-system,sans-serif; color: var(--text-muted); }
+.brain-mem-shared { font: 400 10px/1 -apple-system,sans-serif; color: var(--cyan); }
+.brain-mem-provenance { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); display: flex; gap: 14px; flex-wrap: wrap; font: 400 10px/1 -apple-system,sans-serif; color: var(--text-muted); }
 .brain-mem-provenance span { display: flex; gap: 3px; }
 .brain-mem-provenance strong { color: var(--text); }
 
-.brain-source-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.brain-source-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; margin-bottom: 8px; }
 .brain-source-row { display: flex; align-items: flex-start; gap: 12px; }
 .brain-source-ico { font-size: 20px; flex-shrink: 0; padding-top: 2px; }
 .brain-source-body { flex: 1; min-width: 0; }
@@ -1239,14 +1271,210 @@ body {
 .brain-source-sync strong { color: var(--text); }
 .brain-source-share { margin-top: 10px; }
 .brain-source-share-label { font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
-.brain-source-notice { background: rgba(6,182,212,.05); border: 1px solid rgba(6,182,212,.15); border-radius: 8px; padding: 9px 12px; font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text-muted); margin-top: 10px; }
+.brain-source-notice { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 9px 12px; font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text-muted); margin-top: 10px; }
 
-.brain-access-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.brain-access-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; margin-bottom: 8px; }
 .brain-access-peer-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .brain-access-peer-name { font: 700 13px/1 -apple-system,sans-serif; color: var(--text-strong); }
 .brain-access-peer-sub { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); margin-top: 2px; }
 .brain-access-perm { display: flex; align-items: center; gap: 7px; font: 400 12px/1 -apple-system,sans-serif; color: var(--text); margin-bottom: 5px; cursor: pointer; }
 .brain-access-perm input { accent-color: var(--cyan); }
+
+/* ── Brain drawer ──────────────────────────────── */
+.brain-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 460px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 600; transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: -16px 0 40px rgba(0,0,0,0.35);
+}
+.brain-drawer.open { transform: translateX(0); }
+.brain-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 599;
+  opacity: 0; pointer-events: none; transition: opacity .28s;
+}
+.brain-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+.brain-drawer-header {
+  padding: 18px 20px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  background: var(--surface-2);
+}
+.brain-drawer-title { font: 600 12px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; }
+.brain-drawer-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px; transition: color .15s; }
+.brain-drawer-close:hover { color: var(--text-strong); }
+.brain-drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+.brain-drawer-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; background: var(--surface-2); }
+
+/* ── Access radio group ────────────────────────── */
+.access-radios { display: flex; flex-direction: column; gap: 6px; }
+.access-radio-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); border: 1px solid var(--border); cursor: pointer; transition: border-color .15s; }
+.access-radio-row:hover { border-color: var(--border-light); }
+.access-radio-row.selected { border-color: var(--border-active); background: var(--surface-2); }
+.access-radio-row input { accent-color: var(--cyan); margin-top: 2px; flex-shrink: 0; }
+.access-radio-label { font: 600 12px/1.4 -apple-system,sans-serif; color: var(--text-strong); }
+.access-radio-sub { font: 400 11px/1.4 -apple-system,sans-serif; color: var(--text-muted); margin-top: 2px; }
+.brain-peer-checks { margin-top: 10px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); display: flex; flex-direction: column; gap: 6px; }
+
+/* ── Filter bar ────────────────────────────────── */
+.brain-filter-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.brain-filter-pill { padding: 4px 10px; border-radius: var(--r-sm); font: 500 11px/1 -apple-system,sans-serif; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-muted); transition: border-color .12s, color .12s, background .12s; font-family: inherit; }
+.brain-filter-pill:hover { border-color: var(--border-light); color: var(--text); }
+.brain-filter-pill.active { background: var(--surface-2); border-color: var(--border-active); color: var(--text-strong); }
+.brain-filter-pill .pill-count { opacity: .6; margin-left: 3px; font-weight: 400; }
+.brain-search-input { margin-left: auto; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: var(--r-sm); font: 400 12px/1 -apple-system,sans-serif; outline: none; width: 160px; transition: border-color .15s; font-family: inherit; }
+.brain-search-input:focus { border-color: var(--border-active); }
+
+/* ── Brain tooltip ─────────────────────────────────────────────── */
+.brain-tooltip {
+  position: fixed; pointer-events: none; z-index: 700;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 10px 13px;
+  min-width: 140px; max-width: 220px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  opacity: 0; transition: opacity .12s;
+}
+.brain-tooltip.visible { opacity: 1; }
+.brain-tooltip-name { font: 700 12px/1 -apple-system,sans-serif; color: var(--text-strong); margin-bottom: 5px; }
+.brain-tooltip-count { font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text-muted); }
+.brain-tooltip-types { font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text); margin-top: 3px; }
+
+/* ── Dense memory rows ─────────────────────────────────────────── */
+.brain-mem-row-dense {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.brain-mem-row-dense:last-child { border-bottom: none; }
+.brain-mem-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px;
+}
+.brain-mem-dense-body { flex: 1; min-width: 0; }
+.brain-mem-dense-summary {
+  font: 400 13px/1.4 -apple-system,sans-serif; color: var(--text-strong);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.brain-mem-dense-meta {
+  font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text-muted); margin-top: 2px;
+  display: flex; gap: 5px; align-items: center; flex-wrap: wrap;
+}
+.brain-mem-dense-tag {
+  padding: 1px 5px; border-radius: var(--r-xs); font: 500 10px/1.4 -apple-system,sans-serif;
+  border: 1px solid transparent;
+}
+.brain-mem-dense-access { margin-left: auto; flex-shrink: 0; font: 400 10px/1 -apple-system,sans-serif; color: var(--text-dim); }
+.brain-mem-dense-access.shared { color: var(--cyan); }
+
+/* ── Harvest workflow ──────────────────────────────────────────── */
+.hv-section-label {
+  font: 700 10px/1 -apple-system,sans-serif; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 18px 0 8px;
+}
+.hv-section-label:first-child { margin-top: 0; }
+.hv-session-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 10px 13px; margin-bottom: 4px;
+}
+.hv-session-name { font: 600 13px/1 -apple-system,sans-serif; color: var(--text-strong); }
+.hv-session-meta { font: 400 11px/1.5 -apple-system,sans-serif; color: var(--text-muted); margin-top: 4px; }
+.hv-checks { display: flex; flex-direction: column; gap: 5px; }
+.hv-check-row { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 3px 0; }
+.hv-check-row input { accent-color: var(--cyan); flex-shrink: 0; }
+.hv-check-label { font: 400 12px/1.3 -apple-system,sans-serif; color: var(--text); }
+.hv-check-sub { font: 400 10px/1 -apple-system,sans-serif; color: var(--text-muted); margin-left: 22px; margin-top: -2px; }
+.hv-desc {
+  font: 400 12px/1.6 -apple-system,sans-serif; color: var(--text-muted);
+  padding: 0 0 14px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
+}
+
+/* ── Harvest review ────────────────────────────────────────────── */
+.hv-summary-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hv-found-label { font: 600 13px/1 -apple-system,sans-serif; color: var(--text-strong); }
+.hv-sel-count { font: 400 11px/1 -apple-system,sans-serif; color: var(--text-muted); }
+.hv-sel-all { background: none; border: none; color: var(--cyan); cursor: pointer; font: 500 11px/1 -apple-system,sans-serif; padding: 0; font-family: inherit; }
+.hv-candidates { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.hv-candidate {
+  border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px;
+  cursor: pointer; transition: border-color .12s, background .12s; position: relative;
+}
+.hv-candidate:hover { border-color: var(--border-light); }
+.hv-candidate.selected { border-color: var(--border-active); background: var(--surface-2); }
+.hv-candidate.excluded { opacity: .38; border-color: var(--border); background: transparent; }
+.hv-cand-top { display: flex; align-items: flex-start; gap: 8px; }
+.hv-cand-cb { flex-shrink: 0; accent-color: var(--cyan); margin-top: 3px; cursor: pointer; }
+.hv-cand-body { flex: 1; min-width: 0; }
+.hv-cand-type {
+  font: 600 9px/1 -apple-system,sans-serif; text-transform: uppercase; letter-spacing: .07em;
+  padding: 2px 5px; border-radius: var(--r-xs); display: inline-block; margin-bottom: 5px;
+}
+.hv-cand-summary { font: 400 12px/1.5 -apple-system,sans-serif; color: var(--text-strong); margin-bottom: 4px; }
+.hv-cand-meta { font: 400 10px/1.4 -apple-system,sans-serif; color: var(--text-muted); }
+.hv-cand-edit-btn {
+  position: absolute; top: 8px; right: 10px;
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  font: 400 12px/1 -apple-system,sans-serif; padding: 2px 4px; border-radius: var(--r-xs); transition: color .12s;
+}
+.hv-cand-edit-btn:hover { color: var(--text); }
+.hv-dup-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: 400 10px/1 -apple-system,sans-serif; color: var(--amber);
+  background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18);
+  border-radius: var(--r-xs); padding: 2px 6px; margin-top: 4px;
+}
+.hv-edit-fields {
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.hv-edit-field input, .hv-edit-field select, .hv-edit-field textarea {
+  width: 100%; box-sizing: border-box;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-strong); padding: 5px 8px; border-radius: var(--r-sm);
+  font: 400 11px/1 -apple-system,sans-serif; outline: none; transition: border-color .15s;
+}
+.hv-edit-field input:focus, .hv-edit-field select:focus { border-color: var(--border-active); }
+.hv-edit-field label { font: 600 9px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 3px; }
+.hv-edit-field.full { grid-column: 1 / -1; }
+.hv-edit-field textarea { resize: vertical; min-height: 56px; }
+.hv-edit-actions { grid-column: 1/-1; display: flex; gap: 6px; justify-content: flex-end; margin-top: 2px; }
+.hv-access-bar {
+  padding: 12px 0 0; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.hv-access-label { font: 600 10px/1 -apple-system,sans-serif; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-right: 4px; }
+.hv-access-opt { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.hv-access-opt input { accent-color: var(--cyan); }
+.hv-access-opt span { font: 400 12px/1 -apple-system,sans-serif; color: var(--text); }
+.hv-empty { text-align: center; padding: 32px 0; color: var(--text-muted); font: 400 12px/1.6 -apple-system,sans-serif; }
+
+/* ── Claude Session source ─────────────────────────────────────── */
+.bs-prompt-wrap {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 12px; margin-bottom: 12px; position: relative;
+}
+.bs-prompt-label {
+  font: 700 9px/1 -apple-system,sans-serif; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; display: flex; align-items: center; justify-content: space-between;
+}
+.bs-prompt-text {
+  font: 400 11px/1.6 monospace; color: var(--text);
+  white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y: auto;
+}
+.bs-copy-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-muted); border-radius: var(--r-xs); padding: 3px 9px;
+  font: 600 10px/1 -apple-system,sans-serif; cursor: pointer; transition: border-color .12s, color .12s; flex-shrink: 0;
+}
+.bs-copy-btn:hover { border-color: var(--border-light); color: var(--text); }
+.bs-copy-btn.copied { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+.bs-paste-label {
+  font: 700 9px/1 -apple-system,sans-serif; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 5px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bs-paste-hint { font: 400 10px/1 -apple-system,sans-serif; color: var(--text-dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
 </style>
 <!-- Three.js r134 — global build matching Adrian World visual system -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
@@ -1278,9 +1506,6 @@ body {
     </div>
     <div class="nav-item" data-page="tasks" onclick="navigate('tasks', this)">
       <span class="nav-icon">⚙</span> Tasks
-    </div>
-    <div class="nav-item" data-page="artifacts" onclick="navigate('artifacts', this)">
-      <span class="nav-icon">◈</span> Artifacts
     </div>
     <div class="nav-item" data-page="brain" onclick="navigate('brain', this)">
       <span class="nav-icon">◎</span> Brain
@@ -1417,6 +1642,7 @@ body {
         <button class="filter-tab" onclick="filterTasks('pending-approval', this)">Pending Approval</button>
         <button class="filter-tab" onclick="filterTasks('completed', this)">Completed</button>
         <button class="filter-tab" onclick="filterTasks('failed', this)">Failed</button>
+        <button class="filter-tab" onclick="filterTasks('artifacts', this)">Artifacts</button>
       </div>
       <div class="card">
         <div id="tasks-full-list">
@@ -1425,123 +1651,59 @@ body {
       </div>
     </div>
 
-    <!-- Artifacts -->
-    <div class="page" id="page-artifacts">
-      <div class="card">
-        <div class="card-title">Artifacts</div>
-        <div id="artifacts-list">
-          <div class="empty-state"><div class="empty-icon">◈</div>No artifacts yet</div>
+    <!-- Brain -->
+    <div class="page" id="page-brain" style="position:relative;">
+
+      <!-- Hover tooltip -->
+      <div id="brain-tooltip" class="brain-tooltip">
+        <div class="brain-tooltip-name"></div>
+        <div class="brain-tooltip-count"></div>
+        <div class="brain-tooltip-types"></div>
+      </div>
+
+      <!-- Drawer overlay -->
+      <div id="brain-drawer-overlay" class="brain-drawer-overlay" onclick="brainCloseDrawer()"></div>
+
+      <!-- Right drawer -->
+      <div id="brain-drawer" class="brain-drawer">
+        <div class="brain-drawer-header">
+          <span class="brain-drawer-title" id="brain-drawer-title">Add Memory</span>
+          <button class="brain-drawer-close" onclick="brainCloseDrawer()">✕</button>
+        </div>
+        <div class="brain-drawer-body" id="brain-drawer-body">
+          <!-- populated by JS -->
+        </div>
+        <div class="brain-drawer-footer" id="brain-drawer-footer">
+          <!-- populated by JS -->
         </div>
       </div>
-    </div>
 
-    <!-- Brain -->
-    <div class="page" id="page-brain">
-      <!-- Orbital visualization -->
-      <div class="brain-orbital-wrap">
+      <!-- Brain Observatory -->
+      <div class="brain-orbital-wrap" style="height:380px;">
         <canvas id="brain-orbital-canvas"></canvas>
+        <div id="bo-label-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;"></div>
+        <div id="bo-zoom-out" onclick="_bo3ZoomOut()" style="position:absolute;top:12px;right:14px;font:400 11px/1 -apple-system,sans-serif;color:rgba(148,163,184,0.38);cursor:pointer;user-select:none;letter-spacing:.03em;transition:color .18s;" onmouseover="this.style.color='rgba(148,163,184,0.75)'" onmouseout="this.style.color='rgba(148,163,184,0.38)'">↗ See all</div>
         <div class="brain-orbital-info">
-          <div class="brain-orbital-title">World Brain</div>
-          <div class="brain-orbital-sub" id="brain-orbital-sub">Shared knowledge layer</div>
+          <div class="bo-hud">
+            <div class="bo-hud-title">World Brain</div>
+            <div class="bo-hud-sep"></div>
+            <div class="bo-hud-stat"><span class="bo-hud-num" id="bo-stat-mem-n">0</span><span class="bo-hud-lbl">Memories</span></div>
+            <div class="bo-hud-stat"><span class="bo-hud-num" id="bo-stat-src-n">0</span><span class="bo-hud-lbl">Sources</span></div>
+            <div class="bo-hud-stat"><span class="bo-hud-num" id="bo-stat-shared-n">0</span><span class="bo-hud-lbl">Shared</span></div>
+          </div>
+          <div class="bo-hud-sub">
+            <span id="bo-stat-sync" style="color:#4ade80;">● Synced</span>
+            <span class="bo-hud-dot">·</span>
+            <span id="bo-stat-updated">Last updated just now</span>
+          </div>
         </div>
       </div>
 
       <!-- Action bar -->
       <div class="brain-action-bar">
-        <button class="btn" id="bbtn-memory" onclick="brainToggleComposer()">+ Add Memory</button>
-        <button class="btn" id="bbtn-source" onclick="brainToggleAddSource()">+ Add Source</button>
-        <button class="btn" id="bbtn-harvest" onclick="brainHarvestSession()">⚡ Harvest Session</button>
-      </div>
-
-      <!-- Memory composer -->
-      <div id="brain-composer" class="brain-composer" style="display:none">
-        <div class="brain-composer-title">Add to Brain</div>
-        <div class="form-group">
-          <label class="form-label">What should this world remember?</label>
-          <textarea class="form-input form-textarea" id="bc-summary" placeholder="e.g. Authentication uses Supabase. OTP is the primary login method." style="min-height:80px;resize:vertical;"></textarea>
-        </div>
-        <div class="bc-ctx-grid">
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Project</label>
-            <input class="form-input" id="bc-project" placeholder="e.g. Bantay Basura">
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Repository</label>
-            <input class="form-input" id="bc-repo" placeholder="e.g. owner/repo">
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Area / Component</label>
-            <input class="form-input" id="bc-area" placeholder="e.g. Authentication">
-          </div>
-        </div>
-        <div class="bc-type-row">
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Type</label>
-            <select class="form-select" id="bc-type">
-              <option value="decision">Decision</option>
-              <option value="fact">Fact</option>
-              <option value="constraint">Constraint</option>
-              <option value="convention">Convention</option>
-              <option value="learning">Learning</option>
-              <option value="goal">Goal</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Importance</label>
-            <div class="imp-pills" id="bc-imp-pills">
-              <div class="imp-pill" data-v="low" onclick="brainSetImp(this)">Low</div>
-              <div class="imp-pill active" data-v="normal" onclick="brainSetImp(this)">Normal</div>
-              <div class="imp-pill" data-v="high" onclick="brainSetImp(this)">High</div>
-              <div class="imp-pill" data-v="critical" onclick="brainSetImp(this)">Critical</div>
-            </div>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:14px">
-          <label class="form-label">Access</label>
-          <label class="peer-share-row" style="margin-bottom:8px;">
-            <input type="checkbox" id="bc-private"> <span><span class="peer-share-name">Private</span> <span class="peer-share-sub">— only this world</span></span>
-          </label>
-          <div style="font:600 10px/1 -apple-system,sans-serif;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Share with peers</div>
-          <div class="peer-share-list" id="bc-peer-list">
-            <div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No connected peers</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
-          <span id="bc-save-msg" style="font:400 12px/1 -apple-system,sans-serif;color:var(--green);"></span>
-          <button class="btn" onclick="brainToggleComposer()">Cancel</button>
-          <button class="btn-primary" onclick="brainAddMemory()">Add Memory</button>
-        </div>
-      </div>
-
-      <!-- Add Source form -->
-      <div id="brain-add-source-form" class="brain-composer" style="display:none">
-        <div class="brain-composer-title">Add Knowledge Source</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Type</label>
-            <select class="form-select" id="bs-type">
-              <option value="repository">GitHub Repository</option>
-              <option value="folder">Local Folder</option>
-              <option value="file">File / Document</option>
-              <option value="api-spec">API Spec</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Name</label>
-            <input class="form-input" id="bs-name" placeholder="e.g. project-adrian">
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:14px">
-          <label class="form-label">Path / URL</label>
-          <input class="form-input" id="bs-path" placeholder="e.g. github.com/joseph/project-adrian or /Users/joseph/docs">
-        </div>
-        <div class="brain-source-notice" style="margin-bottom:14px">
-          ℹ Share knowledge, not source access. Peers can receive permitted Brain context derived from this source. This does not grant access to the underlying repository or files.
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
-          <button class="btn" onclick="brainToggleAddSource()">Cancel</button>
-          <button class="btn-primary" onclick="brainAddSource()">Add Source</button>
-        </div>
+        <button class="btn" id="bbtn-memory" onclick="brainOpenDrawer('memory')">+ Memory</button>
+        <button class="btn" id="bbtn-source" onclick="brainOpenDrawer('source')">+ Source</button>
+        <button class="btn" id="bbtn-harvest" onclick="brainOpenDrawer('harvest')">⚡ Harvest</button>
       </div>
 
       <!-- Tabs -->
@@ -1551,26 +1713,34 @@ body {
         <button class="brain-tab-btn" id="btab-access" onclick="brainTab('access')">Access</button>
       </div>
 
-      <!-- Memories -->
+      <!-- Memories tab -->
       <div id="brain-tab-memories">
+        <div class="brain-filter-bar">
+          <button class="brain-filter-pill active" data-type="all" onclick="brainFilter(this)">All <span class="pill-count" id="bfc-all">0</span></button>
+          <button class="brain-filter-pill" data-type="decision" onclick="brainFilter(this)">Decisions <span class="pill-count" id="bfc-decision">0</span></button>
+          <button class="brain-filter-pill" data-type="fact" onclick="brainFilter(this)">Facts <span class="pill-count" id="bfc-fact">0</span></button>
+          <button class="brain-filter-pill" data-type="learning" onclick="brainFilter(this)">Learnings <span class="pill-count" id="bfc-learning">0</span></button>
+          <button class="brain-filter-pill" data-type="constraint" onclick="brainFilter(this)">Constraints <span class="pill-count" id="bfc-constraint">0</span></button>
+          <input class="brain-search-input" placeholder="Search memories…" oninput="brainSearch(this.value)" id="brain-search">
+        </div>
         <div id="brain-list">
-          <div class="empty-state"><div class="empty-icon">◎</div>No memories yet — add the first one above</div>
+          <div class="empty-state"><div class="empty-icon">◎</div>No memories yet — click + Memory above</div>
         </div>
       </div>
 
-      <!-- Sources -->
+      <!-- Sources tab -->
       <div id="brain-tab-sources" style="display:none">
         <div id="brain-sources-list">
           <div class="empty-state"><div class="empty-icon">◈</div>No knowledge sources connected</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
-          <button class="btn" onclick="brainToggleAddSource()">+ Repository</button>
-          <button class="btn" onclick="brainToggleAddSource()">+ Folder</button>
-          <button class="btn" onclick="brainToggleAddSource()">+ Files</button>
+          <button class="btn" onclick="brainOpenDrawer('source')">+ Repository</button>
+          <button class="btn" onclick="brainOpenDrawer('source')">+ Folder</button>
+          <button class="btn" onclick="brainOpenDrawer('source')">+ Files</button>
         </div>
       </div>
 
-      <!-- Access -->
+      <!-- Access tab -->
       <div id="brain-tab-access" style="display:none">
         <div id="brain-access-list">
           <div class="empty-state"><div class="empty-icon">◎</div>No connected peers</div>
@@ -1653,6 +1823,13 @@ body {
       <select id="composer-cap-select" class="form-select" style="font-size:11px;padding:4px 8px;height:28px;" onchange="_gwCapChanged(this.value)"></select>
     </div>
     <div class="composer-row">
+      <div id="session-auth-warn" style="display:none;" class="session-auth-warn">
+        <span style="font-size:16px;flex-shrink:0;">⚠</span>
+        <div class="session-auth-warn-body">
+          <strong>Session token invalid</strong> — this world's connection needs to be refreshed.<br>
+          <button class="session-auth-warn-fix" onclick="_peerAuthFix()">Go to Connections → Reconnect</button>
+        </div>
+      </div>
       <button class="composer-type-btn" id="composer-type-btn" onclick="toggleComposerMenu()">Message ▾</button>
       <div id="composer-type-menu" class="composer-type-menu">
         <div class="composer-type-item" onclick="setComposerType('message')">💬 Message</div>
@@ -1672,8 +1849,8 @@ body {
     <div class="modal-header">
       <span class="modal-title">Artifact</span>
       <div style="display:flex;gap:6px;align-items:center;">
-        <button id="artifact-send-btn" style="display:none;padding:4px 11px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);border-radius:7px;color:#06b6d4;font:500 11px -apple-system,sans-serif;cursor:pointer;" onclick="artifactSendAsMessage()">→ Send as message</button>
-        <button id="artifact-copy-btn" style="padding:4px 11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#94a3b8;font:500 11px -apple-system,sans-serif;cursor:pointer;" onclick="artifactCopy(this)">Copy</button>
+        <button id="artifact-send-btn" style="display:none;padding:4px 11px;background:var(--cyan-glow);border:1px solid var(--cyan-dim);border-radius:4px;color:var(--cyan);font:500 11px -apple-system,sans-serif;cursor:pointer;" onclick="artifactSendAsMessage()">→ Send as message</button>
+        <button id="artifact-copy-btn" style="padding:4px 11px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font:500 11px -apple-system,sans-serif;cursor:pointer;" onclick="artifactCopy(this)">Copy</button>
         <button class="modal-close" onclick="closeModal('modal-artifact')">✕</button>
       </div>
     </div>
@@ -1702,6 +1879,7 @@ body {
 window._startTime = Date.now();
 let _state = { peers: [], tasks: [], audit: [], messages: [], brain: [], worldId: '', worldName: '', port: '' };
 let _taskFilter = 'all';
+var _peerErrors = {}; // { worldId: errorMessage } — auth/session failures
 let _msgTarget = null;
 
 // ── Navigation ────────────────────────────────────────────────────
@@ -1726,7 +1904,7 @@ function navigate(page, el) {
     });
   }
   // Brain canvas — init/resume on first visit
-  if (page === 'brain') requestAnimationFrame(_brainOrbitalInit);
+  if (page === 'brain') { brainCloseDrawer(); requestAnimationFrame(_bo3Init); }
   // Mark messages as read on visit
   if (page === 'messages') {
     _state.messages.forEach(m => m.read = true);
@@ -1737,7 +1915,7 @@ function navigate(page, el) {
 // ── Copy helpers ──────────────────────────────────────────────────
 function copyWorldId() {
   if (_state.worldId) {
-    navigator.clipboard.writeText(_state.worldId).catch(() => {});
+    _copyText(_state.worldId, 'World ID copied');
     flashMsg('topbar-id-text', 'Copied!', 600);
   }
 }
@@ -2305,12 +2483,12 @@ function syncWorldScene(myName, peers) {
       var pos = _wPeerPos(wid, i, peers.length);
       grp.position.copy(pos);
       _wscene.add(grp);
-      var labelEl = _wMkLabel(peer.worldName || peer.worldId, peer.status, false);
+      var labelEl = _wMkLabel(peer.worldName || peer.worldId, peer.status, false, wid);
       entry = { group: grp, labelEl: labelEl };
       _wislands.set(wid, entry);
     } else {
       _wSetIslandStatus(entry.group, peer.status);
-      _wUpdateLabel(entry.labelEl, peer.worldName || peer.worldId, peer.status);
+      _wUpdateLabel(entry.labelEl, peer.worldName || peer.worldId, peer.status, wid);
     }
     // Set base emissive for pulse calculation
     var om = entry.group.userData._orbMat;
@@ -2386,30 +2564,36 @@ function _wSpawnPacket(worldId, dir, colorHex, type) {
 }
 
 // ── HTML world labels ──────────────────────────────────────────────
-function _wMkLabel(name, status, isLocal) {
+function _wMkLabel(name, status, isLocal, worldId) {
   var layer = document.getElementById('world-label-layer');
   if (!layer) return null;
   var el = document.createElement('div');
   el.className = 'world-label';
-  el.innerHTML = _wLabelHTML(name, status, isLocal);
+  if (worldId) el.dataset.worldId = worldId;
+  el.innerHTML = _wLabelHTML(name, status, isLocal, worldId);
+  if (!isLocal && worldId) el.onclick = function() { if (_peerErrors[worldId]) _peerAuthFix(worldId); };
   layer.appendChild(el);
   return el;
 }
-function _wLabelHTML(name, status, isLocal) {
+function _wLabelHTML(name, status, isLocal, worldId) {
   var cmap = { online:'#06b6d4',active:'#22d3ee',pending:'#f59e0b',error:'#ef4444',offline:'#52525b' };
   var dot  = cmap[status] || cmap.offline;
   var glow = (status !== 'offline') ? ';box-shadow:0 0 5px ' + dot : '';
   var you  = isLocal ? '<span class="wl-lbl-you">You</span>' : '';
-  return '<div class="wl-lbl-name"><span>' + escHTML(name) + '</span>' + you + '</div>'
+  var warn = (!isLocal && worldId && _peerErrors[worldId]) ? '<span class="wl-lbl-warn">!</span>' : '';
+  return '<div class="wl-lbl-name"><span>' + escHTML(name) + '</span>' + you + warn + '</div>'
        + '<div class="wl-lbl-status">'
        + '<span class="wl-lbl-dot" style="background:' + dot + glow + '"></span>'
        + '<span class="wl-lbl-stxt">' + escHTML(status || 'offline') + '</span>'
        + '</div>';
 }
-function _wUpdateLabel(el, name, status) {
+function _wUpdateLabel(el, name, status, worldId) {
   if (!el) return;
   var isLocal = !!el.querySelector('.wl-lbl-you');
-  el.innerHTML = _wLabelHTML(name, status, isLocal);
+  if (worldId) el.dataset.worldId = worldId;
+  el.classList.toggle('has-error', !isLocal && !!worldId && !!_peerErrors[worldId]);
+  el.innerHTML = _wLabelHTML(name, status, isLocal, worldId);
+  el.onclick = (!isLocal && worldId && _peerErrors[worldId]) ? function() { _peerAuthFix(worldId); } : null;
 }
 function _wUpdateLabels() {
   if (!_wrenderer) return;
@@ -2497,6 +2681,7 @@ function openSession(peer) {
   document.querySelectorAll('.session-tab').forEach(function(el){ el.classList.toggle('active', el.dataset.tab === 'session'); });
   renderSessionHeader();
   renderSessionTimeline();
+  _updateSessionAuthWarn();
 }
 
 function closeSession() {
@@ -2550,6 +2735,12 @@ function renderSessionTimeline() {
       .filter(function(t){ return t.sourceWorld === peer.worldId || t.targetWorld === peer.worldId; })
       .forEach(function(t){ timeline.push({ _type:'task', task:t, _ts:t.createdAt||0 }); });
 
+    // Outbound tasks sent by us (client-side tracked)
+    (_outboxTasks[peer.worldId] || []).forEach(function(o) {
+      var already = timeline.find(function(e){ return e._type==='task' && e.task.prompt===o.prompt && Math.abs((e._ts||0)-o.ts)<5000; });
+      if (!already) timeline.push({ _type:'task-out', cap:o.capability, prompt:o.prompt, _ts:o.ts });
+    });
+
     timeline.sort(function(a,b){ return a._ts - b._ts; });
 
     if (!timeline.length) {
@@ -2575,8 +2766,21 @@ function renderSessionTimeline() {
           + '<div class="tl-time">' + fmtTs(entry._ts) + '</div>'
           + '</div>';
       }
+      // Outbound task (client-side tracked, no server task object yet)
+      if (entry._type === 'task-out') {
+        return '<div class="tl-system-event">'
+          + '<span class="tl-sys-icon" style="color:#f59e0b;">→</span>'
+          + '<div class="tl-sys-body">'
+          + '<span class="tl-sys-cap">' + escHTML(entry.cap) + '</span>'
+          + '<span class="tl-sys-status">sent</span>'
+          + (entry.prompt ? '<div class="tl-sys-prompt">' + escHTML(entry.prompt) + '</div>' : '')
+          + '</div>'
+          + '<div class="tl-time">' + fmtTs(entry._ts) + '</div>'
+          + '</div>';
+      }
       // Task event — inline system entry
       var t = entry.task;
+      if (!t) return '';
       var isOut = (t.sourceWorld !== peer.worldId); // we dispatched it
       var icon  = t.status === 'completed' ? '✓' : t.status === 'running' ? '⚙' : t.status === 'error' ? '✗' : '◌';
       var iconColor = t.status === 'completed' ? '#22c55e' : t.status === 'running' ? '#f59e0b' : t.status === 'error' ? '#ef4444' : '#475569';
@@ -2655,9 +2859,14 @@ function renderSessionTimeline() {
 
 // ── Outbound message store (in-session memory for "You" side) ───────
 var _outbox = {}; // peerId → [{text, ts}]
+var _outboxTasks = {}; // peerId → [{capability, prompt, ts, status}]
 function _outboxPush(peerId, text) {
   if (!_outbox[peerId]) _outbox[peerId] = [];
   _outbox[peerId].push({ text: text, ts: Date.now() });
+}
+function _outboxTaskPush(peerId, capability, prompt) {
+  if (!_outboxTasks[peerId]) _outboxTasks[peerId] = [];
+  _outboxTasks[peerId].push({ capability, prompt, ts: Date.now(), status: 'sent' });
 }
 
 // ── Composer ────────────────────────────────────────────────────────
@@ -2699,7 +2908,12 @@ async function sendComposerMsg() {
         body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, text: text })
       });
       var data = await res.json();
-      if (data.error) { _wlGwToast('✗ ' + data.error, 'err'); return; }
+      if (data.error) {
+        _wlGwToast('✗ ' + data.error, 'err');
+        if (/session token|invalid session|rejected/i.test(data.error)) _markPeerError(_sessionPeer.worldId, data.error);
+        return;
+      }
+      _clearPeerError(_sessionPeer.worldId);
       _outboxPush(_sessionPeer.worldId, text);
       _wSpawnPacket(_sessionPeer.worldId, 'out', 0x06b6d4, 'message');
       _wlGwToast('Message sent');
@@ -2715,7 +2929,13 @@ async function sendComposerMsg() {
         body: JSON.stringify({ targetWorldId: _sessionPeer.worldId, capability: cap, prompt: text, sharedContext: { from: _state.worldName, timestamp: Date.now() } })
       });
       var data2 = await res2.json();
-      if (data2.error) { _wlGwToast('✗ ' + data2.error, 'err'); return; }
+      if (data2.error) {
+        _wlGwToast('✗ ' + data2.error, 'err');
+        if (/session token|invalid session|rejected/i.test(data2.error)) _markPeerError(_sessionPeer.worldId, data2.error);
+        return;
+      }
+      _clearPeerError(_sessionPeer.worldId);
+      _outboxTaskPush(_sessionPeer.worldId, cap, text);
       _wSpawnPacket(_sessionPeer.worldId, 'out', 0xf59e0b, 'task');
       _wlGwToast('Task sent');
       await refreshAll();
@@ -2740,11 +2960,11 @@ function _wlGwToast(msg, type) {
   var el = document.getElementById('wl-gw-toast');
   if (!el) {
     el = document.createElement('div'); el.id = 'wl-gw-toast';
-    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d1929;border:1px solid #1a3a5c;border-radius:8px;padding:8px 18px;font:500 12px/1 -apple-system,sans-serif;color:#e2e8f0;z-index:9999;opacity:0;transition:opacity .25s;white-space:nowrap;pointer-events:none;';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 18px;font:500 12px/1 -apple-system,sans-serif;color:var(--text-strong);z-index:9999;opacity:0;transition:opacity .25s;white-space:nowrap;pointer-events:none;';
     document.body.appendChild(el);
   }
   el.textContent = msg;
-  el.style.borderColor = type === 'err' ? '#ef4444' : '#1a3a5c';
+  el.style.borderColor = type === 'err' ? 'var(--red)' : 'var(--border)';
   el.style.opacity = '1';
   clearTimeout(el._t);
   el._t = setTimeout(function(){ el.style.opacity = '0'; }, 2800);
@@ -2867,16 +3087,19 @@ async function renderConnections() {
       var isOn = p.status === 'online';
       var isDisabled = p.disabled || p.status === 'paused' || p.status === 'disabled';
       var statusLabel = isOn ? 'Online' : (isDisabled ? 'Paused' : 'Offline');
-      return '<div class="conn-peer-card">'
-        + '<div class="conn-peer-orb" style="background:radial-gradient(circle at 38% 36%,' + (isOn ? hsl : '#1e2a3a') + ',' + (isOn ? 'hsl(' + hue + ',60%,30%)' : '#111827') + ' 55%,' + (isOn ? 'hsl(' + hue + ',60%,18%)' : '#0d1117') + ' 100%);box-shadow:' + (isOn ? '0 0 10px ' + hsl + '44' : 'none') + '"></div>'
+      var hasErr = !!_peerErrors[p.worldId];
+      return (hasErr ? '<div style="margin-bottom:4px;padding:8px 12px;background:var(--amber-dim);border:1px solid var(--amber);border-radius:var(--r-sm);font:500 11px/1.4 -apple-system,sans-serif;color:var(--amber);display:flex;align-items:center;gap:6px;"><span style="font-size:14px;">⚠</span>Session token invalid — disconnect then reconnect to fix</div>' : '')
+        + '<div class="conn-peer-card" data-world-id="' + escAttr(p.worldId) + '" style="' + (hasErr ? 'border-color:var(--amber);' : '') + '">'
+        + '<div class="dm-avatar" style="background:' + (isOn ? _worldColor(p.worldId) : 'var(--surface-2)') + ';opacity:' + (isOn ? '1' : '0.5') + ';">' + escHTML((p.worldName||p.worldId).slice(0,2).toUpperCase()) + '</div>'
         + '<div class="conn-peer-body">'
         + '<div class="conn-peer-name">' + escHTML(p.worldName || p.worldId) + '</div>'
         + '<div class="conn-peer-meta">' + escHTML(p.host || '—') + ' · ' + statusLabel + ' · ' + relTime(p.lastSeen) + '</div>'
         + '</div>'
         + '<div class="conn-toggle-wrap">'
         + '<span class="conn-toggle-label">' + (isOn ? 'On' : 'Off') + '</span>'
-        + '<button class="conn-toggle' + (isOn ? ' on' : '') + '" onclick="togglePeerConnection(\'' + escAttr(p.worldId) + '\',' + isOn + ',\'' + escAttr(p.host||'') + '\')" title="' + (isOn ? 'Pause connection' : 'Reconnect') + '"></button>'
+        + '<button class="conn-toggle' + (isOn ? ' on' : '') + '" onclick="togglePeerConnection(\'' + escAttr(p.worldId) + '\',' + isOn + ',\'' + escAttr(p.host||'') + '\')" title="' + (isOn ? 'Pause connection' : 'Resume') + '"></button>'
         + '</div>'
+        + (isOn ? '<button class="btn" style="flex-shrink:0;" onclick="reconnectPeer(\'' + escAttr(p.worldId) + '\')" title="Refresh session token">↺ Reconnect</button>' : '')
         + '<button class="conn-disconnect-btn" onclick="removePeer(\'' + escAttr(p.worldId) + '\',\'' + escAttr(p.worldName||p.worldId) + '\')" title="Remove world">✕</button>'
         + '</div>';
     }).join('');
@@ -2892,12 +3115,23 @@ async function renderConnections() {
   }
 }
 
+function _copyText(text, successMsg) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(function(){ _wlGwToast(successMsg || 'Copied'); }).catch(function(){ _copyFallback(text, successMsg); });
+  } else {
+    _copyFallback(text, successMsg);
+  }
+}
+function _copyFallback(text, successMsg) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); _wlGwToast(successMsg || 'Copied'); } catch(e) { _wlGwToast('Copy failed — select text manually', 'err'); }
+  document.body.removeChild(ta);
+}
 function copyShareUrl() {
   if (!_myShareUrl) return;
-  navigator.clipboard.writeText(_myShareUrl).then(function() { _wlGwToast('URL copied'); }).catch(function() {
-    var t = document.getElementById('conn-share-url');
-    if (t) { var r = document.createRange(); r.selectNode(t); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
-  });
+  _copyText(_myShareUrl, 'URL copied');
 }
 
 function startEditName() {
@@ -2994,6 +3228,18 @@ async function togglePeerConnection(worldId, isCurrentlyOn, host) {
   }
 }
 
+async function reconnectPeer(worldId) {
+  _wlGwToast('Reconnecting…');
+  try {
+    var res = await fetch('/worldlink/local/peer/' + encodeURIComponent(worldId) + '/reconnect', { method: 'POST' });
+    var data = await res.json();
+    if (data.error) { _wlGwToast('✗ ' + data.error, 'err'); return; }
+    _clearPeerError(worldId);
+    _wlGwToast('Reconnected — session refreshed');
+    await refreshAll(); renderConnections();
+  } catch(e) { _wlGwToast('✗ ' + e.message, 'err'); }
+}
+
 async function removePeer(worldId, worldName) {
   var displayName = worldName || worldId;
   if (!confirm('Remove "' + displayName + '" from your connected worlds?\n\nThis will permanently delete the connection. You\'ll need to paste the gateway URL again to reconnect.')) return;
@@ -3038,7 +3284,7 @@ function renderOverview() {
           <div class="peer-sub">${p.status === 'online' ? '🟢' : '⚫'} ${p.status} · ${relTime(p.lastSeen)}</div>
         </div>
         <div class="peer-actions">
-          <button class="icon-btn" title="Send message" onclick="openMsgModal('${escAttr(p.worldId)}','${escAttr(name)}')">✉</button>
+          <button class="icon-btn" title="Open chat" onclick="openPeerSession('${escAttr(p.worldId)}')">✉</button>
         </div>
       </div>`;
     }).join('');
@@ -3069,13 +3315,15 @@ function renderOverview() {
     if (_state.messages.length) {
       msgCard.style.display = 'block';
       const msgsListEl = document.getElementById('ov-messages-list');
-      if (msgsListEl) msgsListEl.innerHTML = _state.messages.slice(0, 5).map(m =>
-        `<div class="message-item">
-          <div class="message-from">${escHTML(m.fromWorld || '—')}</div>
-          <div class="message-text">${escHTML(m.text)}</div>
+      if (msgsListEl) msgsListEl.innerHTML = _state.messages.slice(0, 5).map(m => {
+        const peer = (_state.peers||[]).find(p => p.worldId === m.fromWorld);
+        const name = peer?.worldName || m.fromWorld || '—';
+        return `<div class="message-item" style="cursor:pointer;" onclick="openPeerSession('${escAttr(m.fromWorld||'')}')">
+          <div class="message-from">${escHTML(name)}</div>
+          <div class="message-text">${escHTML((m.text||'').length>60?m.text.slice(0,60)+'…':m.text)}</div>
           <div class="message-time">${relTime(m.timestamp)}</div>
-        </div>`
-      ).join('');
+        </div>`;
+      }).join('');
     } else {
       msgCard.style.display = 'none';
     }
@@ -3119,7 +3367,7 @@ function renderPeers() {
       </div>
       <div class="peer-actions">
         <span class="badge ${p.status === 'online' ? 'badge-green' : 'badge-muted'}">${p.status}</span>
-        <button class="btn" onclick="openMsgModal('${escAttr(p.worldId)}','${escAttr(name)}')">✉ Send Message</button>
+        <button class="btn" onclick="openPeerSession('${escAttr(p.worldId)}')">Send Message</button>
       </div>
     </div>`;
   }).join('');
@@ -3135,9 +3383,15 @@ function filterTasks(filter, el) {
 function renderTasks() {
   const el = document.getElementById('tasks-full-list');
   let tasks = [..._state.tasks].reverse();
-  if (_taskFilter !== 'all') tasks = tasks.filter(t => t.status === _taskFilter);
+  if (_taskFilter === 'artifacts') {
+    tasks = tasks.filter(t => t.artifactId);
+  } else if (_taskFilter !== 'all') {
+    tasks = tasks.filter(t => t.status === _taskFilter);
+  }
   if (!tasks.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙</div>No tasks found</div>';
+    const icon = _taskFilter === 'artifacts' ? '◈' : '⚙';
+    const label = _taskFilter === 'artifacts' ? 'No artifacts yet' : 'No tasks found';
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${icon}</div>${label}</div>`;
     return;
   }
   el.innerHTML = tasks.map(t => `<div class="task-item" style="padding:12px 0;">
@@ -3148,7 +3402,7 @@ function renderTasks() {
       <div class="task-time">From: ${escHTML((t.sourceWorld||'').slice(0,24))} · ${relTime(t.createdAt)}</div>
     </div>
     <div class="task-actions">
-      ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}','${t.sourceWorld||''}')">View</button>` : ''}
+      ${t.artifactId ? `<button class="btn" onclick="viewArtifact('${t.artifactId}','${t.sourceWorld||''}')">View Artifact</button>` : ''}
       ${t.status === 'pending-approval' ? `
         <button class="btn btn-green" onclick="approveTask('${t.taskId}')">Approve</button>
         <button class="btn btn-red" onclick="denyTask('${t.taskId}')">Deny</button>
@@ -3180,104 +3434,567 @@ function renderArtifacts() {
 var _bSources = [];   // { id, type, name, path, indexed, lastIndexed, branch, commit, syncMode, memCount, sharedWith }
 var _bCurrentTab = 'memories';
 
-// ── Brain orbital canvas ───────────────────────────────────────────
-var _boCtx = null, _boAnimId = null, _boW = 0, _boH = 0, _boT = 0, _boReady = false;
+// ── Brain orbital canvas — 3D ──────────────────────────────────────
+var _bo3R = null, _bo3Scene = null, _bo3Camera = null, _bo3Controls = null;
+var _bo3AnimId = null, _bo3T = 0, _bo3CoreMesh = null;
+var _bo3Nodes = []; // [{mesh(hit sphere), glowSpr, pointSpr, selSpr, key, cl, _hv, _baseGS}]
+var _bo3HoveredKey = null, _bo3Raycaster = null, _bo3Mouse = null;
+var _bo3LabelEls = [];
+var _bo3Mode = 'category'; // 'category' | 'drill'
+var _bo3DrillType = null;
+var _bo3GlowTex = null;  // shared radial gradient canvas texture
+var _bo3CoreSprites = []; // [outer, mid, core] for pulsing
+var _bo3CoreOrbs = [];   // [{pivot, speed, phase}] orbiting mini-orbs
+var _bo3BgGroup = null;  // rotating background particle clouds
+var _bo3ZoomTarget = null; // null = free, number = lerp toward this radius
+var _bo3CamSph = null;   // THREE.Spherical reused for zoom lerp (no GC)
+var _boClickedKey = null;
+var _boHarvestAnim = [];
+var _boPrefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function _brainOrbitalInit() {
+function _bo3MakeGlowTex() {
+  var sz = 256, mid = 128;
+  var cv = document.createElement('canvas');
+  cv.width = cv.height = sz;
+  var ctx = cv.getContext('2d');
+  var gr = ctx.createRadialGradient(mid, mid, 0, mid, mid, mid);
+  gr.addColorStop(0,    'rgba(255,255,255,1)');
+  gr.addColorStop(0.12, 'rgba(255,255,255,0.85)');
+  gr.addColorStop(0.35, 'rgba(255,255,255,0.3)');
+  gr.addColorStop(0.65, 'rgba(255,255,255,0.06)');
+  gr.addColorStop(1,    'rgba(255,255,255,0)');
+  ctx.fillStyle = gr;
+  ctx.fillRect(0, 0, sz, sz);
+  return new THREE.CanvasTexture(cv);
+}
+
+function _bo3CategoryData() {
+  var memories = _state.brain || [];
+  var typeConfig = [
+    { type: 'decision',   label: 'Decisions',   col: 0x06b6d4 },
+    { type: 'learning',   label: 'Learnings',   col: 0xf59e0b },
+    { type: 'constraint', label: 'Constraints', col: 0xf87171 },
+    { type: 'convention', label: 'Conventions', col: 0x4ade80 },
+    { type: 'fact',       label: 'Facts',       col: 0x818cf8 },
+    { type: 'goal',       label: 'Goals',       col: 0xa855f7 },
+  ];
+  var counts = {};
+  memories.forEach(function(r) { var t = r.type || 'fact'; counts[t] = (counts[t]||0) + 1; });
+  var result = typeConfig.filter(function(tc){ return counts[tc.type] > 0; }).map(function(tc) {
+    return { key: tc.type, label: tc.label, type: tc.type, count: counts[tc.type]||0, col: tc.col, isCategory: true };
+  });
+  if (_bSources.length) {
+    result.push({ key: 'source', label: 'Sources', type: 'source', count: _bSources.length, col: 0x64748b, isSource: true });
+  }
+  return result;
+}
+
+function _bo3DrillData(type) {
+  var memories = (_state.brain || []).filter(function(r){ return r.type === type; });
+  var groups = {};
+  memories.forEach(function(r) {
+    var key = r.project || r.scope || 'Global';
+    if (!groups[key]) groups[key] = { key: key, label: key, count: 0, type: type };
+    groups[key].count++;
+  });
+  return Object.values(groups).sort(function(a,b){ return b.count - a.count; });
+}
+
+function _bo3Init() {
   var canvas = document.getElementById('brain-orbital-canvas');
   if (!canvas) return;
+
+  // Clean up previous instance
+  canvas.removeEventListener('mousemove', _bo3OnMouseMove);
+  canvas.removeEventListener('mouseleave', _bo3OnMouseLeave);
+  canvas.removeEventListener('click', _bo3OnClick);
+  if (_bo3AnimId) { cancelAnimationFrame(_bo3AnimId); _bo3AnimId = null; }
+  if (_bo3Controls) { _bo3Controls.dispose(); _bo3Controls = null; }
+  if (_bo3R) { _bo3R.dispose(); _bo3R = null; }
+
   var wrap = canvas.parentElement;
   var W = wrap.clientWidth, H = wrap.clientHeight;
-  if (_boReady && W === _boW && H === _boH) return;
-  _boW = W; _boH = H;
-  canvas.width = W; canvas.height = H;
-  _boCtx = canvas.getContext('2d');
-  _boReady = true;
-  cancelAnimationFrame(_boAnimId);
-  _boLoop();
+  if (W < 1 || H < 1) return;
+
+  _bo3R = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  _bo3R.setSize(W, H);
+  _bo3R.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  _bo3Scene = new THREE.Scene();
+
+  _bo3Camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+  _bo3Camera.position.set(0, 0, 5.5);
+  if (!_bo3CamSph) _bo3CamSph = new THREE.Spherical();
+  _bo3ZoomTarget = null;
+
+  _bo3Scene.add(new THREE.AmbientLight(0x0d2030, 2.5));
+  var corePt = new THREE.PointLight(0x06b6d4, 3.0, 20);
+  _bo3Scene.add(corePt);
+
+  _bo3Controls = new THREE.OrbitControls(_bo3Camera, _bo3R.domElement);
+  _bo3Controls.enableDamping = true;
+  _bo3Controls.dampingFactor = 0.08;
+  _bo3Controls.enablePan = false;
+  _bo3Controls.minDistance = 5;
+  _bo3Controls.maxDistance = 22;
+  _bo3Controls.autoRotate = !_boPrefersReducedMotion;
+  _bo3Controls.autoRotateSpeed = 0.28;
+
+  _bo3Raycaster = new THREE.Raycaster();
+  _bo3Mouse = new THREE.Vector2();
+  if (!_bo3GlowTex) _bo3GlowTex = _bo3MakeGlowTex();
+
+  _bo3BuildScene();
+
+  canvas.addEventListener('mousemove', _bo3OnMouseMove);
+  canvas.addEventListener('mouseleave', _bo3OnMouseLeave);
+  canvas.addEventListener('click', _bo3OnClick);
+
+  if (window._bo3RO) window._bo3RO.disconnect();
+  window._bo3RO = new ResizeObserver(function() {
+    if (!_bo3R) return;
+    var nW = wrap.clientWidth, nH = wrap.clientHeight;
+    if (nW < 1 || nH < 1) return;
+    _bo3R.setSize(nW, nH);
+    _bo3Camera.aspect = nW / nH;
+    _bo3Camera.updateProjectionMatrix();
+  });
+  window._bo3RO.observe(wrap);
+
+  _bo3Animate();
 }
 
-function _boClusters() {
+function _boSceneData() {
+  var memories = _state.brain || [];
   var groups = {};
-  (_state.brain || []).forEach(function(r) {
-    var key = r.project || r.scope || r.type || 'General';
-    if (!groups[key]) groups[key] = 0;
-    groups[key]++;
+
+  memories.forEach(function(r) {
+    var key = r.project || (r.scope && r.scope !== 'global' ? r.scope : null) || 'Global';
+    if (!groups[key]) groups[key] = { label: key, count: 0, breakdown: {}, sharedCount: 0, isPrivate: 0 };
+    groups[key].count++;
+    groups[key].breakdown[r.type] = (groups[key].breakdown[r.type] || 0) + 1;
+    if (r.sharedWith && r.sharedWith.length) groups[key].sharedCount++;
+    if (!r.sharedWith || !r.sharedWith.length) groups[key].isPrivate++;
   });
-  if (!Object.keys(groups).length) {
-    return [{ label:'Architecture',count:0 },{ label:'Android',count:0 },{ label:'API',count:0 },{ label:'Decisions',count:0 }];
-  }
-  return Object.keys(groups).map(function(k){ return { label:k, count:groups[k] }; });
+
+  // Sources always get a cluster even if they have no memories yet
+  _bSources.forEach(function(s) {
+    if (!groups[s.name]) {
+      groups[s.name] = { label: s.name, count: 0, breakdown: {}, sharedCount: 0, isPrivate: 0, isSource: true };
+    } else {
+      groups[s.name].isSource = true;
+    }
+  });
+
+  var clusters = Object.keys(groups).map(function(k) {
+    var g = groups[k];
+    var dominant = Object.keys(g.breakdown).sort(function(a,b){ return g.breakdown[b]-g.breakdown[a]; })[0] || (g.isSource ? 'source' : 'fact');
+    return { key: k, label: g.label, count: g.count, breakdown: g.breakdown, sharedCount: g.sharedCount, isPrivate: g.isPrivate, isSource: g.isSource||false, dominantType: dominant };
+  });
+
+  // Sort: larger clusters closer in (smaller orbit radius)
+  clusters.sort(function(a,b){ return b.count - a.count; });
+
+  return clusters;
 }
 
-function _boLoop() {
-  if (!_boCtx) return;
-  _boAnimId = requestAnimationFrame(_boLoop);
-  if (!document.getElementById('page-brain').classList.contains('active')) return;
-  _boT += 0.004;
-  var ctx = _boCtx, W = _boW, H = _boH;
-  var cx = W / 2, cy = H * 0.50;
-  ctx.clearRect(0, 0, W, H);
+function _bo3BuildScene() {
+  if (!_bo3Scene) return;
+  var toRemove = [];
+  _bo3Scene.children.forEach(function(c) { if (!c.isLight) toRemove.push(c); });
+  toRemove.forEach(function(c) {
+    _bo3Scene.remove(c);
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+  });
+  _bo3Nodes = [];
+  _bo3LabelEls = [];
+  _bo3CoreMesh = null;
+  _bo3CoreSprites = [];
+  _bo3CoreOrbs = [];
 
-  var bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W,H)*0.55);
-  bg.addColorStop(0, 'rgba(6,182,212,0.05)'); bg.addColorStop(0.6, 'rgba(99,102,241,0.02)'); bg.addColorStop(1,'rgba(2,9,20,0)');
-  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  // Clear label layer
+  var layer = document.getElementById('bo-label-layer');
+  if (layer) layer.innerHTML = '';
 
-  var clusters = _boClusters();
-  var maxR = Math.min(cx * 0.88, cy * 0.78);
-  var minR = maxR * 0.36;
-  var clCols = ['#06b6d4','#a855f7','#22c55e','#f59e0b','#ec4899','#60a5fa','#f87171'];
+  // Starfield — deterministic golden-angle distribution
+  var starPos = [];
+  for (var si = 0; si < 360; si++) {
+    var thetaS = (si * 2.399963) % (Math.PI * 2);
+    var phiS = Math.acos(1 - 2 * (si + 0.5) / 360);
+    var rr = 20 + (si % 7) * 1.5;
+    starPos.push(Math.sin(phiS)*Math.cos(thetaS)*rr, Math.cos(phiS)*rr, Math.sin(phiS)*Math.sin(thetaS)*rr);
+  }
+  var starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+  _bo3Scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x5a7a99, size: 0.07, sizeAttenuation: true, transparent: true, opacity: 0.55 })));
 
-  clusters.forEach(function(cl, i) {
-    var frac = clusters.length < 2 ? 0.5 : i / (clusters.length - 1);
-    var r = minR + frac * (maxR - minR);
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.strokeStyle = 'rgba(6,182,212,0.09)'; ctx.lineWidth = 1;
-    ctx.setLineDash([3,7]); ctx.stroke(); ctx.setLineDash([]);
+  // Animated background particles — two clouds rotating at different speeds
+  var bgGrp = new THREE.Group();
+  var outerPos = [], innerPos = [];
+  for (var bi = 0; bi < 700; bi++) {
+    var bphi = Math.acos(1 - 2 * (bi + 0.5) / 700);
+    var btheta = 2.399963 * bi;
+    var br = 22 + (bi % 13) * 2.2;
+    outerPos.push(Math.sin(bphi)*Math.cos(btheta)*br, Math.cos(bphi)*br, Math.sin(bphi)*Math.sin(btheta)*br);
+  }
+  for (var ci = 0; ci < 220; ci++) {
+    var cphi = Math.acos(1 - 2 * (ci + 0.5) / 220);
+    var ctheta = 2.399963 * ci * 1.618;
+    var cr = 13 + (ci % 6) * 1.6;
+    innerPos.push(Math.sin(cphi)*Math.cos(ctheta)*cr, Math.cos(cphi)*cr, Math.sin(cphi)*Math.sin(ctheta)*cr);
+  }
+  var outerGeo = new THREE.BufferGeometry();
+  outerGeo.setAttribute('position', new THREE.Float32BufferAttribute(outerPos, 3));
+  bgGrp.add(new THREE.Points(outerGeo, new THREE.PointsMaterial({ color: 0x3a5a7a, size: 0.065, sizeAttenuation: true, transparent: true, opacity: 0.55 })));
+  var innerGeo = new THREE.BufferGeometry();
+  innerGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerPos, 3));
+  bgGrp.add(new THREE.Points(innerGeo, new THREE.PointsMaterial({ color: 0x5a7a9a, size: 0.10, sizeAttenuation: true, transparent: true, opacity: 0.42 })));
+  _bo3Scene.add(bgGrp);
+  _bo3BgGroup = bgGrp;
+
+  // Core — layered sprite glow (no solid sphere, pure light)
+  _bo3CoreSprites = [];
+  var coreData = [
+    { col: 0x06b6d4, op: 0.10, sc: 15.0 },
+    { col: 0x06b6d4, op: 0.28, sc: 7.0  },
+    { col: 0x0ef4ff, op: 0.65, sc: 3.0  },
+    { col: 0xddfcff, op: 0.95, sc: 1.0  }
+  ];
+  coreData.forEach(function(cd) {
+    var spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: _bo3GlowTex, color: cd.col, transparent: true, opacity: cd.op, blending: THREE.AdditiveBlending, depthWrite: false }));
+    spr.scale.setScalar(cd.sc);
+    _bo3Scene.add(spr);
+    _bo3CoreSprites.push({ spr: spr, baseScale: cd.sc });
   });
 
-  clusters.forEach(function(cl, i) {
-    var frac = clusters.length < 2 ? 0.5 : i / (clusters.length - 1);
-    var r = minR + frac * (maxR - minR);
-    var base = (i / clusters.length) * Math.PI * 2 - Math.PI / 2;
-    var angle = base + _boT * (i % 2 === 0 ? 0.45 : -0.32);
-    var nx = cx + Math.cos(angle) * r, ny = cy + Math.sin(angle) * r;
-    var col = clCols[i % clCols.length];
+  // Invisible hit sphere for core click detection
+  _bo3CoreMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.4, 6, 6),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+  );
+  _bo3Scene.add(_bo3CoreMesh);
 
-    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny);
-    ctx.strokeStyle = 'rgba(6,182,212,0.05)'; ctx.lineWidth=1; ctx.stroke();
+  // Orbiting mini-orbs around the core brain
+  var orbDefs = [
+    { r: 2.3,  speed:  0.38, phase: 0,              tiltX:  0.35, tiltZ:  0.0,  col: 0x06b6d4, sc: 0.70 },
+    { r: 1.85, speed: -0.55, phase: Math.PI * 0.7,  tiltX:  1.10, tiltZ:  0.45, col: 0x0ef4ff, sc: 0.50 },
+    { r: 2.70, speed:  0.27, phase: Math.PI * 1.4,  tiltX: -0.60, tiltZ:  1.05, col: 0xb0faff, sc: 0.40 },
+  ];
+  orbDefs.forEach(function(od) {
+    // Faint ring trace
+    var ringPts = [];
+    for (var ra = 0; ra <= 64; ra++) {
+      var ang = (ra / 64) * Math.PI * 2;
+      ringPts.push(new THREE.Vector3(Math.cos(ang) * od.r, 0, Math.sin(ang) * od.r));
+    }
+    var ringGeo = new THREE.BufferGeometry().setFromPoints(ringPts);
+    var ringLine = new THREE.LineLoop(ringGeo, new THREE.LineBasicMaterial({ color: od.col, transparent: true, opacity: 0.07 }));
+    ringLine.rotation.x = od.tiltX;
+    ringLine.rotation.z = od.tiltZ;
+    _bo3Scene.add(ringLine);
 
-    var ng = ctx.createRadialGradient(nx,ny,0,nx,ny,20);
-    ng.addColorStop(0, col+'99'); ng.addColorStop(1, col+'00');
-    ctx.fillStyle = ng; ctx.beginPath(); ctx.arc(nx,ny,20,0,Math.PI*2); ctx.fill();
+    // Pivot drives the orbit rotation
+    var pivot = new THREE.Object3D();
+    pivot.rotation.x = od.tiltX;
+    pivot.rotation.z = od.tiltZ;
+    pivot.rotation.y = od.phase;
+    _bo3Scene.add(pivot);
 
-    ctx.beginPath(); ctx.arc(nx,ny,7,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
-    if (cl.count > 0) {
-      ctx.font = '700 9px -apple-system,sans-serif'; ctx.fillStyle='#fff';
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(cl.count, nx, ny);
+    // Outer glow
+    var outerSpr = new THREE.Sprite(new THREE.SpriteMaterial({ map: _bo3GlowTex, color: od.col, transparent: true, opacity: 0.30, blending: THREE.AdditiveBlending, depthWrite: false }));
+    outerSpr.scale.setScalar(od.sc * 3.0);
+    outerSpr.position.set(od.r, 0, 0);
+    pivot.add(outerSpr);
+
+    // Bright core point
+    var coreSpr = new THREE.Sprite(new THREE.SpriteMaterial({ map: _bo3GlowTex, color: 0xddfcff, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false }));
+    coreSpr.scale.setScalar(od.sc * 0.55);
+    coreSpr.position.set(od.r, 0, 0);
+    pivot.add(coreSpr);
+
+    _bo3CoreOrbs.push({ pivot: pivot, speed: od.speed, phase: od.phase });
+  });
+
+  // Drill mode: back-arrow label on core
+  if (_bo3Mode === 'drill' && layer) {
+    var backEl = document.createElement('div');
+    backEl.className = 'bo-node-label';
+    backEl.textContent = '← All';
+    backEl.style.color = '#06b6d4';
+    backEl.setAttribute('data-core', '1');
+    layer.appendChild(backEl);
+  }
+
+  // Scene nodes — category view or drill view
+  var sceneNodes = _bo3Mode === 'drill' && _bo3DrillType
+    ? _bo3DrillData(_bo3DrillType)
+    : _bo3CategoryData();
+
+  var typeColHex = { decision: '#06b6d4', fact: '#818cf8', learning: '#f59e0b', constraint: '#f87171', convention: '#4ade80', goal: '#a855f7', source: '#64748b' };
+  var typeColInt = { decision: 0x06b6d4, fact: 0x818cf8, learning: 0xf59e0b, constraint: 0xf87171, convention: 0x4ade80, goal: 0xa855f7, source: 0x64748b };
+  var minOrbit = 3.8, maxOrbit = 7.2;
+  var goldenAngle = Math.PI * (3 - Math.sqrt(5));
+
+  sceneNodes.forEach(function(cl, i) {
+    var col = cl.col || typeColInt[cl.type] || 0x475569;
+    var colHex = typeColHex[cl.type] || '#64748b';
+    var nr = cl.count > 0 ? Math.min(0.15 + Math.sqrt(cl.count) * 0.075, 0.80) : (cl.isSource ? 0.28 : 0.22);
+    var t = sceneNodes.length < 2 ? 0.5 : i / (sceneNodes.length - 1);
+    var orbitR = minOrbit + t * (maxOrbit - minOrbit);
+
+    var inclination = Math.acos(1 - 2 * ((i + 0.5) / Math.max(sceneNodes.length, 1)));
+    var azimuth = goldenAngle * i;
+    var x = Math.sin(inclination) * Math.cos(azimuth) * orbitR;
+    var y = Math.cos(inclination) * orbitR;
+    var z = Math.sin(inclination) * Math.sin(azimuth) * orbitR;
+
+    var baseGS = nr * 13;
+    var selMat = new THREE.SpriteMaterial({ map: _bo3GlowTex, color: col, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    var selSpr = new THREE.Sprite(selMat);
+    selSpr.scale.setScalar(baseGS * 2.2);
+    selSpr.position.set(x, y, z);
+    _bo3Scene.add(selSpr);
+
+    var glowMat = new THREE.SpriteMaterial({ map: _bo3GlowTex, color: col, transparent: true, opacity: 0.40, blending: THREE.AdditiveBlending, depthWrite: false });
+    var glowSpr = new THREE.Sprite(glowMat);
+    glowSpr.scale.setScalar(baseGS);
+    glowSpr.position.set(x, y, z);
+    _bo3Scene.add(glowSpr);
+
+    var pointMat = new THREE.SpriteMaterial({ map: _bo3GlowTex, color: 0xffffff, transparent: true, opacity: 0.80, blending: THREE.AdditiveBlending, depthWrite: false });
+    var pointSpr = new THREE.Sprite(pointMat);
+    pointSpr.scale.setScalar(nr * 2.8);
+    pointSpr.position.set(x, y, z);
+    _bo3Scene.add(pointSpr);
+
+    // Invisible hit sphere for raycasting only
+    var hitMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(nr * 2.2, 6, 6),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+    );
+    hitMesh.position.set(x, y, z);
+    _bo3Scene.add(hitMesh);
+
+    _bo3Nodes.push({ mesh: hitMesh, glowSpr: glowSpr, pointSpr: pointSpr, selSpr: selSpr, glowMat: glowMat, pointMat: pointMat, selMat: selMat, key: cl.key, cl: cl, _hv: 0, _baseGS: baseGS });
+
+    // HTML label
+    if (layer) {
+      var el = document.createElement('div');
+      el.className = 'bo-node-label';
+      var lbl = cl.label.length > 15 ? cl.label.slice(0, 13) + '…' : cl.label;
+      el.innerHTML = lbl + (cl.count > 0 ? ' <span style="color:rgba(148,163,184,0.38);font-weight:400">· ' + cl.count + '</span>' : '');
+      el.style.color = colHex;
+      layer.appendChild(el);
+      _bo3LabelEls.push(el);
     }
 
-    var lx = cx + Math.cos(angle)*(r+26), ly = cy + Math.sin(angle)*(r+26);
-    ctx.font = '500 11px -apple-system,sans-serif'; ctx.fillStyle='rgba(203,213,225,.82)';
-    ctx.textAlign = lx < cx - 10 ? 'right' : (lx > cx + 10 ? 'left' : 'center');
-    ctx.textBaseline = 'middle'; ctx.fillText(cl.label, lx, ly);
+    if (cl.count > 0 || cl.isSource) {
+      var pts = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(x, y, z)];
+      var lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+      _bo3Scene.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.06, depthWrite: false })));
+    }
+  });
+}
+
+function _bo3Animate() {
+  if (!_bo3R) return;
+  _bo3AnimId = requestAnimationFrame(_bo3Animate);
+  if (!document.getElementById('page-brain').classList.contains('active')) return;
+  _bo3T += 0.016;
+  if (_bo3Controls) _bo3Controls.update();
+
+  // Smooth zoom-out when "See all" tapped
+  if (_bo3ZoomTarget !== null && _bo3Camera && _bo3CamSph) {
+    _bo3CamSph.setFromVector3(_bo3Camera.position);
+    var dr = (_bo3ZoomTarget - _bo3CamSph.radius) * 0.08;
+    _bo3CamSph.radius += dr;
+    _bo3Camera.position.setFromSpherical(_bo3CamSph);
+    if (Math.abs(dr) < 0.02) _bo3ZoomTarget = null;
+  }
+
+  // Lerp sprite glow + selection halo on every node
+  _bo3Nodes.forEach(function(n) {
+    var hvT = n.key === _bo3HoveredKey ? 1 : 0;
+    n._hv += (hvT - n._hv) * 0.09;
+    n.glowMat.opacity = 0.40 + n._hv * 0.30;
+    n.glowSpr.scale.setScalar(n._baseGS * (1 + n._hv * 0.22));
+    n.pointMat.opacity = 0.80 + n._hv * 0.18;
+    var selT = n.key === _boClickedKey ? 0.24 : 0;
+    n.selMat.opacity += (selT - n.selMat.opacity) * 0.11;
   });
 
-  var pulse = 0.85 + Math.sin(_boT*2.1)*0.15;
-  var cg = ctx.createRadialGradient(cx,cy,0,cx,cy,42);
-  cg.addColorStop(0,'rgba(6,182,212,0.30)'); cg.addColorStop(0.5,'rgba(6,182,212,0.10)'); cg.addColorStop(1,'rgba(6,182,212,0)');
-  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(cx,cy,42,0,Math.PI*2); ctx.fill();
+  // Pulse core sprite layers
+  if (_bo3CoreSprites.length) {
+    var p = 0.88 + Math.sin(_bo3T * 2.1) * 0.12;
+    var p2 = 0.92 + Math.sin(_bo3T * 4.3) * 0.08;
+    _bo3CoreSprites[0].spr.scale.setScalar(_bo3CoreSprites[0].baseScale * p);
+    _bo3CoreSprites[1].spr.scale.setScalar(_bo3CoreSprites[1].baseScale * p);
+    _bo3CoreSprites[2].spr.scale.setScalar(_bo3CoreSprites[2].baseScale * p2);
+    _bo3CoreSprites[3].spr.scale.setScalar(_bo3CoreSprites[3].baseScale * p2);
+  }
 
-  var cr = ctx.createRadialGradient(cx-4,cy-4,0,cx,cy,16*pulse);
-  cr.addColorStop(0,'#ccf4ff'); cr.addColorStop(0.45,'#06b6d4'); cr.addColorStop(1,'#0e3a52');
-  ctx.fillStyle=cr; ctx.beginPath(); ctx.arc(cx,cy,16*pulse,0,Math.PI*2); ctx.fill();
+  // Drive orbiting mini-orbs around core
+  _bo3CoreOrbs.forEach(function(o) {
+    o.pivot.rotation.y = _bo3T * o.speed + o.phase;
+  });
 
-  ctx.beginPath(); ctx.arc(cx,cy,22,0,Math.PI*2);
-  ctx.strokeStyle='rgba(6,182,212,0.45)'; ctx.lineWidth=1.5; ctx.stroke();
+  // Rotate background particle clouds at different speeds for parallax depth
+  if (_bo3BgGroup) {
+    _bo3BgGroup.children[0].rotation.y = _bo3T * 0.018;
+    _bo3BgGroup.children[0].rotation.x = _bo3T * 0.007;
+    _bo3BgGroup.children[1].rotation.y = -_bo3T * 0.026;
+    _bo3BgGroup.children[1].rotation.x = _bo3T * 0.011;
+  }
 
-  ctx.font='600 9px -apple-system,sans-serif'; ctx.fillStyle='rgba(6,182,212,0.55)';
-  ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText('WORLD MEMORY CORE', cx, cy+29);
+  if (_boHarvestAnim.length) {
+    var stillActive = [];
+    _boHarvestAnim.forEach(function(anim) {
+      if (!anim.mesh) {
+        var pMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, transparent: true });
+        anim.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), pMat);
+        _bo3Scene.add(anim.mesh);
+      }
+      var elapsed = _bo3T - anim.startT;
+      if (elapsed > 2.5) { _bo3Scene.remove(anim.mesh); if (anim.mesh.geometry) anim.mesh.geometry.dispose(); return; }
+      var prog = Math.min(elapsed / 1.8, 1);
+      var ease = prog * prog * (3 - 2 * prog);
+      var tgt = new THREE.Vector3(0, 0, 0);
+      _bo3Nodes.forEach(function(n){ if (n.key === anim.clusterKey) tgt = n.mesh.position; });
+      var wobble = Math.sin(elapsed * 8) * (1 - prog) * 0.6;
+      anim.mesh.position.set(tgt.x * ease + wobble, tgt.y * ease, tgt.z * ease);
+      anim.mesh.material.opacity = elapsed < 1.8 ? 0.9 : 0.9 * (1 - (elapsed - 1.8) / 0.7);
+      stillActive.push(anim);
+    });
+    _boHarvestAnim = stillActive;
+  }
+
+  _bo3R.render(_bo3Scene, _bo3Camera);
+
+  // Update HTML label positions from 3D projections
+  if (_bo3LabelEls.length && _bo3Camera && _bo3R) {
+    var canvasEl = _bo3R.domElement;
+    var cW = canvasEl.clientWidth, cH = canvasEl.clientHeight;
+    _bo3Nodes.forEach(function(n, i) {
+      var el = _bo3LabelEls[i];
+      if (!el) return;
+      var v = n.mesh.position.clone().project(_bo3Camera);
+      if (v.z >= 1) { el.style.opacity = '0'; return; }
+      var sx = (v.x + 1) / 2 * cW;
+      var sy = (-v.y + 1) / 2 * cH;
+      var nr = n.mesh.geometry.parameters.radius || 0.2;
+      var screenOffset = Math.abs(nr / (n.mesh.position.length() || 1)) * cH * 0.5 + 14;
+      el.style.left = sx + 'px';
+      el.style.top = (sy + screenOffset) + 'px';
+      var isActive = n.key === _bo3HoveredKey || n.key === _boClickedKey;
+      el.style.opacity = isActive ? '1' : '0.55';
+      el.style.fontWeight = isActive ? '700' : '600';
+    });
+    // Update "← All" core label in drill mode
+    var backEl = document.querySelector('#bo-label-layer [data-core]');
+    if (backEl && _bo3CoreMesh) {
+      var cv = _bo3CoreMesh.position.clone().project(_bo3Camera);
+      var bx = (cv.x + 1) / 2 * cW;
+      var by = (-cv.y + 1) / 2 * cH;
+      backEl.style.left = bx + 'px';
+      backEl.style.top = (by + 22) + 'px';
+      backEl.style.opacity = '0.75';
+    }
+  }
+}
+
+function _bo3OnMouseMove(e) {
+  if (!_bo3R || !_bo3Raycaster) return;
+  var rect = e.target.getBoundingClientRect();
+  _bo3Mouse.x = ((e.clientX - rect.left) / rect.width)  *  2 - 1;
+  _bo3Mouse.y = ((e.clientY - rect.top)  / rect.height) * -2 + 1;
+  _bo3Raycaster.setFromCamera(_bo3Mouse, _bo3Camera);
+  var hits = _bo3Raycaster.intersectObjects(_bo3Nodes.map(function(n){ return n.mesh; }));
+  var prevKey = _bo3HoveredKey;
+  _bo3HoveredKey = hits.length ? _bo3Nodes.find(function(n){ return n.mesh === hits[0].object; }).key : null;
+  if (_bo3HoveredKey !== prevKey) {
+    e.target.style.cursor = _bo3HoveredKey ? 'pointer' : 'default';
+  }
+  _bo3UpdateTooltip(e.clientX, e.clientY);
+}
+
+function _bo3OnMouseLeave() {
+  _bo3HoveredKey = null;
+  var tt = document.getElementById('brain-tooltip');
+  if (tt) tt.classList.remove('visible');
+}
+
+function _bo3OnClick(e) {
+  if (!_bo3R || !_bo3Raycaster) return;
+  var rect = e.target.getBoundingClientRect();
+  _bo3Mouse.x = ((e.clientX - rect.left) / rect.width)  *  2 - 1;
+  _bo3Mouse.y = ((e.clientY - rect.top)  / rect.height) * -2 + 1;
+  _bo3Raycaster.setFromCamera(_bo3Mouse, _bo3Camera);
+
+  // Core click — exit drill mode or clear filter
+  if (_bo3CoreMesh && _bo3Raycaster.intersectObject(_bo3CoreMesh).length) {
+    _bo3Mode = 'category';
+    _bo3DrillType = null;
+    _boClickedKey = null;
+    _brainFilterType = 'all';
+    _brainScopeFilter = null;
+    document.querySelectorAll('.brain-filter-pill').forEach(function(p){ p.classList.toggle('active', p.dataset.type==='all'); });
+    renderBrain();
+    _bo3BuildScene();
+    return;
+  }
+
+  var hits = _bo3Raycaster.intersectObjects(_bo3Nodes.map(function(n){ return n.mesh; }));
+  if (!hits.length) return;
+  var nd = _bo3Nodes.find(function(n){ return n.mesh === hits[0].object; });
+  if (!nd) return;
+
+  if (_bo3Mode === 'category') {
+    if (nd.cl.isSource) {
+      // Sources: switch to Sources tab; ring animates via lerp
+      _boClickedKey = nd.key;
+      brainTab('sources');
+    } else {
+      // Enter drill mode for this type
+      _bo3Mode = 'drill';
+      _bo3DrillType = nd.cl.type;
+      _boClickedKey = null;
+      _brainFilterType = nd.cl.type;
+      _brainScopeFilter = null;
+      document.querySelectorAll('.brain-filter-pill').forEach(function(p){ p.classList.toggle('active', p.dataset.type === nd.cl.type); });
+      renderBrain();
+      brainTab('memories');
+      _bo3BuildScene();
+    }
+  } else {
+    // Drill mode — just toggle scope filter; ring animates via lerp, no rebuild
+    var toggled = nd.key === _boClickedKey ? null : nd.key;
+    _boClickedKey = toggled;
+    _brainScopeFilter = toggled;
+    renderBrain();
+  }
+}
+
+function _bo3ZoomOut() { _bo3ZoomTarget = 14; }
+
+function _bo3UpdateTooltip(clientX, clientY) {
+  var tt = document.getElementById('brain-tooltip');
+  if (!tt) return;
+  if (!_bo3HoveredKey) { tt.classList.remove('visible'); return; }
+  var nd = _bo3Nodes.find(function(n){ return n.key === _bo3HoveredKey; });
+  if (!nd) { tt.classList.remove('visible'); return; }
+  var cl = nd.cl;
+  var typeLines = Object.keys(cl.breakdown).map(function(t){
+    return cl.breakdown[t] + ' ' + t + (cl.breakdown[t]>1?'s':'');
+  }).join(' · ');
+  tt.querySelector('.brain-tooltip-name').textContent = cl.label;
+  tt.querySelector('.brain-tooltip-count').textContent = cl.count + ' memor' + (cl.count===1?'y':'ies');
+  tt.querySelector('.brain-tooltip-types').textContent = typeLines || (cl.isSource ? 'source — no memories yet' : '');
+  var tx = clientX + 14, ty = clientY - 10;
+  if (tx + 230 > window.innerWidth) tx = clientX - 230;
+  if (ty + 100 > window.innerHeight) ty = clientY - 100;
+  tt.style.left = tx + 'px'; tt.style.top = ty + 'px';
+  tt.classList.add('visible');
 }
 
 // ── Brain tab switcher ─────────────────────────────────────────────
@@ -3291,46 +4008,747 @@ function brainTab(tab) {
   });
 }
 
-// ── Composer toggle ────────────────────────────────────────────────
-function _brainSetActiveBtn(id) {
-  ['bbtn-memory','bbtn-source','bbtn-harvest'].forEach(function(bid) {
-    var b = document.getElementById(bid);
-    if (!b) return;
-    b.className = bid === id ? 'btn-primary' : 'btn';
+// ── Brain drawer ───────────────────────────────────────────────────
+// ── Harvest state ──────────────────────────────────────────────
+var _hvStep = 1;
+var _hvCandidates = [];
+var _hvFilters = { decisions: true, learnings: true, facts: true, constraints: true, preferences: false };
+var _hvIgnore  = { chatter: true, commands: true, repeated: true, failed: true };
+var _hvBatchAccess = 'private';
+var _brainDrawerMode = null;
+var _brainFilterType = 'all';
+var _brainScopeFilter = null; // set by clicking orbital node
+var _brainSearchQ    = '';
+
+// ═══════════════════════════════════════════════════════════════
+// HARVEST — two-step workflow
+// ═══════════════════════════════════════════════════════════════
+
+// ── Heuristics ─────────────────────────────────────────────────
+function _hvInferType(text) {
+  var t = text.toLowerCase();
+  if (/\b(use |using |decided |will use|we (chose|use)|switch(ed)? to|adopt(ed)?|going with)\b/.test(t)) return 'decision';
+  if (/\b(don'?t|avoid|must not|cannot|can'?t|never|prohibited|only if|limit(ed)?)\b/.test(t)) return 'constraint';
+  if (/\b(learn(ed)?|discover(ed)?|turns out|found (out|that)|realized|it turns)\b/.test(t)) return 'learning';
+  if (/\b(stored in|located at|runs on|uses port|config(ured)? (in|at)|format(ted)?|version)\b/.test(t)) return 'fact';
+  return 'fact';
+}
+
+function _hvInferImportance(text) {
+  var t = text.toLowerCase();
+  if (/\b(critical|never forget|always remember|absolutely|must always)\b/.test(t)) return 'critical';
+  if (/\b(always|never|must|important|required|key decision)\b/.test(t)) return 'high';
+  return 'normal';
+}
+
+function _hvInferProject() {
+  if (_bSources.length) return _bSources[0].name || '';
+  return _state.worldName || '';
+}
+
+function _hvJaccard(a, b) {
+  var ta = new Set(a.toLowerCase().split(/\W+/).filter(function(w){ return w.length > 3; }));
+  var tb = new Set(b.toLowerCase().split(/\W+/).filter(function(w){ return w.length > 3; }));
+  if (!ta.size || !tb.size) return 0;
+  var inter = 0; ta.forEach(function(w){ if (tb.has(w)) inter++; });
+  return inter / (ta.size + tb.size - inter);
+}
+
+function _hvDuplicateCheck(summary) {
+  var best = null, bestScore = 0;
+  (_state.brain || []).forEach(function(r) {
+    var s = _hvJaccard(summary, r.summary || '');
+    if (s > bestScore) { bestScore = s; best = r; }
+  });
+  return bestScore > 0.45 ? best : null;
+}
+
+// ── Build candidates from _state.tasks ─────────────────────────
+function _hvAnalyze() {
+  var tasks = (_state.tasks || []).slice().reverse(); // newest first
+
+  // Filter by ignore rules
+  var routineRe = /^(ls|cd |git status|git log|npm run|npx |echo |cat |pwd|whoami|curl|ping|brew |which )\b/i;
+  var kept = tasks.filter(function(t) {
+    if (!t.prompt || t.prompt.trim().length < 20) return false;
+    if (_hvIgnore.commands && routineRe.test(t.prompt.trim())) return false;
+    if (_hvIgnore.failed && t.status === 'failed') {
+      var p = t.prompt.toLowerCase();
+      if (!/\b(learn|lesson|issue|problem|mistake|failure|wrong|fixed)\b/.test(p)) return false;
+    }
+    return true;
+  });
+
+  // Apply type filters
+  var typeMap = { decisions: 'decision', learnings: 'learning', facts: 'fact', constraints: 'constraint', preferences: 'convention' };
+  var allowedTypes = Object.keys(_hvFilters).filter(function(k){ return _hvFilters[k]; }).map(function(k){ return typeMap[k]; });
+
+  var raw = kept.map(function(t) {
+    var type = _hvInferType(t.prompt);
+    var imp  = _hvInferImportance(t.prompt);
+    return { type: type, summary: t.prompt.trim(), importance: imp, _taskId: t.taskId, _status: t.status };
+  }).filter(function(c){ return allowedTypes.indexOf(c.type) >= 0; });
+
+  // Deduplicate candidates against each other
+  if (_hvIgnore.repeated) {
+    var unique = [];
+    raw.forEach(function(c) {
+      var isDup = unique.some(function(u){ return _hvJaccard(u.summary, c.summary) > 0.55; });
+      if (!isDup) unique.push(c);
+    });
+    raw = unique;
+  }
+
+  var project = _hvInferProject();
+  var impNum = { low: 0.25, normal: 0.5, high: 0.75, critical: 1.0 };
+
+  _hvCandidates = raw.map(function(c, i) {
+    var dup = _hvDuplicateCheck(c.summary);
+    return {
+      id: 'hv-' + i,
+      selected: true,
+      editing: false,
+      summary: c.summary,
+      type: c.type,
+      project: project,
+      repository: (_bSources.length && _bSources[0].path) ? _bSources[0].path : '',
+      area: '',
+      importance: impNum[c.importance] || 0.5,
+      importanceLabel: c.importance,
+      duplicateOf: dup ? dup.id : null,
+      duplicateSummary: dup ? dup.summary : null,
+    };
   });
 }
 
-function brainToggleComposer() {
-  var el = document.getElementById('brain-composer');
-  if (!el) return;
-  var open = el.style.display === 'none';
-  el.style.display = open ? '' : 'none';
-  document.getElementById('brain-add-source-form').style.display = 'none';
-  _brainSetActiveBtn(open ? 'bbtn-memory' : null);
-  if (open) {
-    brainTab('memories');
-    var peers = (_state.peers || []).filter(function(p){ return p.status === 'online'; });
-    var list = document.getElementById('bc-peer-list');
-    if (peers.length) {
-      list.innerHTML = peers.map(function(p){
-        return '<label class="peer-share-row"><input type="checkbox" data-wid="'+escHTML(p.worldId)+'" checked> '+
-               '<span><span class="peer-share-name">'+escHTML(p.name||p.worldId)+'</span> '+
-               '<span class="peer-share-sub">· '+escHTML(p.status)+'</span></span></label>';
-      }).join('');
-    } else {
-      list.innerHTML = '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No connected peers</div>';
+// ── Candidate count helpers ─────────────────────────────────────
+function _hvSelCount() { return _hvCandidates.filter(function(c){ return c.selected; }).length; }
+
+function _hvUpdateSelCount() {
+  var el = document.getElementById('hv-sel-count');
+  if (el) el.textContent = _hvSelCount() + ' of ' + _hvCandidates.length + ' selected';
+  var addBtn = document.getElementById('hv-add-btn');
+  if (addBtn) { var n = _hvSelCount(); addBtn.textContent = 'Add ' + n + ' to Brain →'; addBtn.disabled = n === 0; }
+}
+
+// ── Step 1 HTML ─────────────────────────────────────────────────
+function _hvRenderStep1() {
+  var tasks = (_state.tasks || []).filter(function(t){ return t.status === 'completed'; });
+  var allTasks = _state.tasks || [];
+  var oldest = allTasks.reduce(function(min, t){ return t.createdAt && t.createdAt < min ? t.createdAt : min; }, Date.now());
+  var timeRange = allTasks.length ? relTime(oldest) : 'no activity';
+
+  return '<div class="hv-desc">Extract durable knowledge from a session and review it before adding anything to Brain.</div>'+
+
+  '<div class="hv-section-label">Source Session</div>'+
+  '<div class="hv-session-card">'+
+    '<div class="hv-session-name">'+escHTML(_state.worldName || 'This World')+'</div>'+
+    '<div class="hv-session-meta">'+
+      tasks.length+' completed task'+(tasks.length===1?'':'s')+
+      ' · '+allTasks.length+' total'+
+      ' · active '+timeRange+
+    '</div>'+
+  '</div>'+
+
+  '<div class="hv-section-label">Look For</div>'+
+  '<div class="hv-checks">'+
+    _hvCheckRow('hv-f-decisions','_hvFilters.decisions','Decisions','Choices made during the session',_hvFilters.decisions)+
+    _hvCheckRow('hv-f-learnings','_hvFilters.learnings','Learnings','Discoveries and lessons',_hvFilters.learnings)+
+    _hvCheckRow('hv-f-facts','_hvFilters.facts','Technical facts','How things work, where things live',_hvFilters.facts)+
+    _hvCheckRow('hv-f-constraints','_hvFilters.constraints','Constraints','Things that must or must not happen',_hvFilters.constraints)+
+    _hvCheckRow('hv-f-preferences','_hvFilters.preferences','Preferences / conventions','Style, patterns, naming choices',_hvFilters.preferences)+
+  '</div>'+
+
+  '<div class="hv-section-label">Ignore</div>'+
+  '<div class="hv-checks">'+
+    _hvCheckRow('hv-i-chatter','_hvIgnore.chatter','Temporary debugging chatter','Short back-and-forth, exploratory commands',_hvIgnore.chatter)+
+    _hvCheckRow('hv-i-commands','_hvIgnore.commands','Routine commands / output','git, npm, ls, echo, curl etc.',_hvIgnore.commands)+
+    _hvCheckRow('hv-i-repeated','_hvIgnore.repeated','Repeated information','Skip near-duplicate candidates',_hvIgnore.repeated)+
+    _hvCheckRow('hv-i-failed','_hvIgnore.failed','Failed experiments','Unless the failure produced a useful lesson',_hvIgnore.failed)+
+  '</div>';
+}
+
+function _hvCheckRow(id, stateExpr, label, sub, checked) {
+  return '<label class="hv-check-row" for="'+id+'">'+
+    '<input type="checkbox" id="'+id+'" '+(checked?'checked':'')+' onchange="_hvToggleFilter(\''+stateExpr+'\',this.checked)">'+
+    '<span class="hv-check-label">'+escHTML(label)+'</span>'+
+  '</label>'+
+  '<div class="hv-check-sub">'+escHTML(sub)+'</div>';
+}
+
+function _hvToggleFilter(expr, val) {
+  // expr is like "_hvFilters.decisions"
+  var parts = expr.split('.');
+  if (parts[0] === '_hvFilters') _hvFilters[parts[1]] = val;
+  if (parts[0] === '_hvIgnore')  _hvIgnore[parts[1]]  = val;
+}
+
+// ── Step 2 HTML ─────────────────────────────────────────────────
+function _hvRenderStep2() {
+  if (!_hvCandidates.length) {
+    return '<div class="hv-empty">◎ No candidate memories found.<br>Try adjusting the filters on the previous screen.</div>';
+  }
+
+  var typeColors = { decision:'#06b6d4', fact:'#818cf8', learning:'#f59e0b', constraint:'#f87171', convention:'#4ade80' };
+
+  var rows = _hvCandidates.map(function(c, i) {
+    var col = typeColors[c.type] || '#64748b';
+    var metaParts = [c.project, c.area].filter(Boolean).join(' · ');
+    var impLabels = { low:'Low', normal:'Normal', high:'High', critical:'Critical' };
+    var impLabel = impLabels[c.importanceLabel] || 'Normal';
+    var dupBadge = c.duplicateOf ? '<div class="hv-dup-badge">⚠ Possible duplicate: "'+escHTML((c.duplicateSummary||'').slice(0,60))+(c.duplicateSummary&&c.duplicateSummary.length>60?'…':'')+'"</div>' : '';
+
+    var editFields = '';
+    if (c.editing) {
+      editFields = '<div class="hv-edit-fields">'+
+        '<div class="hv-edit-field full"><label>Memory</label>'+
+          '<textarea id="hv-ed-summary-'+i+'" oninput="_hvCandidates['+i+'].summary=this.value">'+escHTML(c.summary)+'</textarea></div>'+
+        '<div class="hv-edit-field"><label>Type</label>'+
+          '<select id="hv-ed-type-'+i+'" onchange="_hvCandidates['+i+'].type=this.value">'+
+            ['decision','fact','learning','constraint','convention'].map(function(t){
+              return '<option value="'+t+'"'+(c.type===t?' selected':'')+'>'+t+'</option>';
+            }).join('')+
+          '</select></div>'+
+        '<div class="hv-edit-field"><label>Importance</label>'+
+          '<select id="hv-ed-imp-'+i+'" onchange="_hvSetCandImp('+i+',this.value)">'+
+            ['low','normal','high','critical'].map(function(v){
+              return '<option value="'+v+'"'+(c.importanceLabel===v?' selected':'')+'>'+v+'</option>';
+            }).join('')+
+          '</select></div>'+
+        '<div class="hv-edit-field"><label>Project</label>'+
+          '<input id="hv-ed-proj-'+i+'" value="'+escHTML(c.project)+'" oninput="_hvCandidates['+i+'].project=this.value"></div>'+
+        '<div class="hv-edit-field"><label>Area</label>'+
+          '<input id="hv-ed-area-'+i+'" value="'+escHTML(c.area)+'" oninput="_hvCandidates['+i+'].area=this.value"></div>'+
+        '<div class="hv-edit-actions">'+
+          '<button class="btn" style="font-size:11px;padding:5px 10px;" onclick="_hvDoneEdit('+i+')">Done</button>'+
+        '</div>'+
+      '</div>';
     }
+
+    return '<div class="hv-candidate'+(c.selected?' selected':'')+(c.selected?'':' excluded')+'" id="hvc-'+i+'">'+
+      '<button class="hv-cand-edit-btn" onclick="event.stopPropagation();_hvToggleEdit('+i+')" title="Edit">✎</button>'+
+      '<div class="hv-cand-top">'+
+        '<input type="checkbox" class="hv-cand-cb" '+(c.selected?'checked':'')+
+          ' onchange="event.stopPropagation();_hvToggleCandidate('+i+',this.checked)" onclick="event.stopPropagation()">'+
+        '<div class="hv-cand-body">'+
+          '<span class="hv-cand-type" style="background:'+col+'22;color:'+col+';">'+c.type.toUpperCase()+'</span>'+
+          '<div class="hv-cand-summary">'+escHTML(c.summary)+'</div>'+
+          (metaParts ? '<div class="hv-cand-meta">'+escHTML(metaParts)+' · <strong>'+impLabel+'</strong></div>' : '')+
+          dupBadge+
+        '</div>'+
+      '</div>'+
+      editFields+
+    '</div>';
+  }).join('');
+
+  var accessBar = '<div class="hv-access-bar">'+
+    '<span class="hv-access-label">Access</span>'+
+    '<label class="hv-access-opt"><input type="radio" name="hv-access" value="private" '+(_hvBatchAccess==='private'?'checked':'')+' onchange="_hvBatchAccess=\'private\'"> <span>Private</span></label>'+
+    '<label class="hv-access-opt"><input type="radio" name="hv-access" value="selected" '+(_hvBatchAccess==='selected'?'checked':'')+' onchange="_hvBatchAccess=\'selected\'"> <span>Selected worlds</span></label>'+
+    '<label class="hv-access-opt"><input type="radio" name="hv-access" value="trusted" '+(_hvBatchAccess==='trusted'?'checked':'')+' onchange="_hvBatchAccess=\'trusted\'"> <span>Trusted worlds</span></label>'+
+  '</div>';
+
+  return '<div class="hv-summary-bar">'+
+    '<div>'+
+      '<div class="hv-found-label">'+_hvCandidates.length+' candidate memor'+(+_hvCandidates.length===1?'y':'ies')+' found</div>'+
+      '<div class="hv-sel-count" id="hv-sel-count">'+_hvSelCount()+' of '+_hvCandidates.length+' selected</div>'+
+    '</div>'+
+    '<button class="hv-sel-all" onclick="_hvToggleAll()">Select all</button>'+
+  '</div>'+
+  '<div class="hv-candidates">'+rows+'</div>'+
+  accessBar;
+}
+
+// ── Candidate interaction ───────────────────────────────────────
+function _hvToggleCandidate(i, val) {
+  _hvCandidates[i].selected = val;
+  var row = document.getElementById('hvc-'+i);
+  if (row) { row.classList.toggle('selected', val); row.classList.toggle('excluded', !val); }
+  _hvUpdateSelCount();
+}
+
+function _hvToggleAll() {
+  var allSel = _hvCandidates.every(function(c){ return c.selected; });
+  _hvCandidates.forEach(function(c, i){ _hvToggleCandidate(i, !allSel); });
+}
+
+function _hvToggleEdit(i) {
+  _hvCandidates[i].editing = !_hvCandidates[i].editing;
+  _hvRefreshReview();
+}
+
+function _hvDoneEdit(i) {
+  _hvCandidates[i].editing = false;
+  _hvRefreshReview();
+}
+
+function _hvSetCandImp(i, label) {
+  var num = { low: 0.25, normal: 0.5, high: 0.75, critical: 1.0 };
+  _hvCandidates[i].importanceLabel = label;
+  _hvCandidates[i].importance = num[label] || 0.5;
+}
+
+function _hvRefreshReview() {
+  var body = document.getElementById('brain-drawer-body');
+  if (body) body.innerHTML = _hvRenderStep2();
+  _hvUpdateSelCount();
+}
+
+// ── Commit ──────────────────────────────────────────────────────
+async function _hvCommitHarvest() {
+  var selected = _hvCandidates.filter(function(c){ return c.selected; });
+  if (!selected.length) return;
+
+  var addBtn = document.getElementById('hv-add-btn');
+  if (addBtn) { addBtn.disabled = true; addBtn.textContent = 'Saving…'; }
+
+  var sharedWith = [];
+  if (_hvBatchAccess === 'trusted') {
+    (_state.peers||[]).forEach(function(p){ sharedWith.push(p.worldId); });
+  }
+
+  var savedKeys = [];
+  var errors = 0;
+  for (var i = 0; i < selected.length; i++) {
+    var c = selected[i];
+    var payload = {
+      summary:        c.summary,
+      type:           c.type,
+      scope:          c.area || c.project || 'global',
+      project:        c.project || '',
+      repository:     c.repository || '',
+      area:           c.area || '',
+      importance:     c.importance,
+      importanceLabel:c.importanceLabel,
+      visibility:     _hvBatchAccess === 'private' ? 'self' : 'pod',
+      sharedWith:     sharedWith,
+      source:         'session-harvest',
+      createdBy:      _state.worldName || 'unknown',
+    };
+    try {
+      var res = await fetch('/worldlink/brain', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+      if (res.ok) {
+        var rec = await res.json();
+        savedKeys.push(c.project || c.area || 'Global');
+      } else { errors++; }
+    } catch(e) { errors++; }
+  }
+
+  brainCloseDrawer();
+  await refreshAll();
+
+  // Trigger animation for saved cluster keys
+  if (savedKeys.length) {
+    _boHarvestAnim = savedKeys.map(function(k){ return { clusterKey: k, startT: _bo3T, done: false }; });
+  }
+
+  if (errors > 0) {
+    console.warn('Harvest: ' + errors + ' memories failed to save');
   }
 }
 
-function brainToggleAddSource() {
-  var el = document.getElementById('brain-add-source-form');
-  if (!el) return;
-  var open = el.style.display === 'none';
-  el.style.display = open ? '' : 'none';
-  document.getElementById('brain-composer').style.display = 'none';
-  _brainSetActiveBtn(open ? 'bbtn-source' : null);
-  if (open) brainTab('sources');
+function _hvParseSessionJSON(raw) {
+  // Try direct JSON parse
+  var parsed = null;
+  try { parsed = JSON.parse(raw.trim()); } catch(e) {}
+
+  // Try extracting JSON array from surrounding text
+  if (!parsed) {
+    var m = raw.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (m) { try { parsed = JSON.parse(m[0]); } catch(e) {} }
+  }
+
+  if (!Array.isArray(parsed)) return [];
+
+  var impNum = { low: 0.25, normal: 0.5, high: 0.75, critical: 1.0 };
+  return parsed.filter(function(item){ return item && item.summary; }).map(function(item, i) {
+    var imp = (item.importance || 'normal').toLowerCase();
+    var dup = _hvDuplicateCheck(item.summary || '');
+    return {
+      id: 'hvc-' + i,
+      selected: true,
+      editing: false,
+      summary: (item.summary || '').trim(),
+      type: item.type || 'fact',
+      project: item.project || _hvInferProject(),
+      repository: item.repository || '',
+      area: item.area || '',
+      importance: impNum[imp] || 0.5,
+      importanceLabel: imp,
+      duplicateOf: dup ? dup.id : null,
+      duplicateSummary: dup ? dup.summary : null,
+    };
+  });
+}
+
+function _bsPasteError(msg) {
+  var paste = document.getElementById('bs-paste');
+  var errEl = document.getElementById('bs-paste-err');
+  if (paste) paste.style.borderColor = 'rgba(248,113,113,0.5)';
+  if (errEl) errEl.textContent = msg;
+  setTimeout(function(){
+    if (paste) paste.style.borderColor = '';
+    if (errEl) errEl.textContent = '';
+  }, 4000);
+}
+
+function _hvProcessClaudeSession(sessionName) {
+  var raw  = ((document.getElementById('bs-paste')||{}).value||'').trim();
+  var name = (sessionName || '').trim() || 'Claude Session';
+
+  if (!raw) {
+    _bsPasteError('Paste Claude\'s JSON response first.');
+    return;
+  }
+
+  // Parse candidates first — don't register source until parse succeeds
+  var candidates = _hvParseSessionJSON(raw);
+  if (!candidates.length) {
+    _bsPasteError('Could not parse JSON. Make sure you paste only the [ … ] array returned by Claude.');
+    return;
+  }
+
+  // Register the session as a source
+  var src = {
+    id: 'src-cs-' + Date.now(),
+    type: 'claude-session',
+    name: name,
+    path: 'claude-session',
+    branch: '',
+    includePaths: [], excludePaths: [],
+    syncMode: 'manual',
+    indexed: true,
+    lastIndexed: new Date().toISOString(),
+    commit: null, memCount: 0, sharedWith: []
+  };
+  _bSources.push(src);
+
+  _hvCandidates = candidates;
+  _hvStep = 2;
+  _hvBatchAccess = 'private';
+
+  // Switch drawer to harvest review
+  var title  = document.getElementById('brain-drawer-title');
+  var body   = document.getElementById('brain-drawer-body');
+  var footer = document.getElementById('brain-drawer-footer');
+  if (title)  title.textContent = 'Harvest Review — ' + escHTML(name);
+  if (body)   body.innerHTML = _hvRenderStep2();
+  if (footer) footer.innerHTML =
+    '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+    '<button class="btn-primary" id="hv-add-btn" onclick="_hvCommitHarvest()">Add '+_hvSelCount()+' to Brain →</button>';
+  _hvUpdateSelCount();
+}
+
+// ── Go to step 2 ────────────────────────────────────────────────
+function _hvGoAnalyze() {
+  _hvStep = 2;
+  _hvAnalyze();
+  var body   = document.getElementById('brain-drawer-body');
+  var footer = document.getElementById('brain-drawer-footer');
+  var title  = document.getElementById('brain-drawer-title');
+  if (title)  title.textContent = 'Harvest Review';
+  if (body)   body.innerHTML = _hvRenderStep2();
+  if (footer) footer.innerHTML =
+    '<button class="btn" onclick="_hvGoBack()">← Back</button>'+
+    '<button class="btn-primary" id="hv-add-btn" onclick="_hvCommitHarvest()">Add '+_hvSelCount()+' to Brain →</button>';
+  _hvUpdateSelCount();
+}
+
+// ── Go back to step 1 ───────────────────────────────────────────
+function _hvGoBack() {
+  _hvStep = 1;
+  _hvCandidates = [];
+  var body   = document.getElementById('brain-drawer-body');
+  var footer = document.getElementById('brain-drawer-footer');
+  var title  = document.getElementById('brain-drawer-title');
+  if (title)  title.textContent = 'Harvest Session';
+  if (body)   body.innerHTML = _hvRenderStep1();
+  if (footer) footer.innerHTML =
+    '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+    '<button class="btn-primary" onclick="_hvGoAnalyze()">Analyze Session →</button>';
+}
+
+function _brainDrawerMemoryHTML() {
+  // Source options from _bSources
+  var srcOpts = '<option value="">None</option>' +
+    _bSources.map(function(s){ return '<option value="'+escHTML(s.id)+'">'+escHTML(s.name)+'</option>'; }).join('');
+  // Peer list
+  var peers = (_state.peers||[]).filter(function(p){ return p.status==='online'; });
+  var peerChecks = peers.map(function(p){
+    return '<label class="peer-share-row"><input type="checkbox" class="bc-peer-cb" data-wid="'+escHTML(p.worldId)+'" checked> '+
+           '<span class="peer-share-name">'+escHTML(p.name||p.worldId)+'</span></label>';
+  }).join('') || '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No online peers</div>';
+
+  return '<div class="form-group">'+
+    '<label class="form-label">What should this world remember?</label>'+
+    '<textarea class="form-input form-textarea" id="bc-summary" placeholder="e.g. Authentication uses Supabase…" style="min-height:90px;resize:vertical;"></textarea>'+
+  '</div>'+
+  '<div class="form-group">'+
+    '<label class="form-label">Source</label>'+
+    '<select class="form-select" id="bc-source-ref" onchange="brainSourceAutofill(this.value)">'+srcOpts+'</select>'+
+  '</div>'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Project</label><input class="form-input" id="bc-project" placeholder="e.g. project-adrian"></div>'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Repository</label><input class="form-input" id="bc-repo" placeholder="e.g. owner/repo"></div>'+
+  '</div>'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Area / Component</label><input class="form-input" id="bc-area" placeholder="e.g. Authentication"></div>'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Type</label>'+
+      '<select class="form-select" id="bc-type">'+
+        '<option value="decision">Decision</option><option value="fact">Fact</option>'+
+        '<option value="constraint">Constraint</option><option value="convention">Convention</option>'+
+        '<option value="learning">Learning</option><option value="goal">Goal</option>'+
+      '</select>'+
+    '</div>'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:14px;">'+
+    '<label class="form-label">Importance</label>'+
+    '<div class="imp-pills" id="bc-imp-pills">'+
+      '<div class="imp-pill" data-v="low" onclick="brainSetImp(this)">Low</div>'+
+      '<div class="imp-pill active" data-v="normal" onclick="brainSetImp(this)">Normal</div>'+
+      '<div class="imp-pill" data-v="high" onclick="brainSetImp(this)">High</div>'+
+      '<div class="imp-pill" data-v="critical" onclick="brainSetImp(this)">Critical</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:0;">'+
+    '<label class="form-label">Access</label>'+
+    '<div class="access-radios" id="bc-access-radios">'+
+      '<label class="access-radio-row selected" onclick="brainAccessPick(this,\'private\')">'+
+        '<input type="radio" name="bc-access" value="private" checked>'+
+        '<div><div class="access-radio-label">Private</div><div class="access-radio-sub">Only this world</div></div>'+
+      '</label>'+
+      '<label class="access-radio-row" onclick="brainAccessPick(this,\'selected\')">'+
+        '<input type="radio" name="bc-access" value="selected">'+
+        '<div><div class="access-radio-label">Selected worlds</div><div class="access-radio-sub">Choose connected worlds</div></div>'+
+      '</label>'+
+      '<label class="access-radio-row" onclick="brainAccessPick(this,\'trusted\')">'+
+        '<input type="radio" name="bc-access" value="trusted">'+
+        '<div><div class="access-radio-label">Trusted worlds</div><div class="access-radio-sub">All worlds you trust</div></div>'+
+      '</label>'+
+    '</div>'+
+    '<div id="bc-peer-checks" class="brain-peer-checks" style="display:none;">'+peerChecks+'</div>'+
+  '</div>';
+}
+
+var _BS_EXTRACT_PROMPT = 'Analyze this session and extract durable knowledge worth storing in World Brain.\n\nReturn ONLY a JSON array:\n[\n  {\n    "type": "decision|learning|fact|constraint|convention",\n    "summary": "one clear sentence of durable knowledge",\n    "project": "project name if known, otherwise empty string",\n    "area": "component or area if known, otherwise empty string",\n    "importance": "low|normal|high|critical"\n  }\n]\n\nInclude:\n- Architectural and product decisions made\n- Things learned that were not obvious before\n- Technical facts established (ports, file paths, APIs, patterns)\n- Constraints identified (must / must not)\n- Conventions and standards established\n\nExclude:\n- Greetings or conversational filler\n- Temporary debugging or status messages\n- Routine shell commands and outputs\n- Speculative ideas that were not accepted\n- Information that was already known at session start';
+
+function _brainDrawerSourceHTML() {
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Type</label>'+
+      '<select class="form-select" id="bs-type" onchange="brainSourceTypeChanged(this.value)">'+
+        '<option value="repository">GitHub Repository</option>'+
+        '<option value="folder">Local Folder</option>'+
+        '<option value="file">File / Document</option>'+
+        '<option value="api-spec">API Spec</option>'+
+        '<option value="claude-session">Claude Session</option>'+
+      '</select></div>'+
+    '<div class="form-group" style="margin:0"><label class="form-label">Name</label>'+
+      '<input class="form-input" id="bs-name" placeholder="e.g. project-adrian"></div>'+
+  '</div>'+
+  '<div id="bs-type-fields">'+_bsStdFields()+'</div>';
+}
+
+function _bsStdFields() {
+  return '<div class="form-group" style="margin-bottom:12px;">'+
+    '<label class="form-label">Repository URL / Path</label>'+
+    '<input class="form-input" id="bs-path" placeholder="e.g. github.com/joseph/project-adrian or /Users/joseph/docs">'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:14px;">'+
+    '<label class="form-label">Branch</label>'+
+    '<input class="form-input" id="bs-branch" placeholder="main" value="main">'+
+  '</div>'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
+    '<div class="form-group" style="margin:0;"><label class="form-label">Include paths</label>'+
+      '<textarea class="form-input" id="bs-include" style="min-height:72px;resize:vertical;font-family:monospace;font-size:11px;" placeholder="/src&#10;/docs&#10;/architecture"></textarea>'+
+      '<div style="font:400 10px/1.4 -apple-system,sans-serif;color:var(--text-muted);margin-top:3px;">One path per line</div></div>'+
+    '<div class="form-group" style="margin:0;"><label class="form-label">Exclude paths</label>'+
+      '<textarea class="form-input" id="bs-exclude" style="min-height:72px;resize:vertical;font-family:monospace;font-size:11px;" placeholder="/node_modules&#10;/dist&#10;/build&#10;.env"></textarea>'+
+      '<div style="font:400 10px/1.4 -apple-system,sans-serif;color:var(--text-muted);margin-top:3px;">One path per line</div></div>'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:14px;">'+
+    '<label class="form-label">Sync</label>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
+      '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font:400 12px/1 -apple-system,sans-serif;color:var(--text);">'+
+        '<input type="radio" name="bs-sync" value="manual" checked style="accent-color:#06b6d4;"> Manual'+
+      '</label>'+
+      '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font:400 12px/1 -apple-system,sans-serif;color:var(--text-muted);" title="Not yet supported">'+
+        '<input type="radio" name="bs-sync" value="on-change" disabled style="accent-color:#06b6d4;opacity:.4;"> On change'+
+        '<span style="font:400 10px/1 -apple-system,sans-serif;color:#334155;">(soon)</span>'+
+      '</label>'+
+      '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font:400 12px/1 -apple-system,sans-serif;color:var(--text-muted);" title="Not yet supported">'+
+        '<input type="radio" name="bs-sync" value="scheduled" disabled style="accent-color:#06b6d4;opacity:.4;"> Scheduled'+
+        '<span style="font:400 10px/1 -apple-system,sans-serif;color:#334155;">(soon)</span>'+
+      '</label>'+
+    '</div>'+
+  '</div>'+
+  '<div class="brain-source-notice">'+
+    'ℹ Share knowledge, not source access. Peers can receive permitted Brain context derived from this source. This does not grant access to the underlying repository or files.'+
+  '</div>';
+}
+
+function _bsClaudeSessionFields() {
+  return '<div class="form-group" style="margin-bottom:14px;">'+
+    '<label class="form-label">How it works</label>'+
+    '<div style="font:400 11px/1.6 -apple-system,sans-serif;color:#64748b;padding:8px 12px;background:rgba(6,182,212,0.04);border:1px solid rgba(6,182,212,0.12);border-radius:8px;">'+
+      '1. Copy the extraction prompt below<br>'+
+      '2. Paste and run it in your Claude session<br>'+
+      '3. Copy Claude\'s JSON response<br>'+
+      '4. Paste it in the field below and click <strong style="color:#e2e8f0;">Process Session →</strong>'+
+    '</div>'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:14px;">'+
+    '<div class="bs-prompt-label">'+
+      '<span>Extraction Prompt</span>'+
+      '<button class="bs-copy-btn" id="bs-copy-btn" onclick="_bsCopyPrompt()">Copy prompt</button>'+
+    '</div>'+
+    '<div class="bs-prompt-wrap">'+
+      '<div class="bs-prompt-text" id="bs-prompt-text">'+escHTML(_BS_EXTRACT_PROMPT)+'</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="form-group" style="margin-bottom:0;">'+
+    '<div class="bs-paste-label">'+
+      '<span>Paste Claude\'s Response</span>'+
+      '<span class="bs-paste-hint">JSON array from Claude</span>'+
+    '</div>'+
+    '<textarea class="form-input" id="bs-paste" style="min-height:120px;resize:vertical;font-family:monospace;font-size:11px;" placeholder=\'[\n  {\n    "type": "decision",\n    "summary": "Use WebSockets for Frontier world actions.",\n    "project": "project-adrian",\n    "area": "Frontier",\n    "importance": "high"\n  }\n]\'></textarea>'+
+    '<div id="bs-paste-err" style="font:400 11px/1.4 -apple-system,sans-serif;color:#f87171;margin-top:5px;min-height:16px;"></div>'+
+  '</div>';
+}
+
+function brainSourceTypeChanged(val) {
+  var fieldsEl = document.getElementById('bs-type-fields');
+  var footer   = document.getElementById('brain-drawer-footer');
+  if (!fieldsEl) return;
+  if (val === 'claude-session') {
+    fieldsEl.innerHTML = _bsClaudeSessionFields();
+    if (footer) footer.innerHTML =
+      '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+      '<button class="btn-primary" onclick="brainAddSource()">Process Session →</button>';
+  } else {
+    fieldsEl.innerHTML = _bsStdFields();
+    if (footer) footer.innerHTML =
+      '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+      '<button class="btn-primary" onclick="brainAddSource()">Add Source →</button>';
+  }
+}
+
+function _bsCopyPrompt() {
+  function _bsCopyDone() {
+    var btn = document.getElementById('bs-copy-btn');
+    if (!btn) return;
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); }, 2000);
+  }
+  // Secure-context clipboard API (HTTPS / localhost)
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(_BS_EXTRACT_PROMPT).then(_bsCopyDone).catch(_bsCopyExecCommand);
+    return;
+  }
+  _bsCopyExecCommand();
+  function _bsCopyExecCommand() {
+    // Works on plain HTTP — create an off-screen textarea, select, execCommand
+    var ta = document.createElement('textarea');
+    ta.value = _BS_EXTRACT_PROMPT;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { if (document.execCommand('copy')) _bsCopyDone(); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+}
+
+function brainOpenDrawer(mode) {
+  _brainDrawerMode = mode;
+  var drawer  = document.getElementById('brain-drawer');
+  var overlay = document.getElementById('brain-drawer-overlay');
+  var title   = document.getElementById('brain-drawer-title');
+  var body    = document.getElementById('brain-drawer-body');
+  var footer  = document.getElementById('brain-drawer-footer');
+
+  if (mode === 'memory') {
+    title.textContent = 'Add Memory';
+    body.innerHTML = _brainDrawerMemoryHTML();
+    footer.innerHTML = '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+                       '<button class="btn-primary" onclick="brainAddMemory()">Add Memory →</button>';
+  } else if (mode === 'harvest') {
+    _hvStep = 1;
+    _hvCandidates = [];
+    _hvBatchAccess = 'private';
+    title.textContent = 'Harvest Session';
+    body.innerHTML = _hvRenderStep1();
+    footer.innerHTML = '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+                       '<button class="btn-primary" onclick="_hvGoAnalyze()">Analyze Session →</button>';
+  } else if (mode === 'source') {
+    title.textContent = 'Add Source';
+    body.innerHTML = _brainDrawerSourceHTML();
+    footer.innerHTML = '<button class="btn" onclick="brainCloseDrawer()">Cancel</button>'+
+                       '<button class="btn-primary" onclick="brainAddSource()">Add Source →</button>';
+  }
+
+  drawer.classList.add('open');
+  overlay.classList.add('open');
+  // Highlight the right action button
+  ['bbtn-memory','bbtn-source','bbtn-harvest'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.className = 'btn';
+  });
+  var btnId = { memory:'bbtn-memory', source:'bbtn-source', harvest:'bbtn-harvest' }[mode];
+  if (btnId) { var btn = document.getElementById(btnId); if (btn) btn.className = 'btn-primary'; }
+
+  if (mode === 'memory') {
+    brainTab('memories');
+    setTimeout(function(){ var s = document.getElementById('bc-summary'); if (s) s.focus(); }, 50);
+  } else if (mode === 'harvest') {
+    brainTab('memories');
+  } else {
+    brainTab('sources');
+  }
+}
+
+function brainCloseDrawer() {
+  var drawer  = document.getElementById('brain-drawer');
+  var overlay = document.getElementById('brain-drawer-overlay');
+  if (drawer)  drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+  _brainDrawerMode = null;
+  ['bbtn-memory','bbtn-source','bbtn-harvest'].forEach(function(id){
+    var b = document.getElementById(id); if (b) b.className = 'btn';
+  });
+}
+
+function brainSourceAutofill(srcId) {
+  var src = _bSources.find(function(s){ return s.id === srcId; });
+  var proj = document.getElementById('bc-project');
+  var repo = document.getElementById('bc-repo');
+  if (!src) return;
+  if (proj && !proj.value) proj.value = src.name || '';
+  if (repo && !repo.value) repo.value = src.path || '';
+}
+
+function brainAccessPick(row, val) {
+  document.querySelectorAll('.access-radio-row').forEach(function(r){ r.classList.remove('selected'); });
+  row.classList.add('selected');
+  var checks = document.getElementById('bc-peer-checks');
+  if (checks) checks.style.display = val === 'selected' ? '' : 'none';
+}
+
+// ── Filter + search ────────────────────────────────────────────────
+function brainFilter(btn) {
+  document.querySelectorAll('.brain-filter-pill').forEach(function(p){ p.classList.remove('active'); });
+  btn.classList.add('active');
+  _brainFilterType = btn.dataset.type;
+  renderBrain();
+}
+function _brainClearScopeFilter() {
+  _brainScopeFilter = null;
+  _boClickedKey = null;
+  renderBrain();
+}
+
+function brainSearch(q) {
+  _brainSearchQ = q.toLowerCase();
+  renderBrain();
 }
 
 // ── Importance pill ────────────────────────────────────────────────
@@ -3363,131 +4781,149 @@ function brainTypeColor(type) {
 
 // ── Add Memory ─────────────────────────────────────────────────────
 async function brainAddMemory() {
-  var summary = document.getElementById('bc-summary').value.trim();
-  if (!summary) return;
-  var imp = brainGetImp();
+  var summary = (document.getElementById('bc-summary')||{}).value;
+  if (!summary || !summary.trim()) return;
+  var accessVal = (document.querySelector('input[name="bc-access"]:checked')||{}).value || 'private';
   var sharedWith = [];
-  document.querySelectorAll('#bc-peer-list input[type=checkbox]:checked').forEach(function(cb){
-    if (cb.dataset.wid) sharedWith.push(cb.dataset.wid);
-  });
-  var isPrivate = document.getElementById('bc-private').checked;
+  if (accessVal === 'selected') {
+    document.querySelectorAll('.bc-peer-cb:checked').forEach(function(cb){ if(cb.dataset.wid) sharedWith.push(cb.dataset.wid); });
+  } else if (accessVal === 'trusted') {
+    (_state.peers||[]).forEach(function(p){ sharedWith.push(p.worldId); });
+  }
+  var imp = brainGetImp();
   var body = {
-    summary: summary,
-    type: document.getElementById('bc-type').value,
-    scope: document.getElementById('bc-area').value || document.getElementById('bc-project').value || 'global',
-    project: document.getElementById('bc-project').value,
-    repository: document.getElementById('bc-repo').value,
-    area: document.getElementById('bc-area').value,
-    importance: brainImpNum(imp),
+    summary:       summary.trim(),
+    type:          (document.getElementById('bc-type')||{}).value || 'fact',
+    scope:         (document.getElementById('bc-area')||{}).value || (document.getElementById('bc-project')||{}).value || 'global',
+    project:       (document.getElementById('bc-project')||{}).value || '',
+    repository:    (document.getElementById('bc-repo')||{}).value || '',
+    area:          (document.getElementById('bc-area')||{}).value || '',
+    importance:    brainImpNum(imp),
     importanceLabel: imp,
-    visibility: isPrivate ? 'self' : 'pod',
-    sharedWith: sharedWith,
-    source: 'manual',
-    createdBy: _state.worldName || 'unknown',
+    visibility:    accessVal === 'private' ? 'self' : 'pod',
+    sharedWith:    sharedWith,
+    source:        'manual',
+    createdBy:     _state.worldName || 'unknown',
   };
-  var msg = document.getElementById('bc-save-msg');
-  msg.style.color='var(--text-muted)'; msg.textContent='Saving…';
+  var footer = document.getElementById('brain-drawer-footer');
+  if (footer) footer.innerHTML = '<span style="font:400 12px/1 -apple-system,sans-serif;color:var(--text-muted);">Saving…</span>';
   try {
     var res = await fetch('/worldlink/brain', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (res.ok) {
-      msg.style.color='var(--green)'; msg.textContent='Saved ✓';
-      document.getElementById('bc-summary').value='';
-      document.getElementById('bc-project').value='';
-      document.getElementById('bc-repo').value='';
-      document.getElementById('bc-area').value='';
-      setTimeout(function(){ msg.textContent=''; }, 2000);
+      brainCloseDrawer();
       await refreshAll();
-      brainToggleComposer();
-    } else { msg.style.color='var(--red)'; msg.textContent='Failed'; }
-  } catch(e) { msg.style.color='var(--red)'; msg.textContent='Error'; }
+    } else {
+      if (footer) footer.innerHTML = '<span style="color:var(--red);">Failed to save</span><button class="btn-primary" onclick="brainAddMemory()">Retry</button>';
+    }
+  } catch(e) {
+    if (footer) footer.innerHTML = '<span style="color:var(--red);">Network error</span><button class="btn" onclick="brainCloseDrawer()">Close</button>';
+  }
 }
 
 // ── Add Source ─────────────────────────────────────────────────────
 function brainAddSource() {
-  var name = document.getElementById('bs-name').value.trim();
-  var path = document.getElementById('bs-path').value.trim();
+  var type = (document.getElementById('bs-type')||{}).value || 'repository';
+  var name = (document.getElementById('bs-name')||{}).value.trim();
+
+  if (type === 'claude-session') {
+    return _hvProcessClaudeSession(name);
+  }
+
+  var path = (document.getElementById('bs-path')||{}).value.trim();
   if (!name || !path) return;
+  var syncVal = (document.querySelector('input[name="bs-sync"]:checked')||{}).value || 'manual';
+  var includePaths = ((document.getElementById('bs-include')||{}).value||'').split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  var excludePaths = ((document.getElementById('bs-exclude')||{}).value||'').split('\n').map(function(s){return s.trim();}).filter(Boolean);
   var src = {
     id: 'src-'+Date.now(),
-    type: document.getElementById('bs-type').value,
-    name: name, path: path,
+    type: type,
+    name: name || path.split('/').pop() || path,
+    path: path,
+    branch: (document.getElementById('bs-branch')||{}).value.trim() || 'main',
+    includePaths: includePaths,
+    excludePaths: excludePaths,
+    syncMode: syncVal,
     indexed: false, lastIndexed: null,
-    syncMode: 'manual', branch: 'main', commit: null,
-    memCount: 0, sharedWith: []
+    commit: null, memCount: 0, sharedWith: []
   };
   _bSources.push(src);
-  document.getElementById('bs-name').value='';
-  document.getElementById('bs-path').value='';
-  brainToggleAddSource();
+  fetch('/worldlink/local/sources', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: _bSources }) }).catch(function(){});
+  brainCloseDrawer();
   renderBrainSources();
   renderBrainAccess();
 }
 
-// ── Harvest Session ────────────────────────────────────────────────
-function brainHarvestSession() {
-  var composer = document.getElementById('brain-composer');
-  var wasOpen = composer && composer.style.display !== 'none';
-  // Close source form, open composer
-  document.getElementById('brain-add-source-form').style.display = 'none';
-  if (composer) composer.style.display = '';
-  _brainSetActiveBtn(wasOpen ? null : 'bbtn-harvest');
-  if (!wasOpen) {
-    brainTab('memories');
-    var peers = (_state.peers || []).filter(function(p){ return p.status === 'online'; });
-    var list = document.getElementById('bc-peer-list');
-    list.innerHTML = peers.length ? peers.map(function(p){
-      return '<label class="peer-share-row"><input type="checkbox" data-wid="'+escHTML(p.worldId)+'" checked> '+
-             '<span><span class="peer-share-name">'+escHTML(p.name||p.worldId)+'</span>'+
-             '<span class="peer-share-sub">· '+escHTML(p.status)+'</span></span></label>';
-    }).join('') : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No connected peers</div>';
-  }
-  var el = document.getElementById('bc-summary');
-  if (el) { el.placeholder = 'What key decision or learning came out of this session?'; el.focus(); }
-  var typeEl = document.getElementById('bc-type');
-  if (typeEl) typeEl.value = 'learning';
-}
-
 // ── Render Brain ───────────────────────────────────────────────────
 function renderBrain() {
-  // Update orbital subtitle
-  var sub = document.getElementById('brain-orbital-sub');
-  var n = (_state.brain||[]).length, s = _bSources.length;
-  if (sub) sub.textContent = n+' memor'+(n===1?'y':'ies')+' · '+s+' source'+(s===1?'':'s');
+  // Live stats
+  var all = _state.brain || [];
+  var sharedCount = all.filter(function(r){ return r.sharedWith && r.sharedWith.length; }).length;
+  var el = function(id){ return document.getElementById(id); };
+  if (el('bo-stat-mem-n'))    el('bo-stat-mem-n').textContent    = all.length;
+  if (el('bo-stat-src-n'))    el('bo-stat-src-n').textContent    = _bSources.length;
+  if (el('bo-stat-shared-n')) el('bo-stat-shared-n').textContent = sharedCount;
 
-  // Memory list
-  var el = document.getElementById('brain-list');
-  if (!el) return;
-  if (!(_state.brain||[]).length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div>No memories yet — add the first one above</div>';
+  // Filter pill counts
+  var types = ['decision','fact','learning','constraint','convention','goal'];
+  if (el('bfc-all')) el('bfc-all').textContent = all.length;
+  types.forEach(function(t){
+    var fc = el('bfc-'+t);
+    if (fc) fc.textContent = all.filter(function(r){ return r.type===t; }).length;
+  });
+
+  // Apply filter + search + scope (from orbital click)
+  var filtered = all.slice().reverse().filter(function(r){
+    if (_brainFilterType !== 'all' && r.type !== _brainFilterType) return false;
+    if (_brainScopeFilter) {
+      var rkey = r.project || (r.scope && r.scope !== 'global' ? r.scope : null) || 'Global';
+      if (rkey !== _brainScopeFilter) return false;
+    }
+    if (_brainSearchQ) {
+      var hay = (r.summary||'') + (r.project||'') + (r.area||'') + (r.type||'');
+      if (hay.toLowerCase().indexOf(_brainSearchQ) === -1) return false;
+    }
+    return true;
+  });
+
+  var listEl = el('brain-list');
+  if (!listEl) return;
+  if (!filtered.length) {
+    listEl.innerHTML = all.length
+      ? '<div class="empty-state"><div class="empty-icon">◎</div>No matches</div>'
+      : '<div class="empty-state"><div class="empty-icon">◎</div>No memories yet — click + Memory above</div>';
     return;
   }
-  el.innerHTML = (_state.brain||[]).slice().reverse().map(function(r) {
+
+  // Show active scope filter badge if set
+  var scopeBadge = '';
+  if (_brainScopeFilter) {
+    scopeBadge = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 10px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.2);border-radius:7px;">'+
+      '<span style="font:500 11px/1 -apple-system,sans-serif;color:#06b6d4;">◉ '+escHTML(_brainScopeFilter)+'</span>'+
+      '<button onclick="_brainClearScopeFilter()" style="background:none;border:none;color:#475569;cursor:pointer;font:400 11px/1 -apple-system,sans-serif;margin-left:auto;">Clear ✕</button>'+
+    '</div>';
+  }
+
+  listEl.innerHTML = scopeBadge + filtered.map(function(r) {
+    var col = brainTypeColor(r.type);
     var imp = brainImpLabel(r.importance || 0.5);
-    var impLabel = (r.importanceLabel || imp);
-    var ctx = [r.project, r.repository, r.area||r.scope].filter(Boolean).join(' › ');
-    var icon = brainTypeIcon(r.type);
-    var bg = brainTypeBg(r.type), col = brainTypeColor(r.type);
-    var shared = r.sharedWith && r.sharedWith.length ? '· shared with '+r.sharedWith.length+' peer'+(r.sharedWith.length>1?'s':'') : (r.visibility==='self'?'· private':'');
-    var provenance = [];
-    if (r.source) provenance.push('<span>Source <strong>'+escHTML(r.source)+'</strong></span>');
-    if (r.createdBy) provenance.push('<span>By <strong>'+escHTML(r.createdBy)+'</strong></span>');
-    if (r.derivedFrom) provenance.push('<span>From <strong>'+escHTML(r.derivedFrom)+'</strong></span>');
-    if (r.createdAt) provenance.push('<span>'+relTime(r.createdAt)+'</span>');
-    var statusTag = r.status && r.status!=='active' ? '<span class="brain-mem-tag" style="background:rgba(100,116,139,.1);color:#64748b;border-color:rgba(100,116,139,.2);">'+escHTML(r.status)+'</span>' : '';
-    return '<div class="brain-mem-card"><div class="brain-mem-row">'+
-      '<div class="brain-mem-icon" style="background:'+bg+';color:'+col+';">'+icon+'</div>'+
-      '<div class="brain-mem-body">'+
-        '<div class="brain-mem-summary">'+escHTML(r.summary||'')+'</div>'+
-        (ctx ? '<div class="brain-mem-ctx">'+escHTML(ctx)+'</div>' : '')+
-        '<div class="brain-mem-tags">'+
-          '<span class="brain-mem-tag brain-mem-tag-type">'+escHTML(r.type||'fact')+'</span>'+
-          '<span class="brain-mem-tag brain-mem-tag-imp" data-v="'+impLabel+'">'+impLabel+'</span>'+
-          statusTag+
-          (shared ? '<span class="brain-mem-shared">'+shared+'</span>' : '')+
-        '</div>'+
-        (provenance.length ? '<div class="brain-mem-provenance">'+provenance.join('')+'</div>' : '')+
+    var crumbs = [r.project, r.repository, r.area].filter(Boolean);
+    if (!crumbs.length && r.scope && r.scope !== 'global') crumbs.push(r.scope);
+    var ctx = crumbs.join(' › ');
+    var isShared = r.sharedWith && r.sharedWith.length;
+    var accessLabel = isShared ? 'shared' : 'private';
+    var impColors = { critical:'#f87171', high:'#f59e0b', normal:'#475569', low:'#374151' };
+    var typeTag = '<span class="brain-mem-dense-tag" style="color:'+col+';border-color:'+col+'22;background:'+col+'11;">'+escHTML(r.type||'fact')+'</span>';
+    var impTag  = '<span class="brain-mem-dense-tag" style="color:'+(impColors[imp]||'#475569')+';border-color:'+(impColors[imp]||'#475569')+'33;">'+imp+'</span>';
+    var timeStr = r.createdAt ? relTime(r.createdAt) : '';
+    var srcStr  = r.source && r.source !== 'manual' ? 'via '+escHTML(r.source) : '';
+    var meta = [ctx, typeTag, impTag, srcStr, timeStr].filter(Boolean);
+    return '<div class="brain-mem-row-dense">'+
+      '<div class="brain-mem-dot" style="background:'+col+';"></div>'+
+      '<div class="brain-mem-dense-body">'+
+        '<div class="brain-mem-dense-summary" title="'+escHTML(r.summary||'')+'">'+escHTML(r.summary||'')+'</div>'+
+        '<div class="brain-mem-dense-meta">'+meta.join('<span style="color:#1e293b;">·</span>')+'<span class="brain-mem-dense-access'+(isShared?' shared':'')+'" style="margin-left:auto;">'+accessLabel+'</span></div>'+
       '</div>'+
-    '</div></div>';
+    '</div>';
   }).join('');
 }
 
@@ -3531,6 +4967,7 @@ function brainSourceTogglePeer(srcId, worldId, checked) {
   var idx = src.sharedWith.indexOf(worldId);
   if (checked && idx<0) src.sharedWith.push(worldId);
   if (!checked && idx>-1) src.sharedWith.splice(idx,1);
+  fetch('/worldlink/local/sources', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: _bSources }) }).catch(function(){});
 }
 
 // ── Render Access ──────────────────────────────────────────────────
@@ -3562,14 +4999,70 @@ function renderBrainAccess() {
 function renderMessages() {
   const el = document.getElementById('messages-full-list');
   if (!_state.messages.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">✉</div>No messages</div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">✉</div>No messages yet</div>';
     return;
   }
-  el.innerHTML = _state.messages.map(m => `<div class="message-item">
-    <div class="message-from">${escHTML(m.fromWorld || '—')}</div>
-    <div class="message-text">${escHTML(m.text)}</div>
-    <div class="message-time">${new Date(m.timestamp).toLocaleString()}</div>
-  </div>`).join('');
+
+  // Group by sender, keep latest message per peer
+  const byPeer = {};
+  _state.messages.forEach(function(m) {
+    const wid = m.fromWorld || 'unknown';
+    if (!byPeer[wid]) byPeer[wid] = { worldId: wid, messages: [] };
+    byPeer[wid].messages.push(m);
+  });
+
+  // Sort conversations by most recent message
+  const convos = Object.values(byPeer).sort(function(a, b) {
+    return (b.messages[0]?.timestamp || 0) - (a.messages[0]?.timestamp || 0);
+  });
+
+  el.innerHTML = convos.map(function(c) {
+    const peer = (_state.peers || []).find(function(p){ return p.worldId === c.worldId; });
+    const name = peer?.worldName || c.worldId;
+    const initials = name.replace(/^wld_.*/, '?').slice(0, 2).toUpperCase();
+    const latest = c.messages[0];
+    const preview = (latest?.text || '').length > 80 ? latest.text.slice(0, 80) + '…' : (latest?.text || '');
+    const unread = c.messages.filter(function(m){ return !m.read; }).length;
+    const ts = latest?.timestamp ? _fmtMsgTime(latest.timestamp) : '';
+    const wid = escAttr(c.worldId);
+
+    return '<div class="dm-convo-row" onclick="openPeerSession(\'' + wid + '\')" style="cursor:pointer;">'
+      + '<div class="dm-avatar" style="background:' + _worldColor(c.worldId) + ';">' + escHTML(initials) + '</div>'
+      + '<div class="dm-convo-body">'
+      +   '<div class="dm-convo-header">'
+      +     '<span class="dm-convo-name">' + escHTML(name) + '</span>'
+      +     '<span class="dm-convo-time">' + escHTML(ts) + '</span>'
+      +   '</div>'
+      +   '<div class="dm-convo-preview">' + escHTML(preview) + '</div>'
+      + '</div>'
+      + (unread ? '<div class="dm-unread-badge">' + unread + '</div>' : '')
+      + '<button class="dm-delete-btn" title="Clear conversation" onclick="event.stopPropagation();deleteConversation(\'' + wid + '\')">×</button>'
+      + '<span class="dm-chevron">›</span>'
+      + '</div>';
+  }).join('');
+}
+
+function _fmtMsgTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  if (isToday) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const diff = now - d;
+  if (diff < 7 * 86400000) return d.toLocaleDateString([], { weekday: 'short' });
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function _worldColor(worldId) {
+  var h = 0;
+  for (var i = 0; i < worldId.length; i++) h = (h * 31 + worldId.charCodeAt(i)) & 0xffff;
+  return 'hsl(' + (h % 360) + ',55%,35%)';
+}
+
+async function deleteConversation(worldId) {
+  _state.messages = (_state.messages || []).filter(function(m){ return m.fromWorld !== worldId; });
+  await fetch('/worldlink/local/messages/clear', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ worldId }) }).catch(function(){});
+  renderMessages();
+  _updateMsgBadge();
 }
 
 // ── Render Audit full page ────────────────────────────────────────
@@ -3631,8 +5124,9 @@ async function viewArtifact(artifactId, sourceWorldId) {
 
 function artifactCopy(btn) {
   if (!_artifactText) return;
-  navigator.clipboard?.writeText(_artifactText).then(() => { btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy', 1500); })
-    .catch(() => { var ta = document.createElement('textarea'); ta.value = _artifactText; ta.style.cssText = 'position:fixed;top:-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); btn.textContent = '✓ Copied'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1500); });
+  btn.textContent = '✓ Copied';
+  setTimeout(function(){ btn.textContent = 'Copy'; }, 1500);
+  _copyText(_artifactText, '');
 }
 
 async function artifactSendAsMessage() {
@@ -3648,6 +5142,60 @@ async function artifactSendAsMessage() {
     if (data.ok) { btn.textContent = '✓ Sent!'; setTimeout(() => closeModal('modal-artifact'), 1000); }
     else { btn.textContent = '→ Send as message'; btn.disabled = false; alert(data.error || 'Failed'); }
   } catch(e) { btn.textContent = '→ Send as message'; btn.disabled = false; }
+}
+
+// ── Navigate to overview and open peer session drawer ─────────────
+function openPeerSession(worldId) {
+  var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
+  if (!peer) return;
+  navigate('overview');
+  setTimeout(function(){ openSession(peer); }, 80);
+}
+
+// ── Peer auth error tracking ───────────────────────────────────────
+function _markPeerError(worldId, msg) {
+  _peerErrors[worldId] = msg || 'Connection error';
+  // Update world label to show !
+  var entry = _wislands && _wislands.get(worldId);
+  if (entry && entry.labelEl) {
+    var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
+    entry.labelEl.classList.add('has-error');
+    _wUpdateLabel(entry.labelEl, (peer && peer.worldName) || worldId, (peer && peer.status) || 'online', worldId);
+  }
+  // Show warning banner in session drawer if this peer is active
+  _updateSessionAuthWarn();
+}
+function _clearPeerError(worldId) {
+  delete _peerErrors[worldId];
+  var entry = _wislands && _wislands.get(worldId);
+  if (entry && entry.labelEl) {
+    var peer = (_state.peers || []).find(function(p){ return p.worldId === worldId; });
+    entry.labelEl.classList.remove('has-error');
+    _wUpdateLabel(entry.labelEl, (peer && peer.worldName) || worldId, (peer && peer.status) || 'online', worldId);
+  }
+  _updateSessionAuthWarn();
+}
+function _updateSessionAuthWarn() {
+  var warn = document.getElementById('session-auth-warn');
+  if (!warn) return;
+  var hasErr = _sessionPeer && _peerErrors[_sessionPeer.worldId];
+  warn.style.display = hasErr ? 'flex' : 'none';
+}
+function _peerAuthFix(worldId) {
+  var wid = worldId || (_sessionPeer && _sessionPeer.worldId);
+  navigate('connections');
+  // Scroll to peer and highlight it after page renders
+  setTimeout(function() {
+    var cards = document.querySelectorAll('.conn-peer-card');
+    cards.forEach(function(c) {
+      if (c.dataset.worldId === wid) {
+        c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        c.style.borderColor = 'var(--amber)';
+        setTimeout(function(){ c.style.borderColor = ''; }, 3000);
+      }
+    });
+    _wlGwToast('Disconnect then reconnect this world to refresh the session', 'info');
+  }, 150);
 }
 
 // ── Send message modal ────────────────────────────────────────────
@@ -3738,12 +5286,13 @@ async function refreshAll() {
     const prevMsgs  = _state.messages.slice();
     const prevTasks = _state.tasks.slice();
 
-    const [peersRes, tasksRes, auditRes, msgsRes, brainRes] = await Promise.all([
+    const [peersRes, tasksRes, auditRes, msgsRes, brainRes, sourcesRes] = await Promise.all([
       fetch('/worldlink/peers').then(r => r.json()).catch(() => ({})),
       fetch('/worldlink/tasks').then(r => r.json()).catch(() => ({})),
       fetch('/worldlink/audit').then(r => r.json()).catch(() => ({})),
       fetch('/worldlink/local/messages').then(r => r.json()).catch(() => ({})),
       fetch('/worldlink/local/brain').then(r => r.json()).catch(() => ({})),
+      fetch('/worldlink/local/sources').then(r => r.json()).catch(() => ({})),
     ]);
 
     _state.peers = peersRes.peers || [];
@@ -3751,6 +5300,7 @@ async function refreshAll() {
     _state.audit = auditRes.events || [];
     _state.capabilities = peersRes.capabilities || [];
     _state.brain = brainRes.records || [];
+    _bSources = sourcesRes.sources || _bSources;
 
     // Merge messages — preserve read status
     const newMsgs = msgsRes.messages || [];
@@ -3795,8 +5345,9 @@ async function refreshAll() {
     renderConnections();
     renderPeers();
     renderTasks();
-    renderArtifacts();
     renderBrain();
+    renderBrainSources();
+    renderBrainAccess();
     renderMessages();
     renderAuditFull();
     renderSettings();
