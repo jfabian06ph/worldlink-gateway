@@ -55,10 +55,17 @@ node /path/to/worldlink-gateway/bin/worldlink.js start 8080     # custom port
 open http://localhost:7461/
 ```
 
-The init wizard asks for:
-- **World name** — displayed to peers (e.g. "Joseph-iOS")
-- **Capabilities** — what this world can do (e.g. `claude-task`, `message`, `context-handoff`)
-- **Auto-approve** — automatically approve all incoming tasks (for testing)
+The init wizard asks three questions:
+
+```
+World name [My World]:
+Capabilities (comma-separated) [claude-task]:
+Auto-approve tasks for testing? (y/N):
+```
+
+- **World name** — displayed to peers (e.g. `Joseph-iOS`, `Karlo-Lab`)
+- **Capabilities** — comma-separated list of task types this world can handle. Defaults to `claude-task`. Common values: `claude-task`, `message`, `context-handoff`, `artifact.receive`
+- **Auto-approve** — skip the manual approval step for incoming tasks (useful for local testing)
 
 ---
 
