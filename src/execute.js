@@ -42,7 +42,7 @@ function buildPrompt(task, brainRecords = []) {
 
 function runClaude(fullPrompt) {
   return new Promise((resolve, reject) => {
-    const proc = spawn('claude', ['-p', fullPrompt], {
+    const proc = spawn('claude', ['-p', fullPrompt, '--dangerously-skip-permissions'], {
       env: { ...process.env },
       cwd: process.cwd(),
     });
