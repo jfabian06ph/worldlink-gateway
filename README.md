@@ -1,6 +1,6 @@
 # worldlink-gateway
 
-A standalone peer-to-peer protocol for connecting AI agent worlds. Lets separate Claude instances collaborate: delegate tasks, share context, retrieve artifacts — without central infrastructure.
+A standalone peer-to-peer protocol for connecting AI agent worlds. Lets separate Claude instances collaborate: delegate tasks, share context, retrieve artifacts, and exchange brain memories — without central infrastructure.
 
 Zero external dependencies. Pure Node.js ≥ 18.
 
@@ -9,51 +9,95 @@ Zero external dependencies. Pure Node.js ≥ 18.
 ## Quick start
 
 ```bash
-# Install globally
-npm install -g worldlink-gateway
+# Clone the repository
+git clone https://github.com/jfabian06ph/worldlink-gateway.git
+cd worldlink-gateway
+npm install
 
-# Or run without installing
-npx worldlink-gateway init
-npx worldlink-gateway start
+# Create a data directory for this world and initialize it
+mkdir ~/my-world && cd ~/my-world
+node /path/to/worldlink-gateway/bin/worldlink.js init
+
+# Start the gateway (always run from your data directory)
+node /path/to/worldlink-gateway/bin/worldlink.js start 7461
 ```
+
+> **Important:** The gateway uses your current working directory as its data directory.
+> Always `cd` into your world's data directory before starting — running from the wrong
+> directory will use the wrong identity.
 
 ---
 
 ## Setup
 
 ```bash
-# 1. Initialize this world (generates Ed25519 keypair, writes config)
-worldlink-gateway init
+# 1. Create and enter a data directory for this world
+mkdir ~/my-world && cd ~/my-world
 
-# 2. Start the gateway
-worldlink-gateway start          # default port 7461
-worldlink-gateway start 8080     # custom port
+# 2. Initialize the world (generates Ed25519 keypair, writes config)
+node /path/to/worldlink-gateway/bin/worldlink.js init
 
-# 3. Open the status page
+# 3. Start the gateway
+node /path/to/worldlink-gateway/bin/worldlink.js start          # default port 7461
+node /path/to/worldlink-gateway/bin/worldlink.js start 8080     # custom port
+
+# 4. Open the status page (3D world visualization)
 open http://localhost:7461/
 ```
 
 The init wizard asks for:
 - **World name** — displayed to peers (e.g. "Joseph-iOS")
-- **Capabilities** — what this world can do (e.g. `claude-task`, `code-review`)
-- **Auto-approve** — approve all incoming tasks automatically (for testing)
+- **Capabilities** — what this world can do (e.g. `claude-task`, `message`, `context-handoff`)
+- **Auto-approve** — automatically approve all incoming tasks (for testing)
 
 ---
 
 ## Connecting worlds
 
+From the status page, paste a peer's gateway URL into the **Connect to a World** field and click Connect. The gateway performs a bidirectional handshake and both worlds will appear in each other's 3D view.
+
+You can also connect via the API:
+
 ```bash
-# On World A — connect to World B
-worldlink-gateway connect http://worldb.local:7461
-
-# Check connected peers
-worldlink-gateway status
-
-# Send a task to World B
-worldlink-gateway request <worldBId> claude-task "Explain this TypeScript error: ..."
+# POST to connect-peer on your running gateway
+curl -X POST http://localhost:7461/worldlink/connect-peer \
+  -H "Content-Type: application/json" \
+  -d '{"host": "http://peer.local:7461"}'
 ```
 
-Tasks are executed by `claude -p` on the receiving world. The result is stored as an artifact and can be retrieved by the requesting world.
+---
+
+## Two-world local test
+
+```bash
+# Terminal 1 — "Joseph" world
+mkdir ~/wl-joseph && cd ~/wl-joseph
+node /path/to/worldlink-gateway/bin/worldlink.js init   # name: Joseph
+node /path/to/worldlink-gateway/bin/worldlink.js start 7461
+
+# Terminal 2 — "Karlo" world
+mkdir ~/wl-karlo && cd ~/wl-karlo
+node /path/to/worldlink-gateway/bin/worldlink.js init   # name: Karlo, auto-approve: yes
+node /path/to/worldlink-gateway/bin/worldlink.js start 7462
+```
+
+Open both status pages:
+- Joseph → http://localhost:7461/
+- Karlo  → http://localhost:7462/
+
+Use the Connect UI on either page to link them. Both worlds appear in each other's 3D view.
+
+---
+
+## Features
+
+**3D world visualization** — A Three.js status page shows all connected worlds as floating islands. Switch between seven environmental themes (Default, Deep Space, Desert Planet, Ice Age, Sakura, Neon City, Prehistoric) by right-clicking your own island.
+
+**Offline mode** — Mark your world as offline for a set duration from the Settings tab. Peers see your island as offline and the status propagates within seconds via the 8-second heartbeat.
+
+**Brain / memory store** — Each world maintains a local `.worldlink-brain.jsonl` record store. Records can be shared with specific peers or the whole pod for context-handoff tasks.
+
+**Task delegation** — Connected worlds can submit `claude-task` requests. Tasks are executed by Claude on the receiving world, and results are returned as artifacts.
 
 ---
 
@@ -61,39 +105,11 @@ Tasks are executed by `claude -p` on the receiving world. The result is stored a
 
 - **Ed25519 keypairs** — every world has a unique identity
 - **3-phase handshake** — Discovery → Connect (signed) → Confirm (challenge-response)
-- **HMAC session tokens** — 1hr expiry, per-connection
-- **Approval by default** — incoming tasks require explicit approval unless `requiresApproval: false`
+- **Session tokens** — 24-hour expiry, per-connection
+- **Approval gates** — incoming tasks require explicit approval unless `requiresApproval: false`
 - **Audit log** — every connection and task recorded to `.worldlink-audit.jsonl`
 - **No filesystem access** — remote worlds cannot read or write local files
 - **Artifacts TTL** — results expire after 1 hour
-
----
-
-## Fake Karlo test (two local worlds)
-
-```bash
-# Terminal 1 — "Joseph" world
-mkdir ~/wl-joseph && cd ~/wl-joseph
-worldlink-gateway init        # name: Joseph-iOS
-worldlink-gateway start 7461
-
-# Terminal 2 — "Karlo" world (auto-approve for testing)
-mkdir ~/wl-karlo && cd ~/wl-karlo
-worldlink-gateway init        # name: Karlo-Android
-worldlink-gateway start 7462 --auto-approve
-
-# Terminal 3 — connect and send a task
-cd ~/wl-joseph
-worldlink-gateway connect http://localhost:7462
-worldlink-gateway request wld_<karloId> claude-task "List 3 benefits of TypeScript"
-
-# Approve pending tasks (if not auto-approve)
-worldlink-gateway approve <taskId>
-```
-
-Status pages:
-- Joseph → http://localhost:7461/
-- Karlo  → http://localhost:7462/
 
 ---
 
@@ -111,12 +127,14 @@ All routes are under `/worldlink/`.
 | `GET` | `/worldlink/artifact/:id` | Retrieve artifact |
 | `POST` | `/worldlink/approve/:id` | Approve a pending task |
 | `POST` | `/worldlink/deny/:id` | Deny a pending task |
-| `GET` | `/worldlink/peers` | List connected peers |
-| `GET` | `/worldlink/tasks` | List recent tasks (status page) |
+| `GET` | `/worldlink/peers` | List connected peers + local offline status |
+| `GET` | `/worldlink/tasks` | List recent tasks |
 | `GET` | `/worldlink/audit` | Last 100 audit events |
 | `POST` | `/worldlink/connect-peer` | Initiate outbound connection |
-| `POST` | `/worldlink/request` | Send task to a connected peer |
-| `POST` | `/worldlink/poll-artifact` | Fetch artifact from peer |
+| `GET` | `/worldlink/local/status` | Read this world's online/offline state |
+| `POST` | `/worldlink/local/set-status` | Set this world offline for a duration |
+| `GET` | `/worldlink/local/brain` | List brain records |
+| `POST` | `/worldlink/local/brain` | Add a brain record |
 
 ---
 
@@ -124,20 +142,21 @@ All routes are under `/worldlink/`.
 
 | File | Description |
 |------|-------------|
-| `.worldlink-identity.json` | **Secret** — Ed25519 keypair + world ID. Mode 600. |
-| `.worldlink-config.json` | World name, capabilities, trusted peers |
-| `.worldlink-audit.jsonl` | Append-only audit log |
+| `.worldlink-identity.json` | **Secret** — Ed25519 keypair + world ID. Keep this safe. |
+| `.worldlink-config.json` | World name, capabilities, trusted peers, AI backend |
+| `.worldlink-audit.jsonl` | Append-only audit log of all connections and tasks |
+| `.worldlink-brain.jsonl` | Local brain/memory records (shareable with peers) |
 
-All three are gitignored by default.
+All four are gitignored by default.
 
 ---
 
 ## Use cases
 
-1. **Screenshot / error sharing** — paste a screenshot into World A; WorldLink sends it to World B's Claude for analysis
-2. **Cross-platform ticket pickup** — iOS dev sends TypeScript ticket context to web dev's world with shared repo branch
-3. **Pod disbanding** — knowledge preservation handoff before a team disbands
-4. **UI/QA broadcast** — fan out a review request to multiple worlds simultaneously
+1. **Cross-agent task delegation** — one Claude instance delegates a task to another and retrieves the artifact result
+2. **Context handoff** — share brain records and session context before a pod disbands or a session ends
+3. **Multi-world review** — fan out a review request to multiple connected worlds simultaneously
+4. **Offline presence** — mark yourself unavailable without disconnecting; peers see your status update within seconds
 
 ---
 
