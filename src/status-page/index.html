@@ -1875,10 +1875,8 @@ body {
         <div id="brain-sources-list">
           <div class="empty-state"><div class="empty-icon">◈</div>No knowledge sources connected</div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
-          <button class="btn" onclick="brainOpenDrawer('source')">+ Repository</button>
-          <button class="btn" onclick="brainOpenDrawer('source')">+ Folder</button>
-          <button class="btn" onclick="brainOpenDrawer('source')">+ Files</button>
+        <div style="margin-top:14px;">
+          <button class="btn" onclick="brainOpenDrawer('source')">+ Add Source</button>
         </div>
       </div>
 
@@ -5435,7 +5433,7 @@ function renderBrainSources() {
       var checked = s.sharedWith.indexOf(p.worldId)>-1;
       return '<label class="peer-share-row"><input type="checkbox" '+(checked?'checked':'')+
              ' onchange="brainSourceTogglePeer(\''+s.id+'\',\''+escHTML(p.worldId)+'\',this.checked)"> '+
-             '<span class="peer-share-name">'+escHTML(p.name||p.worldId)+'</span></label>';
+             '<span class="peer-share-name">'+escHTML(p.worldName||p.name||p.worldId)+'</span></label>';
     }).join('') : '<div style="font:400 11px/1 -apple-system,sans-serif;color:var(--text-muted);">No online peers</div>';
     var indexed = s.indexed
       ? '<div class="brain-source-indexed"><span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;flex-shrink:0;"></span>Indexed · '+(s.lastIndexed?relTime(s.lastIndexed):'unknown')+'</div>'+
