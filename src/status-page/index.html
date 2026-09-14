@@ -1763,10 +1763,18 @@ body {
 
       <!-- Share URL -->
       <div class="conn-share-row" id="conn-share-row">
-        <div class="conn-share-label">Share this URL so others can connect to you</div>
+        <div class="conn-share-label">Same network — share this URL to connect</div>
         <div class="conn-share-url-row">
           <span class="conn-share-url" id="conn-share-url">loading…</span>
           <button class="conn-copy-btn" onclick="copyShareUrl()" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+        </div>
+      </div>
+      <!-- Relay share row — shown when relay is active -->
+      <div class="conn-share-row" id="conn-relay-share-row" style="display:none;margin-top:10px;">
+        <div class="conn-share-label" style="color:var(--cyan);">⬡ Relay — share this to connect from any network</div>
+        <div class="conn-share-url-row">
+          <span class="conn-share-url" id="conn-relay-share-url" style="color:var(--cyan);"></span>
+          <button class="conn-copy-btn" onclick="_copyText(_state.relay,'Relay URL copied')" title="Copy relay URL"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
         </div>
       </div>
 
@@ -4546,6 +4554,19 @@ async function renderConnections() {
   // Capabilities
   renderCapabilities();
 
+  // Relay share row — shown in the share section when relay is active
+  var relayShareRow = document.getElementById('conn-relay-share-row');
+  var relayShareUrl = document.getElementById('conn-relay-share-url');
+  var shareLabelEl  = document.querySelector('#conn-share-row .conn-share-label');
+  if (_state.relay) {
+    if (relayShareRow) relayShareRow.style.display = '';
+    if (relayShareUrl) relayShareUrl.textContent = _state.relay;
+    if (shareLabelEl)  shareLabelEl.textContent = 'Same network — share this URL to connect';
+  } else {
+    if (relayShareRow) relayShareRow.style.display = 'none';
+    if (shareLabelEl)  shareLabelEl.textContent = 'Share this URL so others can connect to you';
+  }
+
   // Relay status pill — shown below "Connected Worlds" heading
   var relayPill = document.getElementById('conn-relay-pill');
   if (relayPill) {
@@ -4667,18 +4688,19 @@ async function connectToWorld() {
     if (res.error) {
       var msg = res.error;
       if (msg.toLowerCase().includes('capabilit')) msg = 'Connection rejected: no matching capabilities. Make sure both worlds have at least one capability in common (e.g. Message Exchange).';
+      if (msg.toLowerCase().includes('manifest') && url.includes('trycloudflare.com')) msg = 'Cloudflare tunnel not ready yet — wait a few seconds and try again.';
       throw new Error(msg);
     }
     if (input) input.value = '';
     var successMsg = res.relayUrl
       ? '✓ Joined relay — peers will auto-connect'
       : '✓ Connected to ' + (res.worldName || res.worldId);
-    if (hint) { hint.style.color = '#22c55e'; hint.textContent = successMsg; }
+    if (hint) { hint.style.color = '#22c55e'; hint.style.fontFamily = '-apple-system,sans-serif'; hint.textContent = successMsg; }
     setTimeout(function(){ if (hint) hint.textContent = ''; }, 5000);
     await refreshAll();
     renderConnections();
   } catch(e) {
-    if (hint) { hint.style.color = '#ef4444'; hint.textContent = '✗ ' + e.message; }
+    if (hint) { hint.style.color = '#ef4444'; hint.style.fontFamily = '-apple-system,sans-serif'; hint.textContent = '✕ ' + e.message; }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Connect →'; }
   }
