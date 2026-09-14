@@ -622,6 +622,23 @@ function createGateway(opts = {}) {
         return;
       }
 
+      // POST /worldlink/local/settings — update world name and config
+      if (req.method === 'POST' && req.url === '/worldlink/local/settings') {
+        const b = await body();
+        const { worldName, autoApprove } = b;
+        if (worldName) wlCfg.worldName = worldName.trim();
+        if (typeof autoApprove === 'boolean') {
+          wlCfg.capabilities = (wlCfg.capabilities || []).map(c => ({ ...c, requiresApproval: !autoApprove }));
+        }
+        try {
+          let onDisk = {};
+          try { onDisk = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); } catch {}
+          fs.writeFileSync(CONFIG_FILE, JSON.stringify({ ...onDisk, worldName: wlCfg.worldName, capabilities: wlCfg.capabilities }, null, 2));
+        } catch (e) { json(500, { error: 'Could not write config: ' + e.message }); return; }
+        json(200, { ok: true, worldName: wlCfg.worldName });
+        return;
+      }
+
       // GET /worldlink/local/status — read online/offline state
       if (req.method === 'GET' && req.url === '/worldlink/local/status') {
         const isOffline = localOfflineUntil > Date.now();
