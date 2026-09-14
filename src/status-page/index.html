@@ -4932,6 +4932,7 @@ function renderTasks() {
         <button class="btn btn-green" onclick="approveTask('${t.taskId}')">Approve</button>
         <button class="btn btn-red" onclick="denyTask('${t.taskId}')">Deny</button>
       ` : ''}
+      ${t.status === 'failed' ? `<button class="btn" onclick="retryTask('${t.taskId}', this)">↻ Retry</button>` : ''}
     </div>
   </div>`).join('');
 }
@@ -7261,6 +7262,13 @@ async function approveTask(taskId) {
 async function denyTask(taskId) {
   await fetch(`/worldlink/deny/${taskId}`, { method: 'POST' });
   await refreshAll();
+}
+async function retryTask(taskId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '↻ Running…'; }
+  const res = await fetch(`/worldlink/retry/${taskId}`, { method: 'POST' });
+  const d = await res.json();
+  if (d.ok) { _wlGwToast('Task retrying…'); await refreshAll(); renderTasks(); }
+  else { _wlGwToast('✕ ' + (d.error || 'Retry failed'), 'err'); if (btn) { btn.disabled = false; btn.textContent = '↻ Retry'; } }
 }
 
 // ── Artifact view ─────────────────────────────────────────────────

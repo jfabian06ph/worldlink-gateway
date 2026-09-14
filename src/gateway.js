@@ -426,6 +426,19 @@ function createGateway(opts = {}) {
         return;
       }
 
+      // POST /worldlink/retry/:id
+      if (req.method === 'POST' && req.url.startsWith('/worldlink/retry/')) {
+        const taskId = req.url.slice('/worldlink/retry/'.length);
+        const t = tasks.get(taskId);
+        if (!t) { json(404, { error: 'Task not found' }); return; }
+        if (t.status === 'running') { json(409, { error: 'Task already running' }); return; }
+        t.status = 'pending'; t.error = null; t.result = null; t.artifactId = null;
+        tasks.set(taskId, t);
+        json(200, { ok: true, taskId });
+        executeTask(t);
+        return;
+      }
+
       // GET /worldlink/peers
       if (req.method === 'GET' && req.url === '/worldlink/peers') {
         const list = [];
