@@ -9,7 +9,6 @@ const identity = require('./identity');
 const audit    = require('./audit');
 const execute  = require('./execute');
 const { createBrainStore } = require('./brain');
-const upnp     = require('./upnp');
 
 const STATUS_PAGE = path.join(__dirname, 'status-page', 'index.html');
 
@@ -30,9 +29,6 @@ function createGateway(opts = {}) {
   let wlCfg = { worldName: os.hostname().replace(/\.local$/, '') || 'My World', capabilities: [], trustedPeers: [], localOnly: true };
   try { wlId  = JSON.parse(fs.readFileSync(IDENTITY_FILE, 'utf8')); } catch {}
   try { wlCfg = { ...wlCfg, ...JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')) }; } catch {}
-
-  // UPnP-mapped public URL (populated asynchronously after server starts)
-  let upnpMapping = null;
 
   // In-memory set of paused worldIds (persisted in config.disabledPeers)
   const disabledPeers = new Set(Array.isArray(wlCfg.disabledPeers) ? wlCfg.disabledPeers : []);
@@ -230,7 +226,6 @@ function createGateway(opts = {}) {
             .map(c => ({ id: c.id, description: c.description, requiresApproval: c.requiresApproval ?? true, permissions: c.permissions || ['message','task.request','artifact.receive'] })),
           permissionsSupported: ['message','task.request','artifact.receive','artifact.send','status.read'],
           uiAvailable: false,
-          ...(upnpMapping ? { publicUrl: upnpMapping.publicUrl } : {}),
         });
         return;
       }
@@ -873,46 +868,18 @@ function createGateway(opts = {}) {
     }
   }
 
-  function getLocalIp() {
-    const ifaces = os.networkInterfaces();
-    for (const list of Object.values(ifaces)) {
-      for (const i of list) {
-        if (i.family === 'IPv4' && !i.internal) return i.address;
-      }
-    }
-    return '127.0.0.1';
-  }
-
   function start() {
     server.listen(port, '0.0.0.0', () => {
-      const localIp = getLocalIp();
       console.log(`\n  WorldLink Gateway`);
       console.log(`  ─────────────────────────────────────`);
       console.log(`  World    : ${wlCfg.worldName}`);
       console.log(`  ID       : ${wlId.worldId}`);
-      console.log(`  Local    : http://${localIp}:${port}/`);
-      console.log(`  Public   : detecting via UPnP...`);
+      console.log(`  Port     : ${port}`);
+      console.log(`  Status   : http://localhost:${port}/`);
+      console.log(`  Manifest : http://localhost:${port}/worldlink/manifest`);
       if (autoApprove) console.log(`  Mode     : AUTO-APPROVE (testing)`);
       console.log(`  ─────────────────────────────────────\n`);
       setTimeout(autoConnect, 1500);
-
-      // Attempt UPnP port mapping asynchronously — don't block startup
-      upnp.openPort(localIp, port).then(mapping => {
-        if (mapping) {
-          upnpMapping = mapping;
-          console.log(`  ✓ UPnP   : ${mapping.publicUrl}`);
-          console.log(`  → Share this URL with peers on other networks\n`);
-
-          // Clean up port mapping on exit
-          const cleanup = () => upnp.closePort(mapping.controlUrl, mapping.ns, port);
-          process.once('SIGINT',  cleanup);
-          process.once('SIGTERM', cleanup);
-          process.once('exit',    cleanup);
-        } else {
-          console.log(`  ✗ UPnP   : not available (same-network only)`);
-          console.log(`  → Share  : http://${localIp}:${port}/\n`);
-        }
-      });
     });
     return server;
   }
