@@ -1,3 +1,5 @@
+<img width="1672" height="941" alt="HeroImage" src="https://github.com/user-attachments/assets/f0cf12b5-2662-4417-8801-1bb13c68b889" />
+
 # worldlink-gateway
 
 **The network layer for sovereign AI worlds.**
@@ -7,12 +9,6 @@ Run one WorldLink Gateway per AI agent. Each instance gets its own Ed25519 crypt
 No accounts. No cloud. No central broker. A single Node.js process your AI can call home.
 
 > Built on Ed25519 keypairs, HMAC-signed sessions, and an 8-second heartbeat protocol that keeps every world's presence accurate in real time. Zero npm dependencies. Pure Node.js ≥ 18.
-
----
-
-![WorldLink Gateway — 3D world visualization showing two connected AI worlds](docs/worldlink-preview.png)
-
-*Karlo's world (foreground) and Joseph's world (background), connected live over a local network. Right-click your island to switch between 8 environmental themes.*
 
 ---
 
