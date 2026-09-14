@@ -150,9 +150,9 @@ Use the Connect UI on either page to link them. Both worlds appear in each other
 
 **Offline mode** — Mark your world as offline for a set duration from the Settings tab. Peers see your island as offline and the status propagates within seconds via the 8-second heartbeat.
 
-**Brain / memory store** — Each world maintains a local `.worldlink-brain.jsonl` record store. Records can be shared with specific peers or the whole pod for context-handoff tasks.
+**Brain / memory store** — Each world maintains a local `.worldlink-brain.jsonl` record store. Records have typed categories — Decision, Fact, Learning, Constraint, Goal, Context — and can be shared with specific peers or the whole pod for context-handoff tasks. Query and semantic search available via `/worldlink/brain/ask`.
 
-**Task delegation** — Connected worlds can submit `claude-task` requests. Tasks are executed by Claude on the receiving world, and results are returned as artifacts.
+**Task delegation** — Connected worlds can submit `claude-task` requests. Tasks are executed by Claude on the receiving world, and results are returned as artifacts. Tasks have a 12-minute execution timeout. Failed tasks can be retried via the status page or `POST /worldlink/retry/:id`.
 
 ---
 
@@ -202,14 +202,25 @@ All routes are under `/worldlink/`.
 | `GET` | `/worldlink/artifact/:id` | Retrieve artifact |
 | `POST` | `/worldlink/approve/:id` | Approve a pending task |
 | `POST` | `/worldlink/deny/:id` | Deny a pending task |
-| `GET` | `/worldlink/peers` | List connected peers + local offline status |
+| `POST` | `/worldlink/retry/:id` | Retry a failed task — re-runs and returns result to requester |
+| `GET` | `/worldlink/peers` | List connected peers + relay state |
 | `GET` | `/worldlink/tasks` | List recent tasks |
 | `GET` | `/worldlink/audit` | Last 100 audit events |
 | `POST` | `/worldlink/connect-peer` | Initiate outbound connection (peer URL or relay URL) |
 | `GET` | `/worldlink/local/status` | Read this world's online/offline state |
 | `POST` | `/worldlink/local/set-status` | Set this world offline for a duration |
-| `GET` | `/worldlink/local/brain` | List brain records |
-| `POST` | `/worldlink/local/brain` | Add a brain record |
+| `GET` | `/worldlink/local/my-url` | Returns this world's gateway URL |
+| `POST` | `/worldlink/local/set-name` | Update world name |
+| `POST` | `/worldlink/local/set-ai-backend` | Switch AI backend (claude / ollama / openai) |
+| `POST` | `/worldlink/local/set-capabilities` | Update capability list |
+| `POST` | `/worldlink/local/set-capability-approval` | Configure approval gate per capability |
+| `POST` | `/worldlink/local/settings` | Bulk update name + auto-approve |
+| `GET` | `/worldlink/local/brain` | List brain records (query with `?scope=` `?type=`) |
+| `POST` | `/worldlink/brain` | Add a brain record |
+| `GET` | `/worldlink/brain/:id` | Fetch a single brain record |
+| `PATCH` | `/worldlink/brain/:id` | Update a brain record (e.g. sharedWith) |
+| `DELETE` | `/worldlink/brain/:id` | Delete a brain record |
+| `POST` | `/worldlink/brain/ask` | Semantic query across brain records |
 
 ---
 
