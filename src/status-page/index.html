@@ -4574,6 +4574,11 @@ async function renderConnections() {
       var relayShort = _state.relay.replace(/^https?:\/\//, '');
       relayPill.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.3);border-radius:20px;font:500 11px/1 -apple-system,sans-serif;color:#22d3ee;">⬡ Relay: ' + escHTML(relayShort) + '</span>';
       relayPill.style.display = '';
+    } else if (_state.savedRelayUrl) {
+      // Relay was set before but not currently active — show reconnect button
+      relayPill.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;padding:3px 8px;background:rgba(255,170,0,.10);border:1px solid rgba(255,170,0,.3);border-radius:20px;font:500 11px/1 -apple-system,sans-serif;color:#fbbf24;">⬡ Relay offline</span>'
+        + '<button onclick="_reconnectRelay()" style="margin-left:6px;padding:3px 10px;background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.4);border-radius:20px;font:500 11px/1 -apple-system,sans-serif;color:#22d3ee;cursor:pointer;">↻ Reconnect</button>';
+      relayPill.style.display = '';
     } else {
       relayPill.style.display = 'none';
     }
@@ -4617,6 +4622,18 @@ async function renderConnections() {
     if (onlineCount > 0) { badge.textContent = onlineCount; badge.style.display = ''; }
     else { badge.style.display = 'none'; }
   }
+}
+
+async function _reconnectRelay() {
+  var url = _state.savedRelayUrl;
+  if (!url) return;
+  _wlGwToast('Reconnecting to relay…');
+  try {
+    var r = await fetch('/worldlink/connect-peer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ host: url }) });
+    var d = await r.json();
+    if (d.ok) { _wlGwToast('✓ Relay reconnected'); await refreshAll(); renderConnections(); }
+    else _wlGwToast('✕ ' + (d.error || 'Could not reconnect'));
+  } catch (e) { _wlGwToast('✕ ' + e.message); }
 }
 
 function _copyText(text, successMsg) {
@@ -7602,6 +7619,7 @@ async function refreshAll() {
     _state.aiBackend = peersRes.aiBackend || _state.aiBackend || { type: 'claude' };
     _state.brain = brainRes.records || [];
     _state.relay = peersRes.relay || null;
+    _state.savedRelayUrl = peersRes.savedRelayUrl || null;
     _bSources = sourcesRes.sources || _bSources;
 
     // Merge messages — restore read status from localStorage (survives refresh)

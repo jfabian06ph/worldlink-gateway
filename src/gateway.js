@@ -123,6 +123,9 @@ function createGateway(opts = {}) {
     });
     await relayClient.start();
     activeRelayUrl = url;
+    // Persist so gateway auto-reconnects on restart
+    wlCfg.relayUrl = url;
+    try { fs.writeFileSync(CONFIG_FILE, JSON.stringify(wlCfg, null, 2)); } catch {}
     console.log(`  [WorldLink] Relay: joined ${url}`);
     return { ok: true, relayUrl: url };
   }
@@ -434,7 +437,7 @@ function createGateway(opts = {}) {
           if (!peers.has(cfg.worldId)) list.push({ worldId: cfg.worldId, worldName: cfg.worldName || cfg.worldId, status: cfg.disabled ? 'disabled' : 'offline', host: cfg.host, capabilities: [], lastSeen: null, disabled: !!cfg.disabled });
         }
         const localOffline = localOfflineUntil > Date.now();
-        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), capabilitiesConfig: wlCfg.capabilities || [], aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list, localOffline, localOfflineUntil: localOffline ? localOfflineUntil : null, relay: activeRelayUrl || null });
+        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), capabilitiesConfig: wlCfg.capabilities || [], aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list, localOffline, localOfflineUntil: localOffline ? localOfflineUntil : null, relay: activeRelayUrl || null, savedRelayUrl: wlCfg.relayUrl || null });
         return;
       }
 
@@ -945,8 +948,9 @@ function createGateway(opts = {}) {
       console.log(`  ─────────────────────────────────────\n`);
       setTimeout(autoConnect, 1500);
 
-      if (relayUrl && wlId) {
-        joinRelay(relayUrl).catch(e => console.log(`  [WorldLink] Relay: could not connect — ${e.message}`));
+      const startupRelay = relayUrl || wlCfg.relayUrl;
+      if (startupRelay && wlId) {
+        setTimeout(() => joinRelay(startupRelay).catch(e => console.log(`  [WorldLink] Relay: auto-reconnect failed — ${e.message}`)), 2000);
       }
     });
     return server;
