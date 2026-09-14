@@ -53,7 +53,7 @@ function runClaude(fullPrompt) {
       code === 0 ? resolve(out.trim()) : reject(new Error(`claude exit ${code}: ${err.slice(0, 300)}`))
     );
     proc.on('error', e => reject(new Error(`Could not spawn claude: ${e.message}`)));
-    setTimeout(() => { proc.kill(); reject(new Error('Task timed out (5 min)')); }, 300_000);
+    setTimeout(() => { proc.kill(); reject(new Error('Task timed out (12 min)')); }, 720_000);
   });
 }
 
@@ -159,7 +159,7 @@ function runClaudeStreamJSON(textPrompt, imageAtts) {
     proc.on('error', e => reject(new Error(`Could not spawn claude: ${e.message}`)));
     proc.stdin.write(msg + '\n');
     proc.stdin.end();
-    setTimeout(() => { proc.kill(); reject(new Error('Task timed out (5 min)')); }, 300_000);
+    setTimeout(() => { proc.kill(); reject(new Error('Task timed out (12 min)')); }, 720_000);
   });
 }
 
