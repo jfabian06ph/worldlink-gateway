@@ -12,7 +12,7 @@ No accounts. No cloud. No central broker. A single Node.js process your AI can c
 
 ![WorldLink Gateway — 3D world visualization showing two connected AI worlds](docs/worldlink-preview.png)
 
-*Karlo's world (foreground) and Joseph's world (background), connected live over a local network. Right-click your island to switch between 7 environmental themes.*
+*Karlo's world (foreground) and Joseph's world (background), connected live over a local network. Right-click your island to switch between 8 environmental themes.*
 
 ---
 
@@ -24,34 +24,45 @@ git clone https://github.com/jfabian06ph/worldlink-gateway.git
 cd worldlink-gateway
 npm install
 
+# Make worldlink-gateway available as a global CLI command
+npm link
+
 # Create a data directory for this world and initialize it
 mkdir ~/my-world && cd ~/my-world
-node /path/to/worldlink-gateway/bin/worldlink.js init
+worldlink-gateway init
 
 # Start the gateway (always run from your data directory)
-node /path/to/worldlink-gateway/bin/worldlink.js start 7461
+worldlink-gateway start 7461
 ```
 
 > **Important:** The gateway uses your current working directory as its data directory.
 > Always `cd` into your world's data directory before starting — running from the wrong
 > directory will use the wrong identity.
 
+> **First time on a new machine?** After cloning, run `npm link` once from the repo root.
+> This registers `worldlink-gateway` as a global command available from any directory.
+
 ---
 
 ## Setup
 
 ```bash
-# 1. Create and enter a data directory for this world
+# 1. Clone and link (once per machine)
+git clone https://github.com/jfabian06ph/worldlink-gateway.git
+cd worldlink-gateway
+npm install && npm link
+
+# 2. Create and enter a data directory for this world
 mkdir ~/my-world && cd ~/my-world
 
-# 2. Initialize the world (generates Ed25519 keypair, writes config)
-node /path/to/worldlink-gateway/bin/worldlink.js init
+# 3. Initialize the world (generates Ed25519 keypair, writes config)
+worldlink-gateway init
 
-# 3. Start the gateway
-node /path/to/worldlink-gateway/bin/worldlink.js start          # default port 7461
-node /path/to/worldlink-gateway/bin/worldlink.js start 8080     # custom port
+# 4. Start the gateway
+worldlink-gateway start          # default port 7461
+worldlink-gateway start 8080     # custom port
 
-# 4. Open the status page (3D world visualization)
+# 5. Open the status page (3D world visualization)
 open http://localhost:7461/
 ```
 
@@ -71,16 +82,45 @@ Auto-approve tasks for testing? (y/N):
 
 ## Connecting worlds
 
-From the status page, paste a peer's gateway URL into the **Connect to a World** field and click Connect. The gateway performs a bidirectional handshake and both worlds will appear in each other's 3D view.
+### Same network (LAN)
+
+From the status page, paste a peer's gateway URL into the **Connect** field and click Connect. The gateway performs a bidirectional handshake and both worlds appear in each other's 3D view.
 
 You can also connect via the API:
 
 ```bash
-# POST to connect-peer on your running gateway
 curl -X POST http://localhost:7461/worldlink/connect-peer \
   -H "Content-Type: application/json" \
-  -d '{"host": "http://peer.local:7461"}'
+  -d '{"host": "http://192.168.1.x:7461"}'
 ```
+
+### Different networks (relay)
+
+When peers are on different home or office networks (different routers), direct connections won't work. Use a **WorldLink Relay** — a lightweight broker you host yourself.
+
+**Step 1 — One person runs the relay and exposes it publicly**
+
+```bash
+# Start the relay server (port 9000)
+worldlink-gateway relay 9000
+
+# Expose it to the internet for free using Cloudflare Quick Tunnels
+# Install: brew install cloudflare/cloudflare/cloudflared
+cloudflared tunnel --url http://localhost:9000
+# → Outputs a public URL: https://something-random.trycloudflare.com
+```
+
+Share that URL with your pod over iMessage, Slack, etc.
+
+**Step 2 — Everyone pastes the relay URL into the Connect field**
+
+Each peer opens their gateway status page and pastes the relay URL (e.g. `https://something-random.trycloudflare.com`) into the **Connect** field. The gateway auto-detects it's a relay, registers with it, and automatically connects to any other peers already on the relay — no further steps needed.
+
+**Notes:**
+- The relay URL changes each time `cloudflared` restarts (Cloudflare Quick Tunnels are ephemeral). Share the new URL when you restart.
+- Only the person running the relay needs `cloudflared`. Everyone else just pastes the URL.
+- The relay only routes messages — all payloads are Ed25519-signed end-to-end. The relay operator cannot forge or tamper with WorldLink handshakes.
+- For a stable URL, use a named Cloudflare Tunnel with your own domain (free with a domain on Cloudflare).
 
 ---
 
@@ -89,13 +129,13 @@ curl -X POST http://localhost:7461/worldlink/connect-peer \
 ```bash
 # Terminal 1 — "Joseph" world
 mkdir ~/wl-joseph && cd ~/wl-joseph
-node /path/to/worldlink-gateway/bin/worldlink.js init   # name: Joseph
-node /path/to/worldlink-gateway/bin/worldlink.js start 7461
+worldlink-gateway init   # name: Joseph
+worldlink-gateway start 7461
 
 # Terminal 2 — "Karlo" world
 mkdir ~/wl-karlo && cd ~/wl-karlo
-node /path/to/worldlink-gateway/bin/worldlink.js init   # name: Karlo, auto-approve: yes
-node /path/to/worldlink-gateway/bin/worldlink.js start 7462
+worldlink-gateway init   # name: Karlo, auto-approve: yes
+worldlink-gateway start 7462
 ```
 
 Open both status pages:
@@ -108,13 +148,34 @@ Use the Connect UI on either page to link them. Both worlds appear in each other
 
 ## Features
 
-**3D world visualization** — A Three.js status page shows all connected worlds as floating islands. Switch between seven environmental themes (Default, Deep Space, Desert Planet, Ice Age, Sakura, Neon City, Prehistoric) by right-clicking your own island.
+**3D world visualization** — A Three.js status page shows all connected worlds as floating islands. Switch between eight environmental themes (Star Wars, Dune, Jurassic Park, Avatar, Sakura, Neon City, Prehistoric, Studio Ghibli) by right-clicking your own island.
+
+**Cross-network relay** — Built-in relay server for peers behind different routers. Pair with a free Cloudflare Quick Tunnel for a zero-cost, zero-configuration public endpoint.
 
 **Offline mode** — Mark your world as offline for a set duration from the Settings tab. Peers see your island as offline and the status propagates within seconds via the 8-second heartbeat.
 
 **Brain / memory store** — Each world maintains a local `.worldlink-brain.jsonl` record store. Records can be shared with specific peers or the whole pod for context-handoff tasks.
 
 **Task delegation** — Connected worlds can submit `claude-task` requests. Tasks are executed by Claude on the receiving world, and results are returned as artifacts.
+
+---
+
+## CLI reference
+
+```bash
+worldlink-gateway init                  # Initialize this world
+worldlink-gateway start [port]          # Start gateway (default: 7461)
+  --auto-approve                        #   Skip approval for incoming tasks
+  --relay <url>                         #   Connect to relay at startup
+worldlink-gateway relay [port]          # Run a relay server (default: 9000)
+worldlink-gateway connect <host>        # Connect to a peer
+worldlink-gateway status                # Show connected peers
+worldlink-gateway request <worldId> <cap> "<prompt>"
+worldlink-gateway approve <taskId>
+worldlink-gateway deny <taskId>
+worldlink-gateway brain add|list|remove|share|unshare
+worldlink-gateway help
+```
 
 ---
 
@@ -127,6 +188,7 @@ Use the Connect UI on either page to link them. Both worlds appear in each other
 - **Audit log** — every connection and task recorded to `.worldlink-audit.jsonl`
 - **No filesystem access** — remote worlds cannot read or write local files
 - **Artifacts TTL** — results expire after 1 hour
+- **Relay transparency** — the relay routes signed payloads and cannot forge WorldLink messages
 
 ---
 
@@ -147,7 +209,7 @@ All routes are under `/worldlink/`.
 | `GET` | `/worldlink/peers` | List connected peers + local offline status |
 | `GET` | `/worldlink/tasks` | List recent tasks |
 | `GET` | `/worldlink/audit` | Last 100 audit events |
-| `POST` | `/worldlink/connect-peer` | Initiate outbound connection |
+| `POST` | `/worldlink/connect-peer` | Initiate outbound connection (peer URL or relay URL) |
 | `GET` | `/worldlink/local/status` | Read this world's online/offline state |
 | `POST` | `/worldlink/local/set-status` | Set this world offline for a duration |
 | `GET` | `/worldlink/local/brain` | List brain records |
@@ -174,6 +236,7 @@ All four are gitignored by default.
 2. **Context handoff** — share brain records and session context before a pod disbands or a session ends
 3. **Multi-world review** — fan out a review request to multiple connected worlds simultaneously
 4. **Offline presence** — mark yourself unavailable without disconnecting; peers see your status update within seconds
+5. **Cross-network pod** — connect team members on different home networks using the built-in relay
 
 ---
 

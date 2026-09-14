@@ -17,6 +17,7 @@ function createGateway(opts = {}) {
     port        = parseInt(process.env.PORT || '7461'),
     dataDir     = process.cwd(),
     autoApprove = false,
+    relayUrl    = null,
   } = opts;
 
   const IDENTITY_FILE = path.join(dataDir, '.worldlink-identity.json');
@@ -52,6 +53,8 @@ function createGateway(opts = {}) {
   const artifacts  = new Map(); // artifactId → artifact
   const peers      = new Map(); // worldId → peer
   const messages   = [];        // incoming direct messages
+  let   relayClient  = null;    // set when relay is connected
+  let   activeRelayUrl = null; // current relay URL (runtime-configurable)
 
   // ── Helpers ────────────────────────────────────────────────────────
   function verifyToken(token) {
@@ -69,6 +72,17 @@ function createGateway(opts = {}) {
   }
 
   function wlFetch(url, fetchOpts = {}) {
+    // Relay transport: relay://<worldId>/path  — tunnel request via relay client
+    if (url.startsWith('relay://') && relayClient) {
+      const noScheme  = url.slice('relay://'.length);
+      const slash     = noScheme.indexOf('/');
+      const toWorldId = slash === -1 ? noScheme : noScheme.slice(0, slash);
+      const reqPath   = slash === -1 ? '/' : noScheme.slice(slash);
+      return relayClient.request(toWorldId, fetchOpts.method || 'GET', reqPath, fetchOpts.body, fetchOpts.token)
+        .then(resp => { try { return JSON.parse(resp.body); } catch { return { _raw: resp.body }; } });
+    }
+
+    // Direct HTTP transport
     return new Promise((resolve, reject) => {
       const { method = 'GET', body, token } = fetchOpts;
       const parsed   = new URL(url.startsWith('http') ? url : `http://${url}`);
@@ -93,9 +107,33 @@ function createGateway(opts = {}) {
     });
   }
 
+  async function joinRelay(url) {
+    if (!wlId) throw new Error('Not initialized');
+    if (relayClient) { relayClient.stop(); relayClient = null; }
+    const { createRelayClient } = require('./relay-client');
+    relayClient = createRelayClient({
+      relayUrl: url, worldId: wlId.worldId, worldName: wlCfg.worldName, localPort: port,
+      onPeerJoined: peer => {
+        if (!peers.has(peer.worldId)) {
+          setTimeout(() => initiateConnection(`relay://${peer.worldId}`).catch(e => {
+            console.log(`  [WorldLink] Relay auto-connect to ${peer.worldName} failed: ${e.message}`);
+          }), 500);
+        }
+      },
+    });
+    await relayClient.start();
+    activeRelayUrl = url;
+    console.log(`  [WorldLink] Relay: joined ${url}`);
+    return { ok: true, relayUrl: url };
+  }
+
   async function initiateConnection(host) {
     if (!wlId) throw new Error('Not initialized. Run: worldlink-gateway init');
-    const base = (host.startsWith('http') ? host : `http://${host}`).replace(/\/+$/, '');
+
+    // relay://<worldId>  — tunnel via relay; sourceHost sent back as relay://<myWorldId>
+    const isRelay   = host.startsWith('relay://');
+    const base      = isRelay ? host : (host.startsWith('http') ? host : `http://${host}`).replace(/\/+$/, '');
+    const sourceHost = isRelay ? `relay://${wlId.worldId}` : `http://localhost:${port}`;
 
     const manifest = await wlFetch(`${base}/worldlink/manifest`);
     if (!manifest.worldId) throw new Error(`No WorldLink manifest at ${host}`);
@@ -103,7 +141,7 @@ function createGateway(opts = {}) {
     const connectPayload = {
       sourceWorldId: wlId.worldId,
       sourcePublicKey: wlId.publicKey,
-      sourceHost: `http://localhost:${port}`,
+      sourceHost,
       requestedCapabilities: manifest.capabilities?.map(c => c.id) || [],
       nonce: crypto.randomBytes(16).toString('hex'),
       timestamp: Math.floor(Date.now() / 1000),
@@ -122,7 +160,7 @@ function createGateway(opts = {}) {
     peers.set(manifest.worldId, { manifest, status: peerStatus, sessionToken: connectResp.sessionToken, host: base, lastSeen: Date.now() });
     audit.write({ type: 'connection.established', targetWorld: manifest.worldId, timestamp: Math.floor(Date.now() / 1000) });
     broadcast({ type: 'connection.established', worldId: manifest.worldId });
-    console.log(`  [WorldLink] Connected to "${manifest.worldName}" (${manifest.worldId}) — ${peerStatus}`);
+    console.log(`  [WorldLink] Connected to "${manifest.worldName}" (${manifest.worldId}) — ${peerStatus}${isRelay ? ' [via relay]' : ''}`);
     return { worldId: manifest.worldId, worldName: manifest.worldName, grantedCapabilities: connectResp.grantedCapabilities };
   }
 
@@ -396,7 +434,7 @@ function createGateway(opts = {}) {
           if (!peers.has(cfg.worldId)) list.push({ worldId: cfg.worldId, worldName: cfg.worldName || cfg.worldId, status: cfg.disabled ? 'disabled' : 'offline', host: cfg.host, capabilities: [], lastSeen: null, disabled: !!cfg.disabled });
         }
         const localOffline = localOfflineUntil > Date.now();
-        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), capabilitiesConfig: wlCfg.capabilities || [], aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list, localOffline, localOfflineUntil: localOffline ? localOfflineUntil : null });
+        json(200, { worldId: wlId?.worldId, worldName: wlCfg.worldName, capabilities: (wlCfg.capabilities || []).map(c => c.id), capabilitiesConfig: wlCfg.capabilities || [], aiBackend: wlCfg.aiBackend || { type: 'claude' }, peers: list, localOffline, localOfflineUntil: localOffline ? localOfflineUntil : null, relay: activeRelayUrl || null });
         return;
       }
 
@@ -452,12 +490,20 @@ function createGateway(opts = {}) {
       }
 
       // POST /worldlink/connect-peer  — initiate outbound connection (UI-driven)
+      // Auto-detects: relay URL (returns { ok, relayUrl }) or peer gateway (returns peer info)
       if (req.method === 'POST' && req.url === '/worldlink/connect-peer') {
         const b = await body();
         const { host } = b;
         if (!host) { json(400, { error: 'host required' }); return; }
-        try { json(200, await initiateConnection(host)); }
-        catch (e) { json(502, { error: e.message }); }
+        try {
+          const base = host.startsWith('http') ? host.replace(/\/+$/, '') : `http://${host}`;
+          let isRelay = false;
+          try {
+            const h = await wlFetch(`${base}/relay/health`);
+            if (h.ok === true && typeof h.peers === 'number') isRelay = true;
+          } catch {}
+          json(200, isRelay ? await joinRelay(base) : await initiateConnection(host));
+        } catch (e) { json(502, { error: e.message }); }
         return;
       }
 
@@ -878,8 +924,13 @@ function createGateway(opts = {}) {
       console.log(`  Status   : http://localhost:${port}/`);
       console.log(`  Manifest : http://localhost:${port}/worldlink/manifest`);
       if (autoApprove) console.log(`  Mode     : AUTO-APPROVE (testing)`);
+      if (relayUrl)    console.log(`  Relay    : ${relayUrl}`);
       console.log(`  ─────────────────────────────────────\n`);
       setTimeout(autoConnect, 1500);
+
+      if (relayUrl && wlId) {
+        joinRelay(relayUrl).catch(e => console.log(`  [WorldLink] Relay: could not connect — ${e.message}`));
+      }
     });
     return server;
   }

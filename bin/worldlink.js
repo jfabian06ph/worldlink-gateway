@@ -68,10 +68,18 @@ async function cmdInit() {
 }
 
 async function cmdStart() {
-  const port       = parseInt(process.env.WL_PORT || args[0] || '7461');
+  const port        = parseInt(process.env.WL_PORT || args.find(a => /^\d+$/.test(a)) || '7461');
   const autoApprove = args.includes('--auto-approve') || args.includes('-y');
+  const relayIdx    = args.indexOf('--relay');
+  const relayUrl    = relayIdx !== -1 ? args[relayIdx + 1] : null;
   const { createGateway } = require('../src/gateway');
-  createGateway({ port, dataDir: DATA_DIR, autoApprove }).start();
+  createGateway({ port, dataDir: DATA_DIR, autoApprove, relayUrl }).start();
+}
+
+async function cmdRelay() {
+  const port = parseInt(args[0] || '9000');
+  const { createRelayServer } = require('../src/relay');
+  createRelayServer(port).start();
 }
 
 async function cmdConnect() {
@@ -292,6 +300,8 @@ async function cmdHelp() {
     init                Initialize this world (generates keypair, writes config)
     start [port]        Start the gateway server (default port: 7461)
       --auto-approve    Auto-approve all incoming tasks (for testing)
+      --relay <url>     Connect to a WorldLink Relay for cross-network peers
+    relay [port]        Run a WorldLink Relay server (default port: 9000)
     connect <host>      Connect to another world (e.g. http://localhost:7462)
     status              Show connected peers
     request <worldId> <cap> "<prompt>"  Send a task to a peer
@@ -302,6 +312,14 @@ async function cmdHelp() {
 
   Environment:
     WL_PORT             Gateway port to connect to for commands (default: 7461)
+
+  Cross-network (relay):
+    # Joseph runs the relay (port 9000 must be reachable by Karlo)
+    worldlink-gateway relay 9000
+
+    # Both Joseph and Karlo start with --relay pointing at it
+    worldlink-gateway start 7461 --relay http://JOSEPH_PUBLIC_IP:9000
+    worldlink-gateway start 7470 --relay http://JOSEPH_PUBLIC_IP:9000
 
   Example (fake Karlo test on port 7462):
     # Terminal 1 — start "Joseph" gateway on 7461
@@ -324,6 +342,7 @@ async function cmdHelp() {
 const commands = {
   init:    cmdInit,
   start:   cmdStart,
+  relay:   cmdRelay,
   connect: cmdConnect,
   status:  cmdStatus,
   request: cmdRequest,

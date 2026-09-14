@@ -1783,6 +1783,7 @@ body {
 
       <!-- Connected peers -->
       <div class="conn-section-title" style="margin-top:28px;">Connected Worlds</div>
+      <div id="conn-relay-pill" style="margin-bottom:10px;display:none;"></div>
       <div id="conn-peers-list">
         <div class="session-empty" style="padding:24px 0;">No worlds connected yet.</div>
       </div>
@@ -1790,7 +1791,7 @@ body {
       <!-- Connect form -->
       <div class="conn-section-title" style="margin-top:24px;">Connect to a World</div>
       <div class="conn-form">
-        <input class="form-input" id="conn-url-input" placeholder="Paste a WorldLink gateway URL…" style="flex:1;" onkeydown="if(event.key==='Enter')connectToWorld();">
+        <input class="form-input" id="conn-url-input" placeholder="Paste a gateway or relay URL…" style="flex:1;" onkeydown="if(event.key==='Enter')connectToWorld();">
         <button class="btn-primary" id="conn-connect-btn" onclick="connectToWorld()">Connect →</button>
       </div>
       <div class="conn-form-hint" id="conn-form-status"></div>
@@ -4545,6 +4546,18 @@ async function renderConnections() {
   // Capabilities
   renderCapabilities();
 
+  // Relay status pill — shown below "Connected Worlds" heading
+  var relayPill = document.getElementById('conn-relay-pill');
+  if (relayPill) {
+    if (_state.relay) {
+      var relayShort = _state.relay.replace(/^https?:\/\//, '');
+      relayPill.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.3);border-radius:20px;font:500 11px/1 -apple-system,sans-serif;color:#22d3ee;">⬡ Relay: ' + escHTML(relayShort) + '</span>';
+      relayPill.style.display = '';
+    } else {
+      relayPill.style.display = 'none';
+    }
+  }
+
   // Connected peers
   var list = document.getElementById('conn-peers-list');
   if (!list) return;
@@ -4564,7 +4577,7 @@ async function renderConnections() {
         + '<div class="dm-avatar" style="background:' + (isOn ? _worldColor(p.worldId) : 'var(--surface-2)') + ';opacity:' + (isOn ? '1' : '0.5') + ';">' + escHTML((p.worldName||p.worldId).slice(0,2).toUpperCase()) + '</div>'
         + '<div class="conn-peer-body">'
         + '<div class="conn-peer-name">' + escHTML(p.worldName || p.worldId) + '</div>'
-        + '<div class="conn-peer-meta">' + escHTML(p.host || '—') + ' · ' + statusLabel + ' · ' + relTime(p.lastSeen) + '</div>'
+        + '<div class="conn-peer-meta">' + (p.host && p.host.startsWith('relay://') ? 'via relay' : escHTML(p.host || '—')) + ' · ' + statusLabel + ' · ' + relTime(p.lastSeen) + '</div>'
         + '</div>'
         + '<div class="conn-toggle-wrap">'
         + '<span class="conn-toggle-label">' + (isOn ? 'On' : 'Off') + '</span>'
@@ -4657,8 +4670,11 @@ async function connectToWorld() {
       throw new Error(msg);
     }
     if (input) input.value = '';
-    if (hint) { hint.style.color = '#22c55e'; hint.textContent = '✓ Connected to ' + (res.worldName || res.worldId); }
-    setTimeout(function(){ if (hint) hint.textContent = ''; }, 4000);
+    var successMsg = res.relayUrl
+      ? '✓ Joined relay — peers will auto-connect'
+      : '✓ Connected to ' + (res.worldName || res.worldId);
+    if (hint) { hint.style.color = '#22c55e'; hint.textContent = successMsg; }
+    setTimeout(function(){ if (hint) hint.textContent = ''; }, 5000);
     await refreshAll();
     renderConnections();
   } catch(e) {
@@ -7563,6 +7579,7 @@ async function refreshAll() {
     _state.capabilitiesConfig = peersRes.capabilitiesConfig || _state.capabilitiesConfig || [];
     _state.aiBackend = peersRes.aiBackend || _state.aiBackend || { type: 'claude' };
     _state.brain = brainRes.records || [];
+    _state.relay = peersRes.relay || null;
     _bSources = sourcesRes.sources || _bSources;
 
     // Merge messages — restore read status from localStorage (survives refresh)
